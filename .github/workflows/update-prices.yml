@@ -1,0 +1,63 @@
+name: Update prices and rebuild site
+
+# Runs automatically on a schedule, and whenever you click "Run workflow"
+# in the Actions tab. Markets are closed at weekends, so this only runs on
+# weekdays.
+on:
+  schedule:
+    # 22:30 UTC Mon-Fri = ~6:30pm New York, after the US close.
+    # For every-other-day instead, change MON-FRI to MON,WED,FRI
+    - cron: "30 22 * * MON-FRI"
+  workflow_dispatch:        # lets you trigger it manually from the Actions tab
+
+# The job commits the regenerated data file back to the repo, so it needs
+# write access to repository contents.
+permissions:
+  contents: write
+
+# If a run is already going, don't start a second one on top of it.
+concurrency:
+  group: update-prices
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch live prices from Finnhub
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python fetch_prices.py
+
+      - name: Rebuild the site data
+        run: python build.py
+
+      # Backfills a year of history from Stooq the first time it runs, then
+      # appends each day's close after that. Never fails the job: if Stooq is
+      # unreachable the charts just keep whatever history already exists.
+      - name: Update price history for the charts
+        run: python fetch_history.py || echo "History update failed — charts keep existing data."
+
+      - name: Commit the updated data
+        run: |
+          git config user.name  "freeflow-bot"
+          git config user.email "actions@github.com"
+          git add prices.json docs/data.js || true
+          git add docs/history.js || true
+          # git commit exits non-zero when nothing changed (e.g. a holiday),
+          # which is normal and shouldn't fail the run.
+          if git diff --staged --quiet; then
+            echo "No price changes today — nothing to commit."
+          else
+            git commit -m "Update prices $(date -u +'%Y-%m-%d')"
+            git push
+            echo "Pushed updated prices."
+          fi
