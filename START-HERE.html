@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeFlow Finance — Start Here</title>
+<style>
+  :root{
+    --ink:#0a0912; --surface:#15131f; --surface2:#1b1828; --line:#2b2739;
+    --violet:#6d3fc0; --violet-deep:#241546; --lilac:#b9a3f5;
+    --gold:#c9a227; --gold-soft:#e4c97a;
+    --text:#f1eef8; --muted:#a7a0bd; --dim:#8a83a3;
+    --green:#4fb787; --red:#dd6b7f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--ink); color:var(--text); line-height:1.65;
+    font:16.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background-image:radial-gradient(900px 500px at 15% -5%,rgba(109,63,192,.20),transparent 60%);
+    background-attachment:fixed; padding:0 20px 100px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{padding:56px 0 30px}
+  h1{font:400 40px/1.15 Georgia,serif; letter-spacing:-.01em; margin-bottom:14px}
+  h2{font:400 27px/1.25 Georgia,serif; margin:0 0 8px}
+  h3{font:600 17px/1.4 inherit; margin:0 0 6px}
+  p{color:var(--muted); margin-bottom:14px}
+  .sub{font-size:18px}
+  a{color:var(--lilac)}
+  code{
+    font:14px ui-monospace,Menlo,Consolas,monospace; background:var(--surface2);
+    border:1px solid var(--line); border-radius:5px; padding:2px 7px; color:var(--gold-soft);
+    word-break:break-all;
+  }
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:30px; margin-bottom:22px;
+  }
+  .card.pick{border-color:var(--violet)}
+  .tag{
+    display:inline-block; font:600 11px/1 inherit; letter-spacing:.13em; text-transform:uppercase;
+    padding:7px 13px; border-radius:99px; margin-bottom:14px;
+  }
+  .tag-fast{background:rgba(79,183,135,.15); color:var(--green)}
+  .tag-best{background:rgba(185,163,245,.15); color:var(--lilac)}
+  .tag-opt{background:rgba(212,163,68,.15); color:var(--gold-soft)}
+  ol{margin:16px 0 0 0; padding:0; counter-reset:n; list-style:none}
+  ol li{
+    counter-increment:n; position:relative; padding-left:44px; margin-bottom:18px; color:var(--muted);
+  }
+  ol li::before{
+    content:counter(n); position:absolute; left:0; top:-1px;
+    width:28px; height:28px; border-radius:50%; background:var(--violet-deep);
+    border:1px solid var(--violet); color:var(--lilac);
+    font:600 13px/26px inherit; text-align:center;
+  }
+  ol li b{color:var(--text)}
+  .note{
+    border-left:3px solid var(--gold); background:var(--surface2);
+    padding:14px 18px; border-radius:0 8px 8px 0; margin:16px 0;
+    font-size:15px; color:var(--muted);
+  }
+  .note b{color:var(--text)}
+  .files{width:100%; border-collapse:collapse; margin-top:8px; font-size:15px}
+  .files td{padding:11px 0; border-bottom:1px solid var(--line); color:var(--muted); vertical-align:top}
+  .files td:first-child{
+    font:14px ui-monospace,Menlo,Consolas,monospace; color:var(--gold-soft);
+    white-space:nowrap; padding-right:22px; width:1%;
+  }
+  .files tr:last-child td{border-bottom:none}
+  .divider{height:1px;background:var(--line); margin:44px 0}
+  .eyebrow{
+    font:600 11.5px/1 inherit; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--lilac); margin-bottom:22px; display:flex; align-items:center; gap:12px;
+  }
+  .eyebrow::before{content:'';width:28px;height:1px;background:var(--lilac)}
+  details{border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-bottom:10px; background:var(--surface)}
+  summary{cursor:pointer; color:var(--text); font-weight:600; font-size:15.5px}
+  details p{margin:12px 0 0; font-size:15px}
+  .foot{margin-top:50px; padding-top:26px; border-top:1px solid var(--line); font-size:13.5px; color:var(--dim)}
+</style></head>
+<body><div class="wrap">
+
+<header>
+  <h1>FreeFlow&nbsp;Finance — Start Here</h1>
+  <p class="sub">Two ways to get your site online. Pick one. You don't need to know how to code.</p>
+</header>
+
+<div class="eyebrow">What's in the folder</div>
+<div class="card">
+  <table class="files">
+    <tr><td>FreeFlow-Finance.html</td><td>The whole website in one file. This is all you need for Option A.</td></tr>
+    <tr><td>docs/</td><td>The website as separate files. This is what GitHub uses in Option B.</td></tr>
+    <tr><td>companies/</td><td>Your company research and assumptions. Edit these to add companies.</td></tr>
+    <tr><td>build.py</td><td>Runs the valuation model and rebuilds the site.</td></tr>
+    <tr><td>SETUP-auto-price-updates.txt</td><td>Only needed for the optional auto-updating step.</td></tr>
+    <tr><td>README.md</td><td>Technical notes, for later.</td></tr>
+  </table>
+  <div class="note">
+    <b>There's also a hidden folder called <code>.github</code>.</b> Your computer hides
+    anything starting with a dot, so you probably can't see it. That's normal and nothing is
+    missing — I've put a visible copy of the one file inside it as
+    <code>SETUP-auto-price-updates.txt</code>, so you never need to go looking for it.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="eyebrow">Option A — Get it online in 2 minutes</div>
+<div class="card pick">
+  <span class="tag tag-fast">Fastest · no account needed</span>
+  <h2>Netlify Drop</h2>
+  <p>Best if you just want a link to send people today.</p>
+  <ol>
+    <li><b>Rename the file.</b> Find <code>FreeFlow-Finance.html</code> and rename it to exactly <code>index.html</code></li>
+    <li><b>Go to <a href="https://app.netlify.com/drop" target="_blank" rel="noopener">app.netlify.com/drop</a></b></li>
+    <li><b>Drag that one file onto the page.</b></li>
+    <li><b>Done.</b> You get a link straight away. Copy it and send it to anyone.</li>
+  </ol>
+  <div class="note">
+    Prices won't update by themselves with this option, and the charts stay empty.
+    Everything else works perfectly. You can always do Option B later.
+  </div>
+</div>
+
+<div class="eyebrow" style="margin-top:38px">Option B — The proper setup</div>
+<div class="card pick">
+  <span class="tag tag-best">15 minutes · free forever</span>
+  <h2>GitHub Pages</h2>
+  <p>Takes longer, but your code is visible to others — which matters for college
+     applications and internships — and prices can update by themselves.</p>
+  <ol>
+    <li><b>Make an account</b> at <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a></li>
+    <li><b>Create a repository.</b> Click the <code>+</code> in the top right, then
+        <b>New repository</b>. Name it <code>freeflow-finance</code>. Choose <b>Public</b>.
+        Don't tick any boxes. Click <b>Create repository</b>.</li>
+    <li><b>Upload your files.</b> On the empty page, click the link
+        <b>"uploading an existing file"</b>. Open your unzipped folder, select
+        <em>everything inside it</em> (Cmd+A on Mac, Ctrl+A on Windows), and drag it in.
+        Then click <b>Commit changes</b> at the bottom.</li>
+    <li><b>Turn on the website.</b> Click <b>Settings</b> at the top, then <b>Pages</b>
+        in the left menu. Under <em>Source</em> pick <b>Deploy from a branch</b>.
+        Set Branch to <code>main</code> and folder to <code>/docs</code>. Click <b>Save</b>.</li>
+    <li><b>Wait one minute, then refresh that page.</b> Your link appears in a green box:
+        <code>https://yourname.github.io/freeflow-finance/</code></li>
+  </ol>
+  <div class="note">
+    <b>Seeing a 404?</b> Wait two more minutes and refresh — the first build is slow.
+    If it's still there, go back to step 4 and check the folder says <code>/docs</code>
+    and not <code>/ (root)</code>.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="eyebrow">Optional — Make prices update themselves</div>
+<div class="card">
+  <span class="tag tag-opt">About 12 minutes · only after Option B</span>
+  <h2>Automatic daily updates</h2>
+  <p><b style="color:var(--text)">Skip this if you like.</b> Your site works perfectly without it —
+     the prices just stay where they are until you change them yourself.</p>
+
+  <div class="note" style="border-left-color:var(--lilac)">
+    <b>What you're actually doing, in plain English:</b> your site needs somewhere to get today's
+    share prices. A company called Finnhub gives them away free. They hand you a <b>key</b> — a long
+    random string that works like a password, so they know it's you asking. You give that key to
+    GitHub, GitHub keeps it secret, and once a day it fetches the prices for you.
+  </div>
+
+  <h3 style="margin-top:30px; color:var(--lilac)">Part 1 · Get your key <span style="color:var(--dim);font-weight:400">(3 min)</span></h3>
+  <ol>
+    <li>Go to <a href="https://finnhub.io" target="_blank" rel="noopener">finnhub.io</a> and sign up.
+        It's free and only needs an email address.</li>
+    <li>Check your email and confirm your account if they ask you to.</li>
+    <li>Once you're logged in, look for your <b>API key</b> on the dashboard. It's a long
+        jumble of letters and numbers, something like <code>cq3f8h9r01qmbc...</code></li>
+    <li><b>Copy it.</b> Then leave that tab open in case you need it again.</li>
+  </ol>
+  <div class="note">
+    <b>Never paste this key into a file.</b> Anyone who sees it can use up your allowance.
+    It only ever goes in the one place in Part 2.
+  </div>
+
+  <h3 style="margin-top:30px; color:var(--lilac)">Part 2 · Give the key to GitHub <span style="color:var(--dim);font-weight:400">(3 min)</span></h3>
+  <ol>
+    <li>Open your <code>freeflow-finance</code> page on GitHub.</li>
+    <li>Click <b>Settings</b> in the row of tabs along the top.</li>
+    <li>In the menu down the left side, find <b>Secrets and variables</b> and click it,
+        then click <b>Actions</b> underneath it.</li>
+    <li>Click the green <b>New repository secret</b> button.</li>
+    <li>In the <b>Name</b> box, type exactly: <code>FINNHUB_API_KEY</code><br>
+        <span style="font-size:14.5px">All capitals, with underscores. No spaces. This has to match perfectly.</span></li>
+    <li>In the <b>Secret</b> box, paste your key from Part 1.</li>
+    <li>Click <b>Add secret</b>.</li>
+  </ol>
+  <div class="note" style="border-left-color:var(--green)">
+    <b>You should now see</b> <code>FINNHUB_API_KEY</code> in a list. You won't be able to read
+    the key itself ever again — that's not a mistake, that's the whole point of it being secret.
+  </div>
+
+  <h3 style="margin-top:30px; color:var(--lilac)">Part 3 · Add the instructions file <span style="color:var(--dim);font-weight:400">(4 min)</span></h3>
+  <ol>
+    <li>Click your repository name at the very top to get back to the main page.</li>
+    <li>Click <b>Add file</b>, then <b>Create new file</b>.</li>
+    <li>In the filename box at the top, type exactly:<br>
+        <code>.github/workflows/update-prices.yml</code><br>
+        <span style="font-size:14.5px">Watch what happens as you type each <code>/</code> — GitHub
+        splits it into folders automatically. That's how you make a hidden folder without ever
+        seeing one.</span></li>
+    <li>On your computer, open <code>SETUP-auto-price-updates.txt</code>. Double-clicking it
+        opens TextEdit on a Mac or Notepad on Windows.</li>
+    <li>Select everything in it and copy. <span style="font-size:14.5px">(Cmd+A then Cmd+C on Mac,
+        Ctrl+A then Ctrl+C on Windows.)</span></li>
+    <li>Paste it into the big empty box on GitHub.</li>
+    <li>Scroll down and click the green <b>Commit changes</b> button.</li>
+  </ol>
+
+  <h3 style="margin-top:30px; color:var(--lilac)">Part 4 · Test it right now <span style="color:var(--dim);font-weight:400">(2 min)</span></h3>
+  <p style="font-size:15.5px">Don't wait until tomorrow to find out whether it worked.</p>
+  <ol>
+    <li>Click the <b>Actions</b> tab along the top of your repository.</li>
+    <li>If it asks whether to enable workflows, click the green button to say yes.</li>
+    <li>In the left menu, click <b>Update prices and rebuild site</b>.</li>
+    <li>On the right, click <b>Run workflow</b>, then the green <b>Run workflow</b> button
+        that appears.</li>
+    <li>Wait about two minutes, then refresh the page.</li>
+  </ol>
+  <div class="note" style="border-left-color:var(--green)">
+    <b style="color:var(--green)">Green tick</b> — it worked. From now on it runs by itself
+    every weekday evening after the US market closes, and your site updates without you
+    touching anything.
+  </div>
+  <div class="note" style="border-left-color:var(--red)">
+    <b style="color:var(--red)">Red X</b> — click into it to see why. Nine times out of ten
+    the secret name is slightly wrong. Go back to Part 2 and check it reads exactly
+    <code>FINNHUB_API_KEY</code>, all capitals, underscores not spaces or dashes.
+  </div>
+  <div class="note">
+    <b>Nothing breaks if you get this wrong.</b> Your website carries on working with the prices
+    it already has. The worst case is that GitHub emails you to say a job failed — annoying,
+    not damaging. You can switch it off any time under <b>Actions</b>.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="eyebrow">If something looks wrong</div>
+
+<details>
+  <summary>The charts are empty</summary>
+  <p>That's expected at first, and it's not broken. The site records one closing price
+     each day it updates, so charts fill in over two to three weeks. Everything else —
+     the valuations, models and comparisons — works right now.</p>
+</details>
+
+<details>
+  <summary>I can't find the .github folder in my zip</summary>
+  <p>You're not missing anything. Files starting with a dot are hidden by your computer.
+     That's exactly why <code>SETUP-auto-price-updates.txt</code> exists — it's a visible
+     copy of the only file you need from in there.</p>
+</details>
+
+<details>
+  <summary>The site loads but is blank</summary>
+  <p>The file <code>docs/data.js</code> probably didn't upload — it's the biggest file, about
+     360 KB. Open the <code>docs</code> folder on GitHub and check it's there. If not,
+     upload just that one file on its own.</p>
+</details>
+
+<details>
+  <summary>I want to add more companies</summary>
+  <p>Open any file in the <code>companies</code> folder, copy an existing entry, and change
+     the numbers. The <code>README.md</code> has a template with every field explained.
+     If you're editing on GitHub directly, the site rebuilds itself about a minute after
+     you commit.</p>
+</details>
+
+<details>
+  <summary>Do I need to install Python?</summary>
+  <p>No. Both options above work without installing anything. Python is only needed
+     if you want to rebuild the site on your own computer rather than letting
+     GitHub do it.</p>
+</details>
+
+<div class="foot">
+  <b>One thing worth keeping:</b> the site carries a note saying it's an educational
+  project and not investment advice. Leave it there. Real research firms carry longer
+  ones — it makes you look more serious, not less.
+</div>
+
+</div></body></html>

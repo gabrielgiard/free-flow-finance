@@ -4,6 +4,11 @@
 
 const APP = document.getElementById('app');
 
+// Browsers restore your previous scroll position on reload by default. In a
+// single-page site that means reopening the homepage two screens down — which
+// looks like it loaded the wrong page. We manage scrolling ourselves instead.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 function renderRoute() {
   const hash = location.hash.replace(/^#\/?/, '');
   const [route, arg] = hash.split('/');
@@ -19,7 +24,9 @@ function renderRoute() {
   else { html = view404(); }
 
   APP.innerHTML = html;
-  window.scrollTo(0, 0);
+  // 'instant' overrides the CSS smooth-scroll, which would otherwise animate
+  // on every navigation and look sluggish.
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   updateNavActive(navKey, arg);
   updateSidebarActive(navKey, arg ? decodeURIComponent(arg) : null);
   markDecorativeSvgs();

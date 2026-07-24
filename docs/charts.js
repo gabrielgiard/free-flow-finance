@@ -235,12 +235,20 @@ function hasHistory(key) {
     && FF_HISTORY[key].c.length > 2;
 }
 
-function historyEmptyState(what) {
+function historyEmptyState(key) {
+  // Show how far along we actually are. "Still gathering data" reads like a
+  // fault; "1 of 3 days recorded" reads like a system that's working.
+  const days = (typeof FF_HISTORY !== 'undefined' && FF_HISTORY[key]
+                && Array.isArray(FF_HISTORY[key].c)) ? FF_HISTORY[key].c.length : 0;
+  const detail = days === 0
+    ? `No closing prices recorded yet. The first one arrives the next time your daily update runs.`
+    : `<b style="color:var(--lilac)">${days} of 3</b> daily closing prices recorded so far —
+       a chart needs at least three points before it can draw a line.`;
   return `<div style="border:1px dashed var(--line);border-radius:var(--radius);
       padding:26px 24px;text-align:center;color:var(--text-dim);font-size:12.5px;line-height:1.7">
-      <div style="color:var(--text-muted);margin-bottom:6px">Price chart is still gathering data.</div>
-      Charts build themselves once the daily update runs — nothing for you to do.
-      Until then, every valuation on this page works normally.
+      <div style="color:var(--text-muted);margin-bottom:6px">Price chart is building up.</div>
+      ${detail}<br>
+      Nothing to do — it fills in on its own. Every valuation on this page already works.
     </div>`;
 }
 
@@ -252,7 +260,7 @@ function historyThinNote(n) {
 
 /* Main company chart: 12 months of closes with the fair value overlaid. */
 function priceChartSVG(key, fv, price, h = 240) {
-  if (!hasHistory(key)) return historyEmptyState('this company');
+  if (!hasHistory(key)) return historyEmptyState(key);
   const s = FF_HISTORY[key];
   const closes = s.c;
   const w = 720, padL = 4, padR = 58, padT = 16, padB = 26;

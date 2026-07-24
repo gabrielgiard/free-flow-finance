@@ -145,7 +145,7 @@ function viewHome() {
       <div class="two-col">
         <div class="card">
           <span class="tag tag-lilac" style="margin-bottom:14px;">About the analyst</span>
-          <h2 style="font-size:22px;">Built by a 17-year-old who got a stock for Christmas.</h2>
+          <h2 style="font-size:22px;">Built by a 17-year-old who got a couple of stocks for Christmas.</h2>
           <p>I'm Gabriel Giard, an incoming high school senior. FreeFlow Finance is my attempt to build the kind of coverage a junior analyst at a bank would produce — for anyone to read, whether you know what a discount rate is or you're about to learn.</p>
           <button class="btn btn-ghost" data-route="about">Read the full story ${ICN.arrow}</button>
         </div>
@@ -468,7 +468,7 @@ function viewAbout() {
         <div>
           <div class="eyebrow">About the Analyst</div>
           <h1 style="font-size:36px;">Gabriel Giard</h1>
-          <p style="max-width:520px;font-size:15px;">Incoming high school senior, and the person behind every model in this library. FreeFlow Finance started because a stock I received for Christmas turned into a genuine obsession with figuring out what companies are actually worth.</p>
+          <p style="max-width:520px;font-size:15px;">Incoming high school senior, and the person behind every model in this library. FreeFlow Finance started because a couple of stocks I was given for Christmas in 2022 turned into a genuine obsession with figuring out what companies are actually worth.</p>
           <div class="social-row">
             <a class="social-btn" href="https://www.linkedin.com/in/gabriel-giard-95694a406" target="_blank" rel="noopener">${ICN.linkedin} Connect on LinkedIn</a>
             <a class="social-btn" href="https://www.instagram.com/gab.giard" target="_blank" rel="noopener">${ICN.instagram} @gab.giard</a>
@@ -482,7 +482,7 @@ function viewAbout() {
       <div class="two-col">
         <div class="prose">
           <h4>The Story</h4>
-          <p>It started with one share of stock, unwrapped on a Christmas morning without much fanfare. Most people would have let it sit in a brokerage account. Instead it turned into the question that built this entire site: what makes a company actually worth what the market says it's worth?</p>
+          <p>It started at Christmas in 2022, with a couple of stocks unwrapped without much fanfare. Most people would have let them sit in a brokerage account. Instead they turned into the question that built this entire site: what makes a company actually worth what the market says it's worth?</p>
           <p>Since then I've taken every finance, economics and sociology class my high school offers, and gone looking well beyond the classroom — including Yale's Financial Markets course on Coursera, taught by Nobel laureate Robert Shiller, which is where a lot of the thinking behind the discounted cash flow model on this site was sharpened.</p>
           <p>FreeFlow Finance is the result: a self-built equity research shop covering 100 companies, using the same rigor I'd want to apply if I were a junior analyst at a bank, explained clearly enough that a friend with zero finance background could open any page and actually follow it.</p>
           <h4>Why "FreeFlow"</h4>
@@ -490,7 +490,7 @@ function viewAbout() {
         </div>
         <div>
           <div class="timeline">
-            <div class="tl-item"><h4>The spark</h4><p>Received a single share of stock as a Christmas gift and started asking why it was priced the way it was.</p></div>
+            <div class="tl-item"><h4>The spark</h4><p>Given a couple of stocks as a Christmas gift in 2022, and started asking why they were priced the way they were.</p></div>
             <div class="tl-item"><h4>The classroom</h4><p>Took finance, economics and sociology courses in high school to build a foundation across markets and human behavior.</p></div>
             <div class="tl-item"><h4>Yale Financial Markets</h4><p>Completed the online course taught by Nobel Prize–winning economist Robert Shiller.</p></div>
             <div class="tl-item"><h4>FreeFlow Finance</h4><p>Built a 100-company DCF library to apply everything learned, one ticker at a time.</p></div>
