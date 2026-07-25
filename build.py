@@ -54,7 +54,15 @@ SECTORS = [
      "note": "Read the fair values in this section with real scepticism. A DCF needs stable, predictable cash flows to be meaningful. Several companies here have negative free cash flow today, so almost all of the calculated value sits in the terminal value — the most assumption-heavy part of the model. We publish the numbers anyway, and flag where they are close to meaningless."},
 ]
 
-# Market context shown in the homepage strip. Update these when you refresh.
+# Market context shown in the homepage strip.
+#
+# spx, ndx, vix, brent and rf are OVERWRITTEN each run from market.json, which
+# fetch_history.py produces. The values below are only the fallback for when
+# that fetch fails or hasn't run yet.
+#
+# fedfunds is genuinely manual: it's a policy rate the Fed sets at its meetings,
+# not something that trades, so there's no price to look up. Update it yourself
+# after an FOMC decision (roughly eight times a year).
 META = {
     "asof": "22 July 2026",
     "rf": 4.63,
@@ -64,6 +72,39 @@ META = {
     "ndx": 25508,
     "vix": 18.7,
 }
+
+
+def apply_market(meta):
+    """Overlay live index levels from market.json onto the homepage figures."""
+    path = os.path.join(HERE, "market.json")
+    try:
+        with open(path) as f:
+            m = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("No market.json — homepage figures use their stored values.")
+        return
+
+    applied = []
+    for key in ("spx", "ndx", "vix", "brent", "rf"):
+        v = m.get(key)
+        if isinstance(v, (int, float)) and v > 0:
+            meta[key] = v
+            applied.append(key)
+
+    # Restamp the "Data as of" line from the freshest series, e.g. 2026-07-24
+    # becomes "24 July 2026" to match the existing wording.
+    iso = m.get("asof_iso")
+    if isinstance(iso, str) and len(iso) == 10:
+        try:
+            y, mo, d = iso.split("-")
+            months = ["January", "February", "March", "April", "May", "June", "July",
+                      "August", "September", "October", "November", "December"]
+            meta["asof"] = f"{int(d)} {months[int(mo) - 1]} {y}"
+        except (ValueError, IndexError):
+            pass
+
+    if applied:
+        print(f"Applied live market levels: {', '.join(applied)} (as of {meta['asof']})")
 
 
 def load_companies():
@@ -145,6 +186,8 @@ def main():
         return 1
 
     apply_live_prices(companies)
+    meta = dict(META)
+    apply_market(meta)
 
     out = [build(c) for c in companies]
 
@@ -193,7 +236,7 @@ def main():
                 else:
                     p["pctl"][metric] = 50
 
-    data = {"sectors": sectors, "companies": out, "meta": META}
+    data = {"sectors": sectors, "companies": out, "meta": meta}
 
     docs = os.path.join(HERE, "docs")
     os.makedirs(docs, exist_ok=True)

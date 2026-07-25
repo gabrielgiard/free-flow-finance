@@ -16,20 +16,26 @@ the site footer.
 ## How it fits together
 
 ```
-companies/*.py     your assumptions       <- this is the actual analytical work
+companies/*.py     your assumptions          <- this is the actual analytical work
       |
       v
-fetch_prices.py    today's prices (Finnhub)  -> prices.json
+fetch_prices.py    today's share prices      -> prices.json
+fetch_history.py   a year of closes,         -> docs/history.js
+                   plus index/commodity         market.json
+                   levels
       |
       v
-build.py           runs the DCF on all 100   -> docs/data.js
-      |
-      v
-fetch_history.py   a year of closes (Stooq)  -> docs/history.js
+build.py           runs the DCF on all 100,  -> docs/data.js
+                   overlays live prices and
+                   market levels
       |
       v
 docs/              the website (plain HTML/CSS/JS, no framework)
 ```
+
+Both fetch steps run *before* `build.py`, because the build reads what they
+produce. If either fetch fails, the build carries on using the last good
+values rather than showing gaps.
 
 The website does no math. It only displays what `build.py` produces. That
 separation is deliberate: it means you can change a growth assumption, re-run
@@ -133,15 +139,22 @@ python fetch_history.py --no-backfill   # append today only, skip Stooq
 
 **Two sources, in this order of reliability:**
 
+**Homepage market levels — FRED.** The S&P 500, Nasdaq, VIX, Brent crude and
+10-year Treasury figures (and the sparklines under them) come from FRED, the
+Federal Reserve Bank of St. Louis. No API key, official government source,
+series IDs are listed in `FRED_SERIES` in `fetch_history.py`.
+
+**Company price charts — two sources:**
+
 1. **Accumulate from `prices.json`** — every scheduled run appends that day's
    close. This is the dependable path: it reuses the same free Finnhub quotes
    that already power the site. It starts empty and fills out a day at a time,
    so a chart becomes readable after two or three weeks of runs.
-2. **Backfill from Stooq** (stooq.com) — free and needs no key, and if it works
-   you get a year of history immediately instead of waiting. Treat it as a
-   bonus rather than a dependency: Stooq has no official API, the CSV endpoint
-   is undocumented, and they have begun offering an `apikey` parameter, so it
-   may stop working without notice. If it does, the accumulator carries on.
+2. **Backfill from Stooq** (stooq.com) — *currently not working.* As of July
+   2026 it returns "no data" for every symbol, so the year-of-history backfill
+   fails and the accumulator does all the work. The code still tries it in case
+   the service returns; it can't break anything if it doesn't. Run
+   `python fetch_history.py --test` to check both sources.
 
 **Why not Finnhub for history:** their `/stock/candle` endpoint was moved to the
 premium tiers and returns 403 on a free key. Quotes are free; candles are not.
@@ -153,6 +166,26 @@ Reliance) are in `STOOQ_SKIP` and also in `fetch_prices.py`'s `SKIP`, so their
 charts stay empty until you add a data source that covers those exchanges.
 
 Run `python fetch_history.py --test` to check whether Stooq still responds.
+
+---
+
+## What updates automatically, and what doesn't
+
+**Automatic, every run:**
+
+- All 100 share prices (Finnhub)
+- S&P 500, Nasdaq, VIX, Brent crude, 10-year Treasury yield (`market.json`)
+- The "Data as of" date on the homepage, restamped from the freshest figure
+- Every rating and upside percentage, since those derive from price
+
+**Manual, by design:**
+
+- **Fed funds target** — a policy rate the Fed sets at its meetings, not
+  something that trades. There's no price to look up. Update it in `META` in
+  `build.py` after an FOMC decision, roughly eight times a year.
+- **Your DCF assumptions** — revenue growth, margins, WACC, terminal growth.
+  These are your analysis and should change when you revisit a company, not
+  daily. Fair values are supposed to be stable; only the price should move.
 
 ---
 

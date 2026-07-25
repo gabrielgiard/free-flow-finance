@@ -45,16 +45,6 @@ MAX_POINTS = 260          # about one trading year
 REQUEST_PAUSE = 0.4       # be polite to a free public service
 HISTORY_PATH = os.path.join(HERE, "docs", "history.js")
 
-# Market context instruments shown on the homepage. Stooq uses ^ for indices
-# and .f for futures. Keys here become the keys in history.js.
-MARKET = {
-    "SPX":   ("^spx", "S&P 500"),
-    "NDX":   ("^ndq", "Nasdaq Composite"),
-    "VIX":   ("^vix", "VIX (volatility)"),
-    "BRENT": ("cb.f", "Brent Crude"),
-    "GOLD":  ("gc.f", "Gold"),
-}
-
 # Tickers whose Stooq symbol differs from "<ticker>.us".
 STOOQ_OVERRIDES = {
     "BRK.B": "brk-b.us",
@@ -162,6 +152,116 @@ def accumulate(hist):
     return n
 
 
+# ---------------------------------------------------------------------------
+# Market levels for the homepage come from FRED (Federal Reserve Bank of
+# St. Louis). Stooq stopped serving us entirely -- every symbol returned
+# "no data" -- so this replaced it. FRED is an official government source,
+# needs no API key for the CSV endpoint, and is far less likely to vanish.
+#
+# Series IDs can be looked up at fred.stlouisfed.org; the ID appears in the
+# page title and URL of any series.
+# ---------------------------------------------------------------------------
+FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}"
+
+# meta key -> (FRED series id, label for logs, key used in history.js)
+FRED_SERIES = {
+    "spx":   ("SP500",        "S&P 500",                "SPX"),
+    "ndx":   ("NASDAQCOM",    "Nasdaq Composite",       "NDX"),
+    "vix":   ("VIXCLS",       "VIX",                    "VIX"),
+    "brent": ("DCOILBRENTEU", "Brent crude",            "BRENT"),
+    "rf":    ("DGS10",        "10-year Treasury yield", "US10Y"),
+}
+
+
+def fetch_fred(series_id):
+    """Full daily series from FRED as (dates, values), or (None, reason).
+
+    FRED returns CSV shaped like:
+        observation_date,SP500
+        2026-07-23,7612.40
+    Missing days (holidays, weekends) are written as "." and skipped.
+
+    We return the whole series rather than just the last value, because the
+    homepage sparklines need the history and this saves a second request.
+    """
+    url = FRED_CSV.format(series_id)
+    req = urllib.request.Request(url, headers={"User-Agent": "freeflow-finance/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            body = r.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as e:
+        return None, f"HTTP {e.code}"
+    except Exception as e:
+        return None, type(e).__name__
+
+    rows = [ln for ln in body.splitlines() if ln.strip()]
+    if len(rows) < 2:
+        return None, "empty response"
+
+    dates, values = [], []
+    for line in rows[1:]:
+        parts = line.split(",")
+        if len(parts) < 2:
+            continue
+        date, raw = parts[0].strip(), parts[1].strip()
+        if raw in (".", "", "NA"):      # holidays and gaps
+            continue
+        try:
+            values.append(round(float(raw), 2))
+            dates.append(date)
+        except ValueError:
+            continue
+
+    if not values:
+        return None, "no usable values"
+    return (dates[-MAX_POINTS:], values[-MAX_POINTS:]), None
+
+
+def write_market_snapshot(hist):
+    """Fetch homepage market levels and sparkline history from FRED.
+
+    Writes market.json (the headline numbers) and adds the series to hist
+    (the sparklines under them). Anything that fails simply isn't written, so
+    build.py keeps the value it already has. Fed funds is deliberately absent
+    -- it's a target range set at FOMC meetings, not a traded price, so it
+    stays manual in build.py.
+    """
+    out, dates, failures = {}, [], []
+    print("\nFetching market levels from FRED...")
+    for meta_key, (series_id, label, hist_key) in FRED_SERIES.items():
+        result, err = fetch_fred(series_id)
+        if result:
+            series_dates, series_vals = result
+            val = series_vals[-1]
+            # Index levels read better whole; rates and commodities need decimals.
+            out[meta_key] = round(val) if meta_key in ("spx", "ndx") else val
+            dates.append(series_dates[-1])
+            # feed the sparkline under this number too
+            hist[hist_key] = {"from": series_dates[0], "to": series_dates[-1],
+                              "c": series_vals}
+            print(f"  OK   {label:24s} {out[meta_key]:>10}   ({len(series_vals)} pts, to {series_dates[-1]})")
+        else:
+            failures.append(f"{label} [{series_id}]: {err}")
+            print(f"  MISS {label:24s} {err}")
+        time.sleep(REQUEST_PAUSE)
+
+    if not out:
+        print("\nNo market levels fetched — homepage figures keep their stored values.")
+        return
+
+    if dates:
+        out["asof_iso"] = max(dates)
+
+    path = os.path.join(HERE, "market.json")
+    with open(path, "w") as f:
+        json.dump(out, f, indent=2, sort_keys=True)
+    print(f"\nWrote {path} ({len(out) - 1} of {len(FRED_SERIES)} levels)")
+    if failures:
+        print("Missing (these keep their previous values):")
+        for f_ in failures:
+            print(f"  - {f_}")
+
+
 def main():
     args = sys.argv[1:]
     test_mode = "--test" in args
@@ -171,24 +271,34 @@ def main():
     hist = load_history()
 
     if test_mode:
-        print("Testing 3 symbols against Stooq...\n")
-        for sym in ["nvda.us", "^vix", "cb.f"]:
+        print("Testing both data sources.\n")
+        print("FRED (homepage market levels) — the one that matters most:")
+        for meta_key, (sid, label, _) in FRED_SERIES.items():
+            result, err = fetch_fred(sid)
+            if result:
+                d, v = result
+                print(f"  OK   {label:24s} {v[-1]:>10}  ({len(v)} pts, to {d[-1]})")
+            else:
+                print(f"  FAIL {label:24s} {err}")
+            time.sleep(REQUEST_PAUSE)
+
+        print("\nStooq (optional company-history backfill):")
+        for sym in ["nvda.us", "aapl.us"]:
             result, err = fetch_stooq(sym)
             if result:
-                dates, closes = result
-                print(f"  OK   {sym:10s} {len(closes)} points, "
-                      f"{dates[0]} to {dates[-1]}, last close {closes[-1]}")
+                d, c = result
+                print(f"  OK   {sym:10s} {len(c)} points, {d[0]} to {d[-1]}")
             else:
                 print(f"  FAIL {sym:10s} {err}")
             time.sleep(REQUEST_PAUSE)
-        print("\nIf all three failed, Stooq may be unreachable or have changed.")
-        print("The site still works: charts build up daily from prices.json.")
+        print("\nStooq failing is survivable — company charts build up from")
+        print("daily prices instead. FRED failing means the homepage numbers")
+        print("will not update.")
         return 0
 
     if do_backfill:
         targets = [(c["t"], stooq_symbol(c["t"])) for c in companies
                    if c["t"] not in STOOQ_SKIP]
-        targets += [(k, sym) for k, (sym, _) in MARKET.items()]
         print(f"Backfilling {len(targets)} series from Stooq...\n")
 
         ok = fail = 0
@@ -214,13 +324,18 @@ def main():
             if len(failures) > 15:
                 print(f"  ... and {len(failures)-15} more")
         if ok == 0:
-            print("\nWARNING: nothing came back from Stooq. Either the service is")
-            print("down or the URL format changed. Run with --test to investigate.")
-            print("This is not fatal — charts will accumulate from prices.json.")
+            print("\nStooq returned nothing — it appears to have stopped serving")
+            print("this endpoint. Not a problem: company charts build up one day")
+            print("at a time from the Finnhub prices instead, and the homepage")
+            print("market levels come from FRED below.")
 
     n = accumulate(hist)
     if n:
         print(f"\nAppended today's close for {n} tickers.")
+
+    # Must run before save_history: this adds the index/commodity series that
+    # the homepage sparklines read.
+    write_market_snapshot(hist)
 
     hist["_meta"] = {
         "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

@@ -32,26 +32,30 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Gather all the data first, then build the site from it. Order matters:
+      # build.py reads prices.json and market.json, so both fetches must
+      # complete before it runs.
       - name: Fetch live prices from Finnhub
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python fetch_prices.py
 
+      # Backfills a year of history the first time it runs, then appends each
+      # day's close. Also writes market.json with the S&P, Nasdaq, VIX, Brent
+      # and 10-year Treasury levels for the homepage. Never fails the job: if
+      # the source is unreachable, the site keeps the numbers it already has.
+      - name: Update price history and market levels
+        run: python fetch_history.py || echo "History/market update failed — keeping existing data."
+
       - name: Rebuild the site data
         run: python build.py
-
-      # Backfills a year of history from Stooq the first time it runs, then
-      # appends each day's close after that. Never fails the job: if Stooq is
-      # unreachable the charts just keep whatever history already exists.
-      - name: Update price history for the charts
-        run: python fetch_history.py || echo "History update failed — charts keep existing data."
 
       - name: Commit the updated data
         run: |
           git config user.name  "freeflow-bot"
           git config user.email "actions@github.com"
           git add prices.json docs/data.js || true
-          git add docs/history.js || true
+          git add docs/history.js market.json || true
           # git commit exits non-zero when nothing changed (e.g. a holiday),
           # which is normal and shouldn't fail the run.
           if git diff --staged --quiet; then
