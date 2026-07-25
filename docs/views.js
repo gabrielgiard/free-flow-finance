@@ -85,15 +85,14 @@ function viewHome() {
         </div>
       </div>
       <div class="snapshot-strip">
-        <div class="snap-item"><div class="snap-label">S&amp;P 500</div><div class="snap-value">${m.spx.toLocaleString()}</div>${marketSparkSVG('SPX')}</div>
-        <div class="snap-item"><div class="snap-label">Nasdaq Composite</div><div class="snap-value">${m.ndx.toLocaleString()}</div>${marketSparkSVG('NDX')}</div>
-        <div class="snap-item"><div class="snap-label">10-Yr Treasury</div><div class="snap-value">${m.rf}%</div></div>
-        <div class="snap-item"><div class="snap-label">Brent Crude</div><div class="snap-value">$${m.brent}</div>${marketSparkSVG('BRENT')}</div>
-        <div class="snap-item"><div class="snap-label">VIX</div><div class="snap-value">${m.vix}</div>${marketSparkSVG('VIX')}</div>
-        <div class="snap-item"><div class="snap-label">Fed Funds Target</div><div class="snap-value">${m.fedfunds}</div></div>
-        <div class="snap-item"><div class="snap-label">Data as of</div><div class="snap-value">${m.asof}</div></div>
+        <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${m.n_companies}</div></div>
+        <div class="snap-item"><div class="snap-label">Sectors</div><div class="snap-value">${m.n_sectors}</div></div>
+        <div class="snap-item"><div class="snap-label">Market Cap Covered</div><div class="snap-value">$${m.total_mcap}T</div></div>
+        <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${m.median_upside >= 0 ? 'up' : 'down'}">${FMT.pct(m.median_upside)}</div></div>
+        <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${m.n_buy}</div></div>
+        <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${m.n_sell}</div></div>
+        <div class="snap-item"><div class="snap-label">Prices Updated</div><div class="snap-value">${m.asof}</div></div>
       </div>
-    </div>
   </section>
 
   <section>
