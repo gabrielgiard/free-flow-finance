@@ -47,6 +47,10 @@ jobs:
       - name: Update price history and market levels
         run: python fetch_history.py || echo "History/market update failed — keeping existing data."
 
+      - name: Fetch market levels
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: python fetch_market.py
       - name: Rebuild the site data
         run: python build.py
 
