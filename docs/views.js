@@ -22,8 +22,27 @@ function crumbs(...parts) {
 }
 
 /* ============================== HOME ================================= */
+/* Homepage strip figures, computed from the loaded data rather than baked in
+   at build time. Keeps the strip working regardless of what build.py emits,
+   and it recalculates itself the moment a company is added. */
+function coverageStats() {
+  const cs = FF_DATA.companies;
+  const ups = cs.map(c => c.upside).sort((a, b) => a - b);
+  const mid = Math.floor(ups.length / 2);
+  const medianUpside = ups.length % 2 ? ups[mid] : (ups[mid - 1] + ups[mid]) / 2;
+  return {
+    n: cs.length,
+    sectors: FF_DATA.sectors.length,
+    mcap: (cs.reduce((a, c) => a + c.mcap, 0) / 1000).toFixed(1),
+    medianUpside,
+    buys: cs.filter(c => c.rating === 'Strong Buy' || c.rating === 'Buy').length,
+    sells: cs.filter(c => c.rating === 'Sell' || c.rating === 'Reduce').length,
+  };
+}
+
 function viewHome() {
   const m = FF_DATA.meta;
+  const cov = coverageStats();
   const all = FF_DATA.companies;
   const ratingOrder = ['Strong Buy', 'Buy', 'Hold', 'Reduce', 'Sell'];
   const counts = {}; ratingOrder.forEach(r => counts[r] = 0);
@@ -85,14 +104,15 @@ function viewHome() {
         </div>
       </div>
       <div class="snapshot-strip">
-        <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${m.n_companies}</div></div>
-        <div class="snap-item"><div class="snap-label">Sectors</div><div class="snap-value">${m.n_sectors}</div></div>
-        <div class="snap-item"><div class="snap-label">Market Cap Covered</div><div class="snap-value">$${m.total_mcap}T</div></div>
-        <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${m.median_upside >= 0 ? 'up' : 'down'}">${FMT.pct(m.median_upside)}</div></div>
-        <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${m.n_buy}</div></div>
-        <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${m.n_sell}</div></div>
-        <div class="snap-item"><div class="snap-label">Prices Updated</div><div class="snap-value">${m.asof}</div></div>
+        <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${cov.n}</div></div>
+        <div class="snap-item"><div class="snap-label">Sectors</div><div class="snap-value">${cov.sectors}</div></div>
+        <div class="snap-item"><div class="snap-label">Market Cap Covered</div><div class="snap-value">$${cov.mcap}T</div></div>
+        <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${cov.medianUpside >= 0 ? 'up' : 'down'}">${FMT.pct(cov.medianUpside)}</div></div>
+        <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${cov.buys}</div></div>
+        <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${cov.sells}</div></div>
+        <div class="snap-item"><div class="snap-label">Model Dated</div><div class="snap-value">${m.asof}</div></div>
       </div>
+    </div>
   </section>
 
   <section>
