@@ -35,6 +35,7 @@ function coverageStats() {
     sectors: FF_DATA.sectors.length,
     mcap: (cs.reduce((a, c) => a + c.mcap, 0) / 1000).toFixed(1),
     medianUpside,
+    strongBuys: cs.filter(c => c.rating === 'Strong Buy').length,
     buys: cs.filter(c => c.rating === 'Strong Buy' || c.rating === 'Buy').length,
     sells: cs.filter(c => c.rating === 'Sell' || c.rating === 'Reduce').length,
   };
@@ -110,7 +111,7 @@ function viewHome() {
         <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${cov.medianUpside >= 0 ? 'up' : 'down'}">${FMT.pct(cov.medianUpside)}</div></div>
         <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${cov.buys}</div></div>
         <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${cov.sells}</div></div>
-        <div class="snap-item"><div class="snap-label">Model Dated</div><div class="snap-value">${m.asof}</div></div>
+        <div class="snap-item"><div class="snap-label">Strong Buy</div><div class="snap-value up">${cov.strongBuys}</div></div>
       </div>
     </div>
   </section>
