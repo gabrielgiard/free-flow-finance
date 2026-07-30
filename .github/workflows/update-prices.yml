@@ -46,7 +46,20 @@ jobs:
       # the source is unreachable, the site keeps the numbers it already has.
       - name: Update price history and market levels
         run: python fetch_history.py || echo "History/market update failed — keeping existing data."
-        
+
+      # Revenue, share count and net debt. Runs weekly rather than daily --
+      # fundamentals change quarterly, and this uses ~400 API calls.
+      # Never fails the job: if it errors, the previous figures stand.
+      - name: Update company fundamentals (Mondays, or any manual run)
+        run: |
+          if [ "$(date -u +%u)" = "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python fetch_fundamentals.py || echo "Fundamentals update failed — keeping existing figures."
+          else
+            echo "Not Monday — skipping fundamentals refresh."
+          fi
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+
       - name: Rebuild the site data
         run: python build.py
 
@@ -54,7 +67,7 @@ jobs:
         run: |
           git config user.name  "freeflow-bot"
           git config user.email "actions@github.com"
-          git add prices.json docs/data.js || true
+          git add prices.json docs/data.js fundamentals.json || true
           git add docs/history.js market.json || true
           # git commit exits non-zero when nothing changed (e.g. a holiday),
           # which is normal and shouldn't fail the run.
