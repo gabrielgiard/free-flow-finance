@@ -36,11 +36,16 @@ API = "https://finnhub.io/api/v1/quote?symbol={}&token={}"
 # them and keep the hardcoded price from the company file.
 # If you upgrade to a paid plan, delete entries from this set and add the proper
 # Finnhub symbol to SYMBOL_MAP below (e.g. "MC": "MC.PA").
+# ADR alternative: several of these have US-listed ADR lines that Finnhub does
+# cover on the free tier -- LVMUY (LVMH), NSRGY (Nestle), SIEGY (Siemens),
+# LRLCY (L'Oreal). Swapping the ticker here would make them auto-update, but
+# ADR prices differ from the primary listing by the ADR ratio and some lines
+# are thinly traded, so check each returns a sensible quote before switching.
 SKIP = {
-    "MC",        # LVMH            - Euronext Paris
-    "OR",        # L'Oreal         - Euronext Paris
-    "NESN",      # Nestle          - SIX Swiss
-    "SIE",       # Siemens         - Frankfurt / XETRA
+    "MC",        # LVMH            - Euronext Paris  (ADR: LVMUY)
+    "OR",        # L'Oreal         - Euronext Paris  (ADR: LRLCY)
+    "NESN",      # Nestle          - SIX Swiss       (ADR: NSRGY)
+    "SIE",       # Siemens         - Frankfurt/XETRA (ADR: SIEGY)
     "005930",    # Samsung         - Korea Exchange
     "RELIANCE",  # Reliance        - NSE / BSE
     "TCEHY",     # Tencent ADR     - thin OTC line
@@ -114,6 +119,7 @@ def main():
 
     print(f"\nUpdated {ok} prices, {fail} failed, {len(SKIP)} skipped.")
     print(f"Wrote {out_path}")
+
     print("\nNow run:  python build.py")
 
     # Only fail the job if essentially everything broke -- a handful of misses
@@ -123,6 +129,3 @@ def main():
         return 1
     return 0
 
-
-if __name__ == "__main__":
-    sys.exit(main())

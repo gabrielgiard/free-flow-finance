@@ -49,62 +49,61 @@ SECTORS = [
     {"k": "global", "n": "Global & Emerging Markets",
      "d": "The large caps of China, Korea and India. Business quality is often high; the discount is almost always about governance and geopolitics.",
      "note": "Non-US companies here are modelled in US dollar terms using ADR-equivalent share prices so that multiples stay comparable across the library. Currency movements are a real source of return we are not modelling."},
+    {"k": "telecom", "n": "Telecom & Media",
+     "d": "The companies that carry the signal and make the content \u2014 wireless carriers, broadband, studios and streaming. Capital-heavy, slow-growing, and priced mostly on cash returned to shareholders.",
+     "note": "Carriers and cable operators run very high debt loads by design: the networks are long-lived assets funded with long-dated debt. Read the leverage figures here against that norm rather than against an asset-light software company."},
     {"k": "frontier", "n": "Frontier & High-Momentum",
      "d": "Space, crypto, quantum and AI infrastructure. High narrative, thin financial history, and the section where a DCF is least reliable — which is exactly why it is worth doing one.",
      "note": "Read the fair values in this section with real scepticism. A DCF needs stable, predictable cash flows to be meaningful. Several companies here have negative free cash flow today, so almost all of the calculated value sits in the terminal value — the most assumption-heavy part of the model. We publish the numbers anyway, and flag where they are close to meaningless."},
 ]
 
-# Market context shown in the homepage strip.
-#
-# spx, ndx, vix, brent and rf are OVERWRITTEN each run from market.json, which
-# fetch_history.py produces. The values below are only the fallback for when
-# that fetch fails or hasn't run yet.
-#
-# fedfunds is genuinely manual: it's a policy rate the Fed sets at its meetings,
-# not something that trades, so there's no price to look up. Update it yourself
-# after an FOMC decision (roughly eight times a year).
+# Homepage strip. Everything shown there is computed from our own model by
+# coverage_stats() below, so there is no external data feed to break. The only
+# stored value is the date, and that gets restamped from prices.json each run.
 META = {
-    "asof": "22 July 2026",
-    "rf": 4.63,
-    "fedfunds": "3.50–3.75%",
-    "brent": 89.9,
-    "spx": 7443,
-    "ndx": 25508,
-    "vix": 18.7,
+    "asof": "22 July 2026",   # overwritten from prices.json when prices update
 }
 
 
-def apply_market(meta):
-    """Overlay live index levels from market.json onto the homepage figures."""
-    path = os.path.join(HERE, "market.json")
+def coverage_stats(companies, sectors):
+    """Headline figures for the homepage strip, all from our own model.
+
+    Deliberately self-contained: no external market feed, nothing to break,
+    and it says something about this library rather than repeating the index
+    levels every finance site already shows.
+    """
+    ups = sorted(c["upside"] for c in companies)
+    mid = len(ups) // 2
+    median_up = ups[mid] if len(ups) % 2 else (ups[mid - 1] + ups[mid]) / 2
+    buys = sum(1 for c in companies if c["rating"] in ("Strong Buy", "Buy"))
+    sells = sum(1 for c in companies if c["rating"] in ("Sell", "Reduce"))
+    return {
+        "n_companies": len(companies),
+        "n_sectors": len(sectors),
+        "total_mcap": round(sum(c["mcap"] for c in companies) / 1000, 1),
+        "median_upside": round(median_up, 4),
+        "n_buy": buys,
+        "n_sell": sells,
+    }
+
+
+def stamp_date(meta):
+    """Set the homepage date from when prices were last fetched."""
     try:
-        with open(path) as f:
-            m = json.load(f)
+        with open(os.path.join(HERE, "prices.json")) as f:
+            iso = json.load(f).get("_fetched_at", "")[:10]
     except (FileNotFoundError, json.JSONDecodeError):
-        print("No market.json — homepage figures use their stored values.")
         return
-
-    applied = []
-    for key in ("spx", "ndx", "vix", "brent", "rf"):
-        v = m.get(key)
-        if isinstance(v, (int, float)) and v > 0:
-            meta[key] = v
-            applied.append(key)
-
-    # Restamp the "Data as of" line from the freshest series, e.g. 2026-07-24
-    # becomes "24 July 2026" to match the existing wording.
-    iso = m.get("asof_iso")
-    if isinstance(iso, str) and len(iso) == 10:
-        try:
-            y, mo, d = iso.split("-")
-            months = ["January", "February", "March", "April", "May", "June", "July",
-                      "August", "September", "October", "November", "December"]
-            meta["asof"] = f"{int(d)} {months[int(mo) - 1]} {y}"
-        except (ValueError, IndexError):
-            pass
-
-    if applied:
-        print(f"Applied live market levels: {', '.join(applied)} (as of {meta['asof']})")
+    if len(iso) != 10:
+        return
+    try:
+        y, mo, d = iso.split("-")
+        months = ["January", "February", "March", "April", "May", "June", "July",
+                  "August", "September", "October", "November", "December"]
+        meta["asof"] = f"{int(d)} {months[int(mo) - 1]} {y}"
+        print(f"Homepage dated {meta['asof']} from prices.json")
+    except (ValueError, IndexError):
+        pass
 
 
 def load_companies():
@@ -116,8 +115,10 @@ def load_companies():
     from companies.consumer import CONSUMER
     from companies.energy_industrials import ENERGY, INDUSTRIALS
     from companies.autos_global_frontier import AUTOS, GLOBAL, FRONTIER
+    from companies.expansion import EXPANSION
+    from companies.expansion2 import EXPANSION2
     return (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
-            + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER)
+            + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2)
 
 
 def apply_live_prices(companies):
@@ -138,6 +139,43 @@ def apply_live_prices(companies):
     fetched = prices.get("_fetched_at", "unknown time")
     print(f"Applied {n} live prices (fetched {fetched})")
     return fetched
+
+
+def apply_fundamentals(companies):
+    """Overlay real revenue, share count and net debt from fundamentals.json.
+
+    These were originally hand-written estimates. Anything the feed provides
+    replaces them; anything it does not provide keeps the existing value, so a
+    partial fetch degrades gracefully rather than leaving holes.
+    """
+    path = os.path.join(HERE, "fundamentals.json")
+    try:
+        with open(path) as f:
+            fund = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print("No fundamentals.json — using the figures in companies/*.py")
+        return
+
+    applied = {"rev": 0, "shares": 0, "netdebt": 0}
+    for c in companies:
+        got = fund.get(c["t"])
+        if not isinstance(got, dict):
+            continue
+        for field in ("rev", "shares", "netdebt"):
+            v = got.get(field)
+            if not isinstance(v, (int, float)):
+                continue
+            # revenue and share count must be positive; net debt may be
+            # negative, which simply means the company holds net cash
+            if field in ("rev", "shares") and v <= 0:
+                continue
+            c[field] = float(v)
+            applied[field] += 1
+
+    stamp = fund.get("_fetched_at", "unknown")[:10]
+    print(f"Applied fundamentals from {stamp}: "
+          f"{applied['rev']} revenue, {applied['shares']} share counts, "
+          f"{applied['netdebt']} net debt figures")
 
 
 def validate(companies):
@@ -185,9 +223,10 @@ def main():
             print(f"  - {e}")
         return 1
 
+    apply_fundamentals(companies)
     apply_live_prices(companies)
     meta = dict(META)
-    apply_market(meta)
+    stamp_date(meta)
 
     out = [build(c) for c in companies]
 
@@ -236,6 +275,7 @@ def main():
                 else:
                     p["pctl"][metric] = 50
 
+    meta.update(coverage_stats(out, sectors))
     data = {"sectors": sectors, "companies": out, "meta": meta}
 
     docs = os.path.join(HERE, "docs")

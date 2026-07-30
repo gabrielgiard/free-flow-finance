@@ -584,6 +584,21 @@ function viewMethodology() {
         </div>
       </div>
       <div style="margin-top:50px;">
+        <h2 style="font-size:22px;margin-bottom:14px;">Market context</h2>
+        <p style="max-width:720px;font-size:14px;margin-bottom:22px;">Valuations do not sit in a vacuum. This is the environment these models were built in, updated as it changes.</p>
+        <div class="card">
+          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">As of late July 2026</div>
+          <ul class="bullets cat">
+            <li><strong style="color:var(--text)">Rates are not falling.</strong> The Federal Reserve, now chaired by Kevin Warsh, has held its target range at 3.50&ndash;3.75%, and markets have been pricing in the possibility of a <em style="color:var(--gold-soft);font-style:normal">hike</em> rather than cuts. Every discount rate in this library assumes a cost of capital consistent with that, not with the era of near-zero rates.</li>
+            <li><strong style="color:var(--text)">The AI capital cycle is being questioned for the first time.</strong> Hyperscalers are on course to spend somewhere between $600bn and $700bn on AI infrastructure in 2026, up sharply on last year. In July, semiconductor stocks fell hard &mdash; more than a trillion dollars of sector value &mdash; not because demand disappointed, but because investors began asking what return that spending will earn. Alphabet fell around 7% in a week after <em style="color:var(--gold-soft);font-style:normal">raising</em> its capex guidance.</li>
+            <li><strong style="color:var(--text)">Money is rotating from chipmakers to the companies paying them.</strong> The trade for two years was to own semiconductors on the assumption that cloud spending kept accelerating. Some investors are now doing the opposite &mdash; buying the hyperscalers footing the bill, plus software, financials and healthcare.</li>
+            <li><strong style="color:var(--text)">Energy is a geopolitical variable again.</strong> Middle East tensions have moved oil prices sharply in both directions this year, which feeds directly into inflation expectations and therefore into rate policy.</li>
+          </ul>
+          <p style="font-size:12px;color:var(--text-dim);margin:16px 0 0;">Worth saying plainly: this library rated much of the AI complex Reduce or Sell before that selloff, on the basis of cash flows rather than a market call. That is the model working as intended, not a forecast &mdash; and it would have looked equally wrong for a long stretch beforehand.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:50px;">
         <h2 style="font-size:22px;margin-bottom:20px;">Frequently asked questions</h2>
         <div class="faq-list">${faqHTML}</div>
       </div>

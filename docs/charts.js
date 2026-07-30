@@ -232,7 +232,7 @@ function hasHistory(key) {
   return typeof FF_HISTORY !== 'undefined'
     && FF_HISTORY[key]
     && Array.isArray(FF_HISTORY[key].c)
-    && FF_HISTORY[key].c.length > 2;
+    && FF_HISTORY[key].c.length >= 1;
 }
 
 function historyEmptyState(key) {
@@ -240,10 +240,8 @@ function historyEmptyState(key) {
   // fault; "1 of 3 days recorded" reads like a system that's working.
   const days = (typeof FF_HISTORY !== 'undefined' && FF_HISTORY[key]
                 && Array.isArray(FF_HISTORY[key].c)) ? FF_HISTORY[key].c.length : 0;
-  const detail = days === 0
-    ? `No closing prices recorded yet. The first one arrives the next time your daily update runs.`
-    : `<b style="color:var(--lilac)">${days} of 3</b> daily closing prices recorded so far —
-       a chart needs at least three points before it can draw a line.`;
+  const detail = `No closing prices recorded yet. The first one arrives the next
+       time your daily update runs, and the chart appears with it.`;
   return `<div style="border:1px dashed var(--line);border-radius:var(--radius);
       padding:26px 24px;text-align:center;color:var(--text-dim);font-size:12.5px;line-height:1.7">
       <div style="color:var(--text-muted);margin-bottom:6px">Price chart is building up.</div>
@@ -255,7 +253,8 @@ function historyEmptyState(key) {
 /* Shown once a chart has real points but not yet a meaningful span. */
 function historyThinNote(n) {
   return `<p style="font-size:11px;color:var(--text-dim);margin-top:8px">
-    ${n} days recorded so far — the chart fills out as the daily update keeps running.</p>`;
+    ${n === 1 ? 'One daily close recorded' : n + ' daily closes recorded'} so far —
+    the chart fills out as the daily update keeps running.</p>`;
 }
 
 /* Main company chart: 12 months of closes with the fair value overlaid. */
@@ -275,11 +274,19 @@ function priceChartSVG(key, fv, price, h = 240) {
   const pad = (hi - lo) * 0.12 || hi * 0.1 || 1;
   lo -= pad; hi += pad;
 
-  const X = i => padL + (i / (closes.length - 1)) * (w - padL - padR);
+  const span = closes.length - 1;
+  const X = i => span === 0
+    ? (w - padR)                                        // single point: pin to "now"
+    : padL + (i / span) * (w - padL - padR);
   const Y = v => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB);
 
   const line = closes.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
-  const area = line + ` L${X(closes.length - 1).toFixed(1)},${h - padB} L${padL},${h - padB} Z`;
+  const area = span === 0 ? '' : line + ` L${X(span).toFixed(1)},${h - padB} L${padL},${h - padB} Z`;
+  // With only a handful of points, mark each one so it reads as recorded data
+  // rather than a suspiciously straight line.
+  const dots = closes.length <= 8
+    ? closes.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.6" fill="#b9a3f5" opacity=".85"/>`).join('')
+    : '';
 
   const first = closes[0], last = closes[closes.length - 1];
   const chg = (last / first - 1);
@@ -294,8 +301,8 @@ function priceChartSVG(key, fv, price, h = 240) {
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim)">
         Share price · ${s.from} to ${s.to}
       </div>
-      <div class="mono" style="font-size:12.5px;color:${chgColor}">
-        ${FMT.pct(chg)} over period
+      <div class="mono" style="font-size:12.5px;color:${span === 0 ? 'var(--text-dim)' : chgColor}">
+        ${span === 0 ? 'first close recorded' : FMT.pct(chg) + ' over period'}
       </div>
     </div>
     <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Share price from ${s.from} to ${s.to}. Latest close ${FMT.usd(last,0)}${showFV ? `, against a fair value of ${FMT.usd(fv,0)}` : ''}. Change over the period ${FMT.pct(chg)}." style="width:100%;height:${h}px;display:block">
@@ -305,21 +312,22 @@ function priceChartSVG(key, fv, price, h = 240) {
           <stop offset="100%" stop-color="#6d3fc0" stop-opacity="0"/>
         </linearGradient>
       </defs>
-      <path d="${area}" fill="url(#${uid})"/>
-      <path d="${line}" fill="none" stroke="#b9a3f5" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+      ${area ? `<path d="${area}" fill="url(#${uid})"/>` : ''}
+      ${span === 0 ? '' : `<path d="${line}" fill="none" stroke="#b9a3f5" stroke-width="1.8" vector-effect="non-scaling-stroke"/>`}
+      ${dots}
       ${showFV ? `
         <line x1="${padL}" y1="${fvY.toFixed(1)}" x2="${(w - padR).toFixed(1)}" y2="${fvY.toFixed(1)}"
               stroke="#c9a227" stroke-width="1.3" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
         <text x="${w - padR + 6}" y="${(fvY + 3.5).toFixed(1)}" fill="#e4c97a"
               font-family="IBM Plex Mono, monospace" font-size="11">FV ${FMT.usd(fv, 0)}</text>` : ''}
-      <circle cx="${X(closes.length - 1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3.5" fill="#b9a3f5"/>
+      <circle cx="${X(span).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3.5" fill="#b9a3f5"/>
       <text x="${w - padR + 6}" y="${(Y(last) + 3.5).toFixed(1)}" fill="#f1eef8"
             font-family="IBM Plex Mono, monospace" font-size="11">${FMT.usd(last, 0)}</text>
     </svg>
     ${showFV ? '' : `<p style="font-size:11px;color:var(--text-dim);margin-top:8px">
       Fair value of ${fvStr(fv)} sits too far outside the traded range to plot on the same axis —
       the gap itself is the finding. See the DCF tab.</p>`}
-    ${closes.length < 20 ? historyThinNote(closes.length) : ''}
+    ${closes.length < 8 ? historyThinNote(closes.length) : ''}
   </div>`;
 }
 
@@ -329,7 +337,7 @@ function marketSparkSVG(key, w = 120, h = 30) {
   const closes = FF_HISTORY[key].c.slice(-90);
   const lo = Math.min(...closes), hi = Math.max(...closes);
   const span = (hi - lo) || 1;
-  const X = i => (i / (closes.length - 1)) * w;
+  const X = i => closes.length === 1 ? w / 2 : (i / (closes.length - 1)) * w;
   const Y = v => h - 2 - ((v - lo) / span) * (h - 5);
   const d = closes.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
   const up = closes[closes.length - 1] >= closes[0];
@@ -351,6 +359,7 @@ const SECTOR_ICONS = {
   industrials: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>`,
   autos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 16l1.5-5A2 2 0 017.4 9.5h9.2A2 2 0 0118.5 11L20 16"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/></svg>`,
   global: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 4 5.8 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.8-4-9s1.5-6.5 4-9z"/></svg>`,
+  telecom: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v11"/><circle cx="12" cy="17" r="3"/><path d="M7.5 7a6 6 0 019 0M4.8 4.2a10 10 0 0114.4 0"/></svg>`,
   frontier: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2c2 2.5 3 6 3 10l-3 3-3-3c0-4 1-7.5 3-10z"/><path d="M9 15l-3 3 1 3 3-1M15 15l3 3-1 3-3-1"/><circle cx="12" cy="10" r="1.3"/></svg>`,
 };
 

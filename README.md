@@ -171,6 +171,26 @@ Run `python fetch_history.py --test` to check whether Stooq still responds.
 
 ## What updates automatically, and what doesn't
 
+**Every weekday:**
+- All share prices (Finnhub)
+- Every rating and upside percentage, since those derive from price
+
+**Every Monday, and on any manual run:**
+- Revenue, share count and net debt for all 200 companies (`fetch_fundamentals.py`)
+
+Run `python fetch_fundamentals.py --dry-run` before trusting it. That prints
+every figure the feed disagrees with by more than 5x and would refuse to apply,
+which is the fastest way to spot a units problem or a bad response.
+
+**Manual, by design:**
+- **Growth rates, margins, WACC, terminal growth.** These are your analysis.
+  They should change when you revisit a company, not when a feed updates. Fair
+  values are meant to be stable; only price should move day to day.
+- **Everything written in prose** — the thesis, risks, catalysts and street
+  view. No feed can write those.
+
+
+
 **Automatic, every run:**
 
 - All 100 share prices (Finnhub)
