@@ -12,7 +12,7 @@ C("AAPL", "Apple Inc.", "consumer", "Cupertino, California, USA", 1976,
   ["Apple Intelligence has lagged competitors, and the perception that Apple is behind on AI has been a persistent overhang.",
    "The Google search default payment is a significant share of Services profit and is directly threatened by antitrust remedies.",
    "China is both a large market and the manufacturing base, which makes tariff and geopolitical risk two-sided."],
-  "The most widely owned stock in the world and correspondingly well covered. The live debate is whether the AI gap matters commercially or whether the installed base makes Apple a fast follower with no penalty.",
+  "The most widely owned stock in the world and correspondingly well covered. On 27 July 2026 Apple reclaimed the title of most valuable company from NVIDIA — notably on capital discipline rather than AI spending, at the same moment the market began punishing heavy capex elsewhere. The live debate is whether the AI gap matters commercially or whether the installed base makes Apple a fast follower with no penalty.",
   "iPhone upgrade cycle, Services growth rate, Google default ruling, Apple Intelligence rollout.",
   (5, 2, 5, 5)),
 

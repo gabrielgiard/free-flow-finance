@@ -97,8 +97,8 @@ function viewHome() {
     <div class="wrap">
       <div class="hero-inner">
         <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
-        <h1>One model. <em>100</em> companies. Every fair value built the same way.</h1>
-        <p class="lede">A discounted cash flow, comparable-company set, investment thesis and target price for 100 of the world's largest and most-talked-about public companies — built with a single consistent methodology so you can actually compare them, not just read about them.</p>
+        <h1>One model. <em>${cov.n}</em> companies. Every fair value built the same way.</h1>
+        <p class="lede">A discounted cash flow, comparable-company set, investment thesis and target price for ${cov.n} of the world's largest and most-talked-about public companies — built with a single consistent methodology so you can actually compare them, not just read about them.</p>
         <div class="hero-cta">
           <button class="btn btn-violet" data-route="sector" data-key="semis">${ICN.arrow.replace('currentColor','#fff')} Explore the coverage</button>
           <button class="btn btn-ghost" data-route="methodology">How the model works</button>
@@ -119,7 +119,7 @@ function viewHome() {
   <section>
     <div class="wrap">
       <div class="section-head">
-        <div><h2>Coverage by sector</h2><p class="sub">Ten sectors, from AI silicon to frontier technology. Each card links to the full sortable list and every company inside has its own research page.</p></div>
+        <div><h2>Coverage by sector</h2><p class="sub">${cov.sectors} sectors, from AI silicon to frontier technology. Each card links to the full sortable list and every company inside has its own research page.</p></div>
       </div>
       <div class="sector-grid">${sectorCards}</div>
     </div>
@@ -129,7 +129,7 @@ function viewHome() {
     <div class="wrap">
       <div class="section-head">
         <div><h2>Where the model sees the most upside</h2><p class="sub">Ranked by upside to our discounted cash flow fair value versus the current share price.</p></div>
-        <span class="section-link" data-route="screener">Screen all 100 companies ${ICN.arrow}</span>
+        <span class="section-link" data-route="screener">Screen all ${cov.n} companies ${ICN.arrow}</span>
       </div>
       <div class="two-col" style="grid-template-columns: 1fr 1fr;">
         <div class="table-wrap">
@@ -504,7 +504,7 @@ function viewAbout() {
           <h4>The Story</h4>
           <p>It started at Christmas in 2022, with a couple of stocks unwrapped without much fanfare. Most people would have let them sit in a brokerage account. Instead they turned into the question that built this entire site: what makes a company actually worth what the market says it's worth?</p>
           <p>Since then I've taken every finance, economics and sociology class my high school offers, and gone looking well beyond the classroom — including Yale's Financial Markets course on Coursera, taught by Nobel laureate Robert Shiller, which is where a lot of the thinking behind the discounted cash flow model on this site was sharpened.</p>
-          <p>FreeFlow Finance is the result: a self-built equity research shop covering 100 companies, using the same rigor I'd want to apply if I were a junior analyst at a bank, explained clearly enough that a friend with zero finance background could open any page and actually follow it.</p>
+          <p>FreeFlow Finance is the result: a self-built equity research shop covering ${FF_DATA.companies.length} companies, using the same rigor I'd want to apply if I were a junior analyst at a bank, explained clearly enough that a friend with zero finance background could open any page and actually follow it.</p>
           <h4>Why "FreeFlow"</h4>
           <p>Free cash flow is the number at the center of almost every serious valuation — what's left over after a business pays for everything it needs to keep running and growing. The name is a small nod to that idea, and to the goal of making financial analysis flow more freely to anyone curious enough to look.</p>
         </div>
@@ -564,7 +564,7 @@ function viewMethodology() {
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Methodology' })}
       <div class="eyebrow">Methodology</div>
       <h1 style="font-size:36px;max-width:680px;">How every fair value on this site gets built.</h1>
-      <p style="max-width:600px;font-size:15px;">The same six-step process, applied identically whether the company is a 150-year-old oil major or a rocket company that IPO'd five weeks ago. Consistency is the entire point — it's what makes 100 companies actually comparable.</p>
+      <p style="max-width:600px;font-size:15px;">The same six-step process, applied identically whether the company is a 150-year-old oil major or a rocket company that IPO'd five weeks ago. Consistency is the entire point — it's what makes ${FF_DATA.companies.length} companies actually comparable.</p>
     </div>
   </section>
   <section style="padding-top:10px;">
@@ -592,6 +592,7 @@ function viewMethodology() {
             <li><strong style="color:var(--text)">Rates are not falling.</strong> The Federal Reserve, now chaired by Kevin Warsh, has held its target range at 3.50&ndash;3.75%, and markets have been pricing in the possibility of a <em style="color:var(--gold-soft);font-style:normal">hike</em> rather than cuts. Every discount rate in this library assumes a cost of capital consistent with that, not with the era of near-zero rates.</li>
             <li><strong style="color:var(--text)">The AI capital cycle is being questioned for the first time.</strong> Hyperscalers are on course to spend somewhere between $600bn and $700bn on AI infrastructure in 2026, up sharply on last year. In July, semiconductor stocks fell hard &mdash; more than a trillion dollars of sector value &mdash; not because demand disappointed, but because investors began asking what return that spending will earn. Alphabet fell around 7% in a week after <em style="color:var(--gold-soft);font-style:normal">raising</em> its capex guidance.</li>
             <li><strong style="color:var(--text)">Money is rotating from chipmakers to the companies paying them.</strong> The trade for two years was to own semiconductors on the assumption that cloud spending kept accelerating. Some investors are now doing the opposite &mdash; buying the hyperscalers footing the bill, plus software, financials and healthcare.</li>
+            <li><strong style="color:var(--text)">Earnings week put a price on discipline.</strong> On 27 July 2026 Apple reclaimed the title of most valuable company from NVIDIA, on capital restraint rather than AI spending. Two days later Meta beat on revenue &mdash; up 27% to $60.8bn &mdash; and the shares still fell, because earnings per share grew barely 1% while 2026 capex guidance rose again to $125&ndash;145bn. Amazon passed $200bn of quarterly revenue for the first time with AWS growing 37%, and raised its capital plan to roughly $220bn. The pattern across the week was consistent: revenue growth is no longer enough on its own if the spending required to produce it keeps climbing faster.</li>
             <li><strong style="color:var(--text)">Energy is a geopolitical variable again.</strong> Middle East tensions have moved oil prices sharply in both directions this year, which feeds directly into inflation expectations and therefore into rate policy.</li>
           </ul>
           <p style="font-size:12px;color:var(--text-dim);margin:16px 0 0;">Worth saying plainly: this library rated much of the AI complex Reduce or Sell before that selloff, on the basis of cash flows rather than a market call. That is the model working as intended, not a forecast &mdash; and it would have looked equally wrong for a long stretch beforehand.</p>
@@ -703,7 +704,7 @@ function viewScreener() {
     <div class="wrap">
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Screener' })}
       <div class="eyebrow">Stock Screener</div>
-      <h1 style="font-size:32px;max-width:680px;">Filter all 100 companies on the model's own output.</h1>
+      <h1 style="font-size:32px;max-width:680px;">Filter all ${FF_DATA.companies.length} companies on the model's own output.</h1>
       <p style="max-width:600px;font-size:14.5px;">Every number here comes from the same DCF, so the comparisons hold. Combine filters to find, say, every net-cash company trading below 5x sales with upside to fair value.</p>
     </div>
   </section>

@@ -122,7 +122,7 @@ EXPANSION = [
       (4, 2, 3, 4)),
 
     C("INTU", "Intuit Inc.", "software", "Mountain View, California, USA", 1983,
-      "Sasan Goodarzi", "Nasdaq", 660.00, 0.28, 3.0, 17.5,
+      "Sasan Goodarzi", "Nasdaq", 333.13, 0.56, 3.0, 17.5,
       [0.13, 0.12, 0.11, 0.10, 0.09], 0.30, 0.34, 0.090, 0.028,
       "Founded in 1983 by Scott Cook and Tom Proulx to make personal finance software. Sasan Goodarzi has been CEO since 2019. Intuit owns TurboTax and QuickBooks, giving it dominant positions in US consumer tax filing and small business accounting, plus Credit Karma and Mailchimp. The businesses are unusually defensible: switching accounting software mid-year is painful, and tax filing is an annual habit reinforced by having last year's return already stored.",
       [("Small Business & Self-Employed", 58), ("Consumer (TurboTax)", 27), ("Credit Karma", 9), ("ProTax", 6)],

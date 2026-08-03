@@ -12,7 +12,7 @@ C("NVDA", "NVIDIA Corporation", "semis", "Santa Clara, California, USA", 1993,
   ["Customer concentration is extreme — a handful of hyperscalers drive most of the revenue, and they are all designing their own chips.",
    "Meta's July 2026 disclosure that it holds surplus AI capacity — enough to resell to outside customers — rattled the sector on fears that hyperscaler capex may be overbuilding ahead of demand; Nvidia itself fell only modestly since Meta's new cloud business still runs on Nvidia chips, but the shift away from a pure scarcity narrative is a real re-rating risk.",
    "The whole thesis assumes AI capex keeps compounding; if enterprises fail to earn a return on it, orders can stop very suddenly."],
-  "Consensus stayed firmly bullish through the July 2026 semiconductor drawdown, with the argument centred on backlog visibility rather than quarterly beats. The bear case is not about demand today but about the durability of a capex cycle already running at record levels.",
+  "Consensus stayed firmly bullish through the July 2026 semiconductor drawdown, with the argument centred on backlog visibility rather than quarterly beats. NVIDIA lost the most-valuable-company title to Apple on 27 July 2026, a symbolic marker of the market beginning to prefer capital discipline to AI ambition. The bear case is not about demand today but about the durability of a capex cycle already running at record levels.",
   "Rubin platform ramp, quarterly data-centre revenue and gross margin trajectory, hyperscaler capex guidance.",
   (5, 5, 5, 5)),
 

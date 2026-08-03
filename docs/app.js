@@ -335,6 +335,17 @@ window.addEventListener('scroll', () => {
 backTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 /* ---------------------------------- boot -------------------------------------- */
+// Any visible count comes from the data, never a hardcoded number.
+(function labelCounts() {
+  const n = FF_DATA.companies.length;
+  const search = document.getElementById('search-input');
+  if (search) search.placeholder = `Search ${n} companies…`;
+  const foot = document.getElementById('footer-count');
+  if (foot) foot.textContent =
+    `An independent, educational equity research library covering ${n} global ` +
+    `companies — one consistent DCF model, built and maintained by a high school student.`;
+})();
+
 buildSectorMenu();
 buildSidebar();
 markDecorativeSvgs();   // header, sidebar and footer icons on first paint

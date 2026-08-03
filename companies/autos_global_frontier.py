@@ -291,7 +291,7 @@ C("IONQ", "IonQ, Inc.", "frontier", "College Park, Maryland, USA", 2015,
   (2, 5, 1, 3)),
 
 C("MSTR", "Strategy Inc. (MicroStrategy)", "frontier", "Tysons Corner, Virginia, USA", 1989,
-  "Phong Le", "Nasdaq", 210.00, 0.30, 8.0, 0.48,
+  "Phong Le", "Nasdaq", 93.33, 0.30, 8.0, 0.48,
   [0.05, 0.05, 0.05, 0.05, 0.05], 0.05, 0.10, 0.160, 0.025,
   "Founded in 1989 by Michael Saylor as a business intelligence software company. Phong Le is CEO; Saylor is executive chairman and drives strategy. Since 2020 the company has pursued an explicit treasury policy of acquiring and holding bitcoin, funded through convertible notes, preferred stock and at-the-market equity issuance. It renamed itself Strategy in 2025. The original enterprise analytics software business still exists and generates modest revenue, but the share price behaves almost entirely as a leveraged claim on bitcoin rather than as a software equity.",
   [("Bitcoin treasury (balance sheet)", 0), ("Enterprise analytics software", 100)],

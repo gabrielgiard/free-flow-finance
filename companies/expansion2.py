@@ -80,7 +80,7 @@ EXPANSION2 = [
 
     # ===================== SOFTWARE & INTERNET =====================
     C("SNOW", "Snowflake Inc.", "software", "Bozeman, Montana, USA", 2012,
-      "Sridhar Ramaswamy", "NYSE", 230.00, 0.33, -4.0, 4.0,
+      "Sridhar Ramaswamy", "NYSE", 282.9, 0.33, -4.0, 4.0,
       [0.26, 0.23, 0.19, 0.16, 0.13], 0.12, 0.24, 0.110, 0.032,
       "Founded in 2012 by two former Oracle engineers, Benoit Dageville and Thierry Cruanes. Sridhar Ramaswamy, previously head of Google's advertising business, became CEO in 2024. Snowflake sells a cloud data platform that separates storage from compute, letting customers scale each independently and pay only for what they use. That consumption model means revenue tracks customer usage directly rather than seats, which cuts both ways.",
       [("Product Revenue", 95), ("Professional Services", 5)],
