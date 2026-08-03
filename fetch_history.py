@@ -1,33 +1,28 @@
 """Build price history for the charts, and write docs/history.js.
 
-Two sources, deliberately, so the charts don't depend on any one of them:
+Backfills roughly a year of daily closes per company from Twelve Data, then
+tops up with today's close on every subsequent run.
 
-  1. ACCUMULATE from prices.json. Every time the daily job runs, today's close
-     gets appended. This is the reliable path — it uses the same free Finnhub
-     quotes that already power the site, so if it works, charts work. It just
-     starts empty and fills out a day at a time.
+Why Twelve Data: the two obvious free sources both failed from inside GitHub
+Actions. Stooq stopped serving its CSV endpoint entirely and now returns "no
+data" for every symbol. FRED times out -- it appears to refuse datacentre
+traffic. Finnhub covers quotes on the free tier but puts historical candles
+behind a paid plan. Twelve Data's /time_series is on the free tier at one
+credit per symbol, 800 credits a day, comfortably more than the ~200 needed.
 
-  2. BACKFILL from Stooq (stooq.com). Free, no API key, and if it works you get
-     a year of history instantly instead of waiting for it to accumulate.
-     Treat this as a bonus, not a dependency: Stooq has no official API, the
-     CSV endpoint is undocumented, and they have started offering an apikey
-     parameter, so it may stop working without notice. Nothing breaks if it
-     does — the accumulator keeps going.
+The rate limit is 8 calls a minute, so a full backfill takes about half an
+hour. That happens ONCE. Afterwards every series already has deep history and
+gets skipped, so the daily run costs no credits and finishes in seconds.
 
-Why not Finnhub for history: their /stock/candle endpoint was moved to the
-premium tiers and returns 403 on a free key. Quotes are free, candles are not.
+    python fetch_history.py               # backfill anything missing, then top up
+    python fetch_history.py --test        # check three symbols and exit
+    python fetch_history.py --limit 20    # backfill at most 20 series
+    python fetch_history.py --no-backfill # today's close only, no API calls
 
-Run:
-    python fetch_history.py            # try backfill, then accumulate
-    python fetch_history.py --test     # check 3 Stooq symbols and exit
-    python fetch_history.py --no-backfill   # accumulate only, skip Stooq
-
-Output: docs/history.js -- a separate file from data.js on purpose, so that
-if history is missing or stale the rest of the site still works normally.
+Set TWELVEDATA_API_KEY as a repository secret. Without it this still runs --
+it just skips the backfill and appends today's close, as before.
 """
 
-import csv
-import io
 import json
 import os
 import sys
@@ -40,73 +35,62 @@ sys.path.insert(0, HERE)
 
 from build import load_companies  # noqa: E402
 
-STOOQ = "https://stooq.com/q/d/l/?s={}&i=d"
+TS = ("https://api.twelvedata.com/time_series"
+      "?symbol={}&interval=1day&outputsize={}&apikey={}")
+
 MAX_POINTS = 260          # about one trading year
-REQUEST_PAUSE = 0.4       # be polite to a free public service
+PAUSE = 8.0               # free tier allows 8 calls/minute; 8s stays inside it
+BACKFILL_IF_UNDER = 200   # already has this many points? leave it alone
 HISTORY_PATH = os.path.join(HERE, "docs", "history.js")
 
-# Tickers whose Stooq symbol differs from "<ticker>.us".
-STOOQ_OVERRIDES = {
-    "BRK.B": "brk-b.us",
-}
+# Market context series for the homepage sparklines.
+MARKET = {"SPY": "S&P 500 ETF", "QQQ": "Nasdaq 100 ETF",
+          "GLD": "Gold ETF", "BNO": "Brent Oil ETF"}
 
-# Not on Stooq's US list (foreign primary listings). Their charts will build
-# up from the accumulator instead, or stay empty if they're also in the
-# fetch_prices SKIP list.
-STOOQ_SKIP = {"MC", "OR", "NESN", "SIE", "005930", "RELIANCE"}
+# Foreign primaries the free tier may not cover. These accumulate one point a
+# day from prices.json instead.
+SKIP = {"MC", "OR", "NESN", "SIE", "005930", "RELIANCE", "TCEHY", "BYDDY"}
 
 
-def stooq_symbol(ticker):
-    if ticker in STOOQ_OVERRIDES:
-        return STOOQ_OVERRIDES[ticker]
-    return ticker.lower() + ".us"
-
-
-def fetch_stooq(symbol):
-    """Return (dates, closes) from Stooq, or (None, None) on any failure.
-
-    Stooq returns CSV: Date,Open,High,Low,Close,Volume
-    A symbol it doesn't know returns a body containing 'No data'.
-    """
-    url = STOOQ.format(symbol)
-    req = urllib.request.Request(url, headers={"User-Agent": "freeflow-finance/1.0"})
+def fetch_series(symbol, key, points=MAX_POINTS):
+    """Return (dates, closes) oldest-first, or (None, reason)."""
     try:
-        with urllib.request.urlopen(req, timeout=20) as r:
-            body = r.read().decode("utf-8", errors="replace")
+        with urllib.request.urlopen(TS.format(symbol, points, key), timeout=30) as r:
+            data = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
         return None, f"HTTP {e.code}"
     except Exception as e:
-        return None, f"{type(e).__name__}"
+        return None, type(e).__name__
 
-    if "No data" in body or "Date" not in body[:200]:
-        return None, "no data for symbol"
+    if isinstance(data, dict) and data.get("status") == "error":
+        return None, str(data.get("message", "error"))[:70]
+
+    values = data.get("values")
+    if not isinstance(values, list) or not values:
+        return None, "no values returned"
 
     dates, closes = [], []
-    try:
-        for row in csv.DictReader(io.StringIO(body)):
-            close = row.get("Close")
-            date = row.get("Date")
-            if not close or not date or close in ("N/A", "-"):
-                continue
-            try:
-                closes.append(round(float(close), 2))
-                dates.append(date)
-            except ValueError:
-                continue
-    except Exception as e:
-        return None, f"parse error {type(e).__name__}"
+    for row in reversed(values):          # API returns newest first
+        d, c = row.get("datetime"), row.get("close")
+        if not d or c in (None, ""):
+            continue
+        try:
+            v = float(c)
+        except (TypeError, ValueError):
+            continue
+        if v <= 0:
+            continue
+        dates.append(d[:10])
+        closes.append(round(v, 2))
 
-    if len(closes) < 10:
-        return None, f"only {len(closes)} points"
-
-    return (dates[-MAX_POINTS:], closes[-MAX_POINTS:]), None
+    if len(closes) < 5:
+        return None, f"only {len(closes)} usable points"
+    return (dates, closes), None
 
 
 def load_history():
-    """Read the existing history.js back into a dict."""
     try:
-        with open(HISTORY_PATH) as f:
-            text = f.read()
+        text = open(HISTORY_PATH).read()
     except FileNotFoundError:
         return {}
     prefix = "var FF_HISTORY = "
@@ -127,12 +111,10 @@ def save_history(hist):
 
 
 def accumulate(hist):
-    """Append today's price from prices.json to each series."""
+    """Append today's close from prices.json. Costs no API calls."""
     try:
-        with open(os.path.join(HERE, "prices.json")) as f:
-            prices = json.load(f)
+        prices = json.load(open(os.path.join(HERE, "prices.json")))
     except (FileNotFoundError, json.JSONDecodeError):
-        print("No prices.json — nothing to accumulate.")
         return 0
 
     stamp = prices.get("_fetched_at", "")[:10] or time.strftime("%Y-%m-%d")
@@ -140,84 +122,102 @@ def accumulate(hist):
     for tick, px in prices.items():
         if tick.startswith("_") or not isinstance(px, (int, float)) or px <= 0:
             continue
-        entry = hist.setdefault(tick, {"from": stamp, "to": stamp, "c": []})
-        # don't double-append if the job runs twice in one day
-        if entry.get("to") == stamp and entry["c"]:
-            continue
-        entry["c"].append(round(float(px), 2))
-        entry["c"] = entry["c"][-MAX_POINTS:]
-        entry["to"] = stamp
-        entry.setdefault("from", stamp)
+        e = hist.setdefault(tick, {"from": stamp, "to": stamp, "c": []})
+        if e.get("to") == stamp and e["c"]:
+            continue                       # already recorded today
+        e["c"] = (e["c"] + [round(float(px), 2)])[-MAX_POINTS:]
+        e["to"] = stamp
+        e.setdefault("from", stamp)
         n += 1
     return n
 
 
 def main():
     args = sys.argv[1:]
-    test_mode = "--test" in args
-    do_backfill = "--no-backfill" not in args
-
-    companies = load_companies()
+    key = os.environ.get("TWELVEDATA_API_KEY")
     hist = load_history()
 
-    if test_mode:
-        print("Testing Stooq (optional company-history backfill)...\n")
-        for sym in ["nvda.us", "aapl.us"]:
-            result, err = fetch_stooq(sym)
-            if result:
-                d, c = result
-                print(f"  OK   {sym:10s} {len(c)} points, {d[0]} to {d[-1]}")
+    if "--test" in args:
+        if not key:
+            print("TWELVEDATA_API_KEY not set — cannot test.")
+            return 0
+        print("Testing three symbols against Twelve Data...\n")
+        for sym in ["AAPL", "NVDA", "SPY"]:
+            res, err = fetch_series(sym, key, 30)
+            if res:
+                d, c = res
+                print(f"  OK   {sym:6s} {len(c)} points, {d[0]} to {d[-1]}, last {c[-1]}")
             else:
-                print(f"  FAIL {sym:10s} {err}")
-            time.sleep(REQUEST_PAUSE)
-        print("\nStooq failing is survivable: company charts build up one day")
-        print("at a time from the Finnhub prices instead.")
+                print(f"  FAIL {sym:6s} {err}")
+            time.sleep(PAUSE)
         return 0
 
-    if do_backfill:
-        targets = [(c["t"], stooq_symbol(c["t"])) for c in companies
-                   if c["t"] not in STOOQ_SKIP]
-        print(f"Backfilling {len(targets)} series from Stooq...\n")
+    limit = None
+    if "--limit" in args:
+        try:
+            limit = int(args[args.index("--limit") + 1])
+        except (IndexError, ValueError):
+            pass
 
-        ok = fail = 0
-        failures = []
-        for i, (key, sym) in enumerate(targets, 1):
-            result, err = fetch_stooq(sym)
-            if result:
-                dates, closes = result
-                hist[key] = {"from": dates[0], "to": dates[-1], "c": closes}
-                ok += 1
-                if i % 20 == 0 or i == len(targets):
-                    print(f"  {i:3d}/{len(targets)} ... {ok} ok, {fail} failed")
-            else:
-                fail += 1
-                failures.append(f"{key} ({sym}): {err}")
-            time.sleep(REQUEST_PAUSE)
+    if "--no-backfill" in args or not key:
+        if not key:
+            print("TWELVEDATA_API_KEY not set — skipping backfill, "
+                  "appending today's close only.")
+    else:
+        # Only fetch what genuinely needs it. After the first full backfill
+        # this list is empty and the step costs nothing.
+        targets = [c["t"] for c in load_companies()
+                   if c["t"] not in SKIP
+                   and len(hist.get(c["t"], {}).get("c", [])) < BACKFILL_IF_UNDER]
+        targets += [s for s in MARKET
+                    if len(hist.get(s, {}).get("c", [])) < BACKFILL_IF_UNDER]
+        if limit:
+            targets = targets[:limit]
 
-        print(f"\nBackfill complete: {ok} succeeded, {fail} failed.")
-        if failures:
-            print("\nFailed symbols (these will build up from daily prices instead):")
-            for f in failures[:15]:
-                print(f"  - {f}")
-            if len(failures) > 15:
-                print(f"  ... and {len(failures)-15} more")
-        if ok == 0:
-            print("\nStooq returned nothing (expected — it stopped serving this")
-            print("endpoint in 2026). Company charts build up one day at a time")
-            print("from the Finnhub prices instead. Nothing to fix.")
+        if not targets:
+            print("Every series already has deep history — nothing to backfill.")
+        else:
+            mins = len(targets) * PAUSE / 60
+            print(f"Backfilling {len(targets)} series (~{mins:.0f} min at "
+                  f"8 calls/minute). This only happens once.\n")
+            ok = fail = 0
+            failures = []
+            for i, sym in enumerate(targets, 1):
+                res, err = fetch_series(sym, key)
+                if res:
+                    d, c = res
+                    hist[sym] = {"from": d[0], "to": d[-1], "c": c}
+                    ok += 1
+                else:
+                    fail += 1
+                    failures.append(f"{sym}: {err}")
+                if i % 10 == 0 or i == len(targets):
+                    print(f"  {i:3d}/{len(targets)}  {ok} ok, {fail} failed")
+                    save_history(hist)     # checkpoint: a timeout loses nothing
+                time.sleep(PAUSE)
+
+            print(f"\nBackfill: {ok} succeeded, {fail} failed.")
+            if failures:
+                print("Failed (these accumulate one point a day instead):")
+                for f_ in failures[:12]:
+                    print("  - " + f_)
+                if len(failures) > 12:
+                    print(f"  ... and {len(failures) - 12} more")
 
     n = accumulate(hist)
     if n:
-        print(f"\nAppended today's close for {n} tickers.")
+        print(f"Appended today's close for {n} tickers.")
 
+    series = [k for k in hist if not k.startswith("_")]
+    deep = [k for k in series if len(hist[k].get("c", [])) >= 20]
     hist["_meta"] = {
         "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "series": len([k for k in hist if not k.startswith("_")]),
+        "series": len(series),
     }
     save_history(hist)
     size = os.path.getsize(HISTORY_PATH) / 1024
-    print(f"\nWrote {HISTORY_PATH} ({size:.0f} KB, "
-          f"{hist['_meta']['series']} series)")
+    print(f"\nWrote {HISTORY_PATH} ({size:.0f} KB)")
+    print(f"{len(series)} series stored, {len(deep)} with 20+ points.")
     return 0
 
 
