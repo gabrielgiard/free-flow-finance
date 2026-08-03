@@ -7,7 +7,7 @@
   },
   "ABBV": {
     "fcf": 15.3,
-    "netdebt": 63.47,
+    "netdebt": 55.64,
     "rev": 62.56,
     "shares": 1.7668
   },
@@ -24,9 +24,6 @@
     "shares": 1.7304
   },
   "ACN": {
-    "fcf": 8.9,
-    "netdebt": -5.02,
-    "rev": 72.66,
     "shares": 0.6119
   },
   "ADBE": {
@@ -35,11 +32,7 @@
     "rev": 24.92,
     "shares": 0.3975
   },
-  "ADI": {
-    "fcf": 5.32,
-    "netdebt": 6.25,
-    "rev": 12.65
-  },
+  "ADI": {},
   "ADSK": {
     "fcf": 1.03,
     "netdebt": -0.19,
@@ -72,14 +65,11 @@
   },
   "ANET": {
     "fcf": 7.86,
-    "netdebt": -2.79,
+    "netdebt": 2.98,
     "rev": 9.6,
     "shares": 1.2592
   },
   "APD": {
-    "fcf": 3.69,
-    "netdebt": 16.69,
-    "rev": 12.6,
     "shares": 0.2227
   },
   "APP": {
@@ -118,42 +108,25 @@
     "shares": 1.551
   },
   "BA": {
-    "fcf": -1.31,
-    "netdebt": 38.66,
-    "rev": 93.97,
     "shares": 0.7904
   },
   "BABA": {
     "fcf": 175.71,
-    "netdebt": 1687.4
+    "netdebt": 1774.14
   },
   "BAC": {
-    "fcf": 26.75,
-    "netdebt": 732.06,
-    "rev": 87.4,
     "shares": 7.018
   },
   "BHP": {
     "fcf": 29.5,
-    "netdebt": -80.81,
+    "netdebt": -77.34,
     "rev": 53.91,
     "shares": 5.0814
   },
-  "BKNG": {
-    "fcf": 120.06,
-    "netdebt": 2.39,
-    "rev": 27.02
-  },
   "BLK": {
-    "fcf": 6.36,
-    "netdebt": 2.91,
-    "rev": 27.0,
     "shares": 0.1628
   },
   "BMY": {
-    "fcf": 17.62,
-    "netdebt": 34.84,
-    "rev": 48.37,
     "shares": 2.0421
   },
   "BRK.B": {
@@ -173,9 +146,6 @@
     "shares": 1.1965
   },
   "C": {
-    "fcf": 14.87,
-    "netdebt": 813.85,
-    "rev": 68.77,
     "shares": 1.7056
   },
   "CAT": {
@@ -251,9 +221,6 @@
     "shares": 1.2183
   },
   "COST": {
-    "fcf": 8.35,
-    "netdebt": -13.28,
-    "rev": 292.97,
     "shares": 0.4435
   },
   "CRM": {
@@ -279,12 +246,6 @@
     "rev": 60.13,
     "shares": 3.9414
   },
-  "CSX": {
-    "fcf": 4.93,
-    "netdebt": 17.86,
-    "rev": 14.46,
-    "shares": 1.8525
-  },
   "CVS": {
     "fcf": 12.69,
     "netdebt": 53.57,
@@ -303,16 +264,7 @@
     "rev": 3.58,
     "shares": 0.356
   },
-  "DE": {
-    "fcf": 11.17,
-    "netdebt": 55.92,
-    "rev": 47.23,
-    "shares": 0.2699
-  },
   "DHR": {
-    "fcf": 7.69,
-    "netdebt": 22.21,
-    "rev": 24.94,
     "shares": 0.703
   },
   "DIS": {
@@ -346,9 +298,6 @@
     "shares": 0.5326
   },
   "ETN": {
-    "fcf": 3.81,
-    "netdebt": 20.56,
-    "rev": 21.44,
     "shares": 0.3883
   },
   "F": {
@@ -358,9 +307,6 @@
     "shares": 3.9876
   },
   "FCX": {
-    "fcf": 5.69,
-    "netdebt": 6.28,
-    "rev": 25.77,
     "shares": 1.4376
   },
   "FDX": {
@@ -398,15 +344,9 @@
     "rev": 6.69,
     "shares": 0.5487
   },
-  "GILD": {
-    "fcf": 8.29,
-    "netdebt": 14.55,
-    "rev": 29.44,
-    "shares": 1.2416
-  },
   "GM": {
     "fcf": 13.35,
-    "netdebt": 107.56,
+    "netdebt": 106.75,
     "rev": 178.9,
     "shares": 0.8775
   },
@@ -416,12 +356,6 @@
     "rev": 443.0,
     "shares": 12.23
   },
-  "GS": {
-    "fcf": 10.15,
-    "netdebt": 1167.0,
-    "rev": 130.63,
-    "shares": 0.295
-  },
   "HCA": {
     "fcf": 7.66,
     "netdebt": 47.08,
@@ -429,9 +363,6 @@
     "shares": 0.2165
   },
   "HD": {
-    "fcf": 18.54,
-    "netdebt": 51.91,
-    "rev": 166.78,
     "shares": 0.9971
   },
   "HON": {
@@ -439,12 +370,6 @@
     "netdebt": 25.24,
     "rev": 38.82,
     "shares": 0.3169
-  },
-  "HOOD": {
-    "fcf": -0.67,
-    "netdebt": 17.39,
-    "rev": 4.87,
-    "shares": 0.9005
   },
   "HSBC": {
     "netdebt": 414.81,
@@ -464,7 +389,7 @@
   },
   "INFY": {
     "fcf": 286.93,
-    "netdebt": -18.7,
+    "netdebt": -124.6,
     "shares": 4.0496
   },
   "INTC": {
@@ -520,12 +445,6 @@
     "netdebt": 4.24,
     "rev": 13.53
   },
-  "KO": {
-    "fcf": 11.83,
-    "netdebt": 30.64,
-    "rev": 50.01,
-    "shares": 4.3026
-  },
   "KR": {
     "fcf": 3.98,
     "netdebt": 14.12,
@@ -539,9 +458,6 @@
     "shares": 0.1863
   },
   "LIN": {
-    "fcf": 8.9,
-    "netdebt": 22.36,
-    "rev": 34.36,
     "shares": 0.4624
   },
   "LLY": {
@@ -568,23 +484,11 @@
     "rev": 23.15,
     "shares": 1.2513
   },
-  "MA": {
-    "fcf": 10.86,
-    "netdebt": 10.79,
-    "rev": 33.58,
-    "shares": 0.8836
-  },
   "MAR": {
     "fcf": 2.72,
     "netdebt": 16.08,
     "rev": 26.27,
     "shares": 0.2637
-  },
-  "MCD": {
-    "fcf": 9.94,
-    "netdebt": 38.93,
-    "rev": 27.33,
-    "shares": 0.7105
   },
   "MCHP": {
     "fcf": 3.39,
@@ -618,15 +522,9 @@
   },
   "META": {
     "fcf": 38.87,
-    "netdebt": 63.15,
+    "netdebt": 155.38,
     "rev": 225.79,
     "shares": 2.5384
-  },
-  "MMM": {
-    "fcf": -5.11,
-    "netdebt": 9.6,
-    "rev": 24.86,
-    "shares": 0.5157
   },
   "MNST": {
     "fcf": 1.51,
@@ -634,16 +532,7 @@
     "rev": 8.7,
     "shares": 0.978
   },
-  "MO": {
-    "fcf": 8.44,
-    "netdebt": 22.22,
-    "rev": 23.46,
-    "shares": 1.6699
-  },
   "MPC": {
-    "fcf": 10.89,
-    "netdebt": 30.67,
-    "rev": 136.32,
     "shares": 0.2919
   },
   "MPWR": {
@@ -714,7 +603,7 @@
   },
   "NOW": {
     "fcf": 10.65,
-    "netdebt": 5.01,
+    "netdebt": 8.79,
     "rev": 14.73,
     "shares": 1.0339
   },
@@ -737,8 +626,8 @@
   },
   "NXPI": {
     "fcf": 3.86,
-    "netdebt": 8.02,
-    "rev": 12.55,
+    "netdebt": 6.2,
+    "rev": 13.09,
     "shares": 0.2522
   },
   "ORCL": {
@@ -760,13 +649,9 @@
   },
   "PANW": {
     "fcf": 2.1,
-    "netdebt": -1.01,
+    "netdebt": 8.63,
     "rev": 10.79,
     "shares": 0.815
-  },
-  "PDD": {
-    "netdebt": 591.21,
-    "shares": 5.6936
   },
   "PEP": {
     "fcf": 11.1,
@@ -775,15 +660,9 @@
     "shares": 1.3649
   },
   "PFE": {
-    "fcf": 16.62,
-    "netdebt": 62.75,
-    "rev": 62.96,
     "shares": 5.6994
   },
   "PG": {
-    "fcf": 16.74,
-    "netdebt": 24.2,
-    "rev": 83.56,
     "shares": 2.3286
   },
   "PGR": {
@@ -806,7 +685,7 @@
   },
   "PSX": {
     "fcf": 8.63,
-    "netdebt": 21.97,
+    "netdebt": 20.68,
     "rev": 133.69,
     "shares": 0.4009
   },
@@ -869,12 +748,6 @@
     "netdebt": -2.06,
     "rev": 40.62,
     "shares": 1.2285
-  },
-  "SBUX": {
-    "fcf": 5.52,
-    "netdebt": 9.83,
-    "rev": 38.21,
-    "shares": 1.14
   },
   "SCHW": {
     "fcf": 6.27,
@@ -977,15 +850,9 @@
     "shares": 0.4542
   },
   "TJX": {
-    "fcf": 4.79,
-    "netdebt": -2.71,
-    "rev": 60.74,
     "shares": 1.1047
   },
-  "TM": {
-    "fcf": 5471.67,
-    "netdebt": 31173.64
-  },
+  "TM": {},
   "TMO": {
     "fcf": 9.0,
     "netdebt": 38.49,
@@ -1082,16 +949,7 @@
     "shares": 0.247
   },
   "WFC": {
-    "fcf": 18.76,
-    "netdebt": 466.16,
-    "rev": 65.7,
     "shares": 3.024
-  },
-  "WM": {
-    "fcf": 4.3,
-    "netdebt": 23.41,
-    "rev": 25.49,
-    "shares": 0.3997
   },
   "WMB": {
     "fcf": 4.97,
@@ -1105,23 +963,11 @@
     "rev": 721.6,
     "shares": 7.9581
   },
-  "XOM": {
-    "fcf": 61.25,
-    "netdebt": 28.54,
-    "rev": 321.58,
-    "shares": 4.1449
-  },
-  "YUM": {
-    "fcf": 1.64,
-    "netdebt": 10.4,
-    "rev": 8.38,
-    "shares": 0.2756
-  },
   "ZTS": {
     "fcf": 2.5,
-    "netdebt": 7.79,
+    "netdebt": 7.63,
     "rev": 9.44,
     "shares": 0.4192
   },
-  "_fetched_at": "2026-08-03T12:04:16Z"
+  "_fetched_at": "2026-08-03T20:53:14Z"
 }
