@@ -44,8 +44,15 @@ jobs:
       # day's close. Also writes market.json with the S&P, Nasdaq, VIX, Brent
       # and 10-year Treasury levels for the homepage. Never fails the job: if
       # the source is unreachable, the site keeps the numbers it already has.
-      - name: Update price history and market levels
-        run: python fetch_history.py || echo "History/market update failed — keeping existing data."
+      # Backfills a year of daily closes per company from Twelve Data the first
+      # few times it runs, then skips anything already deep and just appends
+      # today's close. The first full backfill takes ~20 minutes; after that
+      # this step costs no API credits and finishes in seconds.
+      # Never fails the job: if it errors, existing history stands.
+      - name: Update price history for the charts
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: python fetch_history.py || echo "History update failed — keeping existing data."
 
       # Revenue, share count and net debt. Runs weekly rather than daily --
       # fundamentals change quarterly, and this uses ~400 API calls.
