@@ -74,8 +74,13 @@ jobs:
         run: |
           git config user.name  "freeflow-bot"
           git config user.email "actions@github.com"
-          git add prices.json docs/data.js fundamentals.json || true
-          git add docs/history.js market.json || true
+          # One file per line, deliberately. "git add a b c" aborts entirely
+          # if any single path is missing, staging nothing at all — and the
+          # trailing || true hides that. This cost us weeks of stale prices.
+          for f in prices.json docs/data.js docs/history.js fundamentals.json market.json; do
+            [ -e "$f" ] && git add "$f"
+          done
+          echo "Staged:"; git diff --staged --name-only | sed 's/^/  /'
           # git commit exits non-zero when nothing changed (e.g. a holiday),
           # which is normal and shouldn't fail the run.
           if git diff --staged --quiet; then

@@ -121,6 +121,65 @@ def load_companies():
             + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2)
 
 
+# A close older than this is not used as a price. Covers a long weekend plus
+# a public holiday; anything beyond that means the pipeline has stopped and we
+# would rather show a stored estimate than a number pretending to be current.
+MAX_PRICE_AGE_DAYS = 5
+
+
+def prices_from_history():
+    """Latest close for every series in docs/history.js.
+
+    This costs nothing -- the file is already built for the charts, and its
+    last point IS the most recent close. It covers companies the quote feed
+    misses entirely, including foreign listings, so nothing is left stranded
+    on a hardcoded estimate.
+    """
+    path = os.path.join(HERE, "docs", "history.js")
+    try:
+        text = open(path).read()
+    except FileNotFoundError:
+        return {}
+    prefix = "var FF_HISTORY = "
+    if not text.startswith(prefix):
+        return {}
+    try:
+        hist = json.loads(text[len(prefix):].rstrip().rstrip(";"))
+    except json.JSONDecodeError:
+        return {}
+
+    # Only trust a close that is actually recent. A price that is weeks old is
+    # worse than an honest estimate, because it looks live and is not.
+    import time as _time
+    def _days_old(ds):
+        if not isinstance(ds, str) or len(ds) < 10:
+            return 9999
+        try:
+            y, m, d = (int(x) for x in ds[:10].split("-"))
+            return int((_time.time() - _time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))) / 86400)
+        except (ValueError, OverflowError):
+            return 9999
+
+    out, stale = {}, 0
+    for tick, entry in hist.items():
+        if tick.startswith("_") or not isinstance(entry, dict):
+            continue
+        closes = entry.get("c")
+        if not (isinstance(closes, list) and closes):
+            continue
+        last = closes[-1]
+        if not (isinstance(last, (int, float)) and last > 0):
+            continue
+        if _days_old(entry.get("to")) > MAX_PRICE_AGE_DAYS:
+            stale += 1
+            continue
+        out[tick] = float(last)
+    if stale:
+        print(f"  ignored {stale} chart closes older than "
+              f"{MAX_PRICE_AGE_DAYS} days — too stale to use as a price")
+    return out
+
+
 def apply_live_prices(companies):
     """Overlay prices.json onto the hardcoded prices, if the file exists."""
     path = os.path.join(HERE, "prices.json")
@@ -128,16 +187,33 @@ def apply_live_prices(companies):
         with open(path) as f:
             prices = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        print("No prices.json found — using prices from the company files.")
-        return None
-    n = 0
+        # Missing or corrupt quote file is not fatal: chart history is an
+        # independent source and should still be used. Returning early here
+        # was a bug — it threw away perfectly good prices.
+        print("No usable prices.json — falling back to chart history.")
+        prices = {}
+    hist_px = prices_from_history()
+    n = from_hist = 0
     for c in companies:
         px = prices.get(c["t"])
         if isinstance(px, (int, float)) and px > 0:
             c["price"] = float(px)
             n += 1
+            continue
+        # Quote feed missed it — fall back to the last close in the chart
+        # history, which is the same number from a different source.
+        hp = hist_px.get(c["t"])
+        if isinstance(hp, (int, float)) and hp > 0:
+            c["price"] = float(hp)
+            from_hist += 1
     fetched = prices.get("_fetched_at", "unknown time")
-    print(f"Applied {n} live prices (fetched {fetched})")
+    print(f"Applied {n} live prices (fetched {fetched})"
+          + (f", plus {from_hist} from chart history" if from_hist else ""))
+    stale = [c["t"] for c in companies
+             if c["t"] not in prices and c["t"] not in hist_px]
+    if stale:
+        print(f"  {len(stale)} still on stored estimates: {', '.join(stale[:10])}"
+              + (" ..." if len(stale) > 10 else ""))
     return fetched
 
 
@@ -212,6 +288,33 @@ def validate(companies):
     return errors
 
 
+def warn_implausible(companies):
+    """Flag figures that are probably wrong rather than merely surprising.
+
+    Prices self-correct from the daily feed, but share counts do not — so a
+    stock split silently doubles the market cap and every multiple built on
+    it. These warnings do not stop the build; they make bad inputs visible
+    instead of letting them sit on the live site.
+    """
+    warnings = []
+    for c in companies:
+        mcap = c["price"] * c["shares"]          # $B
+        if mcap > 6000:
+            warnings.append(f"{c['t']}: market cap ${mcap/1000:.2f}T looks too high "
+                            f"(${c['price']:,.2f} x {c['shares']:.3f}B shares) "
+                            f"— check for a stock split")
+        if mcap < 8:
+            warnings.append(f"{c['t']}: market cap ${mcap:.1f}B looks too low "
+                            f"for a large-cap library — check price and share count")
+        # Post-split, very few large caps trade above $900. A high price here
+        # is the single best signal that a split happened and the stored share
+        # count was never updated to match.
+        if c["price"] > 900 and c["t"] not in ("BKNG", "ASML"):
+            warnings.append(f"{c['t']:6s} ${c['price']:>9,.2f}  "
+                            f"mcap ${mcap:>7,.0f}B  — high price, verify not pre-split")
+    return warnings
+
+
 def main():
     companies = load_companies()
     print(f"Loaded {len(companies)} companies")
@@ -222,6 +325,9 @@ def main():
         for e in errors:
             print(f"  - {e}")
         return 1
+
+    for w in warn_implausible(companies):
+        print(f"  warning: {w}")
 
     apply_fundamentals(companies)
     apply_live_prices(companies)

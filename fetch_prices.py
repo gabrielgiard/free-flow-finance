@@ -36,6 +36,11 @@ API = "https://finnhub.io/api/v1/quote?symbol={}&token={}"
 # them and keep the hardcoded price from the company file.
 # If you upgrade to a paid plan, delete entries from this set and add the proper
 # Finnhub symbol to SYMBOL_MAP below (e.g. "MC": "MC.PA").
+# These stay skipped for the QUOTE feed, but they are no longer stranded:
+# fetch_history.py pulls them from Yahoo using exchange suffixes and converts
+# to USD, and build.py falls back to that last close. So they do get real
+# prices now, just by a different route.
+#
 # ADR alternative: several of these have US-listed ADR lines that Finnhub does
 # cover on the free tier -- LVMUY (LVMH), NSRGY (Nestle), SIEGY (Siemens),
 # LRLCY (L'Oreal). Swapping the ticker here would make them auto-update, but
