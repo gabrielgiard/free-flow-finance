@@ -38,7 +38,21 @@ jobs:
       - name: Fetch live prices from Finnhub
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-        run: python fetch_prices.py
+        run: |
+          if [ -z "$FINNHUB_API_KEY" ]; then
+            echo "::error::FINNHUB_API_KEY secret is empty or missing."
+            echo "Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "API key is present (${#FINNHUB_API_KEY} characters)."
+          python fetch_prices.py
+          echo "--- after fetch ---"
+          if [ -f prices.json ]; then
+            echo "prices.json written, $(wc -c < prices.json) bytes"
+          else
+            echo "::error::prices.json was NOT created."
+            exit 1
+          fi
 
       # Backfills a year of history the first time it runs, then appends each
       # day's close. Also writes market.json with the S&P, Nasdaq, VIX, Brent
@@ -68,7 +82,10 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
 
       - name: Rebuild the site data
-        run: python build.py
+        run: |
+          python build.py
+          echo "--- after build ---"
+          ls -l docs/data.js prices.json 2>&1 || true
 
       - name: Commit the updated data
         run: |
