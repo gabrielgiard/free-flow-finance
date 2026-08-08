@@ -181,7 +181,27 @@ def prices_from_history():
 
 
 def apply_live_prices(companies):
-    """Overlay prices.json onto the hardcoded prices, if the file exists."""
+    """Set every price from the freshest source available.
+
+    ORDER OF PREFERENCE, deliberately changed:
+
+      1. docs/history.js  -- the last close of the chart series. This is now
+                             the PRIMARY source, not a fallback. The history
+                             fetcher pulls a year of daily closes from Yahoo,
+                             needs no API key, and is the one part of this
+                             pipeline proven to run and commit successfully.
+                             Its newest point is by definition the latest
+                             close, so it is a price feed we already have.
+
+      2. prices.json      -- Finnhub intraday quotes, if present. Fresher
+                             within the trading day, but it depends on an API
+                             key and has repeatedly failed to produce a file.
+                             Treated as a bonus, never a requirement.
+
+      3. companies/*.py   -- the stored estimate. Last resort only.
+
+    Nothing here can fail the build. A missing or stale source is skipped and
+    the next one down is used."""
     path = os.path.join(HERE, "prices.json")
     try:
         with open(path) as f:
@@ -193,22 +213,23 @@ def apply_live_prices(companies):
         print("No usable prices.json — falling back to chart history.")
         prices = {}
     hist_px = prices_from_history()
-    n = from_hist = 0
+    from_hist = n = 0
     for c in companies:
-        px = prices.get(c["t"])
-        if isinstance(px, (int, float)) and px > 0:
-            c["price"] = float(px)
-            n += 1
-            continue
-        # Quote feed missed it — fall back to the last close in the chart
-        # history, which is the same number from a different source.
+        # 1. chart history first — the source that actually works
         hp = hist_px.get(c["t"])
         if isinstance(hp, (int, float)) and hp > 0:
             c["price"] = float(hp)
             from_hist += 1
+            continue
+        # 2. quote feed, if it happened to produce anything
+        px = prices.get(c["t"])
+        if isinstance(px, (int, float)) and px > 0:
+            c["price"] = float(px)
+            n += 1
     fetched = prices.get("_fetched_at", "unknown time")
-    print(f"Applied {n} live prices (fetched {fetched})"
-          + (f", plus {from_hist} from chart history" if from_hist else ""))
+    print(f"Prices: {from_hist} from chart history"
+          + (f", {n} from the quote feed" if n else "")
+          + f" (quotes fetched {fetched})")
     stale = [c["t"] for c in companies
              if c["t"] not in prices and c["t"] not in hist_px]
     if stale:

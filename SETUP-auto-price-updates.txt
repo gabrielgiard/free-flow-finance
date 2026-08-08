@@ -35,24 +35,34 @@ jobs:
       # Gather all the data first, then build the site from it. Order matters:
       # build.py reads prices.json and market.json, so both fetches must
       # complete before it runs.
-      - name: Fetch live prices from Finnhub
+      # OPTIONAL. Yahoo (in the history step below) is the real price source
+      # and needs no key at all. This adds intraday precision when it works,
+      # and is skipped entirely when it does not. It can never fail the run.
+      - name: Fetch intraday quotes (optional)
+        continue-on-error: true
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-        run: python fetch_prices.py
+        run: |
+          if [ -z "$FINNHUB_API_KEY" ]; then
+            echo "No Finnhub key set — skipping. Prices come from Yahoo below."
+            exit 0
+          fi
+          python fetch_prices.py || echo "Quote fetch failed — Yahoo will cover it."
 
-      # Backfills a year of history the first time it runs, then appends each
-      # day's close. Also writes market.json with the S&P, Nasdaq, VIX, Brent
-      # and 10-year Treasury levels for the homepage. Never fails the job: if
-      # the source is unreachable, the site keeps the numbers it already has.
-      # Backfills a year of daily closes per company from Twelve Data the first
-      # few times it runs, then skips anything already deep and just appends
-      # today's close. The first full backfill takes ~20 minutes; after that
-      # this step costs no API credits and finishes in seconds.
-      # Never fails the job: if it errors, existing history stands.
-      - name: Update price history for the charts
+      # THIS IS THE PRICE SOURCE. Pulls a year of daily closes per company
+      # from Yahoo (no API key), which drives both the charts and every price
+      # on the site. If this step works, the site is current.
+      - name: Fetch prices and chart history from Yahoo
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-        run: python fetch_history.py || echo "History update failed — keeping existing data."
+        run: |
+          python fetch_history.py || echo "History fetch failed — existing data stands."
+          echo "--- result ---"
+          if [ -f docs/history.js ]; then
+            echo "docs/history.js: $(wc -c < docs/history.js) bytes"
+          else
+            echo "::warning::docs/history.js missing — prices will not update."
+          fi
 
       # Revenue, share count and net debt. Runs weekly rather than daily --
       # fundamentals change quarterly, and this uses ~400 API calls.
@@ -68,7 +78,10 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
 
       - name: Rebuild the site data
-        run: python build.py
+        run: |
+          python build.py
+          echo "--- after build ---"
+          ls -l docs/data.js prices.json 2>&1 || true
 
       - name: Commit the updated data
         run: |
