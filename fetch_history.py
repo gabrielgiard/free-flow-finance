@@ -198,16 +198,37 @@ def save_history(hist):
 
 
 def accumulate(hist):
-    """Append today's close from prices.json. Always available, no API calls."""
+    """Append today's close from prices.json — but ONLY where Yahoo gave us
+    nothing.
+
+    This used to append to every series unconditionally, which quietly
+    corrupted things: a company with a clean year of Yahoo data would get one
+    Finnhub point stapled on the end. Since build.py reads the last point as
+    the price, that one bad value became the displayed price AND the final
+    point of the chart — so the chart and the price disagreed with each other
+    and both were wrong.
+
+    Yahoo's series is internally consistent. Do not contaminate it. The
+    accumulator now only fills genuine gaps.
+    """
     try:
         prices = json.load(open(os.path.join(HERE, "prices.json")))
     except (FileNotFoundError, json.JSONDecodeError):
         return 0
+
     stamp = prices.get("_fetched_at", "")[:10] or time.strftime("%Y-%m-%d")
-    n = 0
+    n = skipped = 0
     for tick, px in prices.items():
         if tick.startswith("_") or not isinstance(px, (int, float)) or px <= 0:
             continue
+        e = hist.get(tick)
+
+        # Series already has a real, current run of data from Yahoo. Leave it
+        # completely alone.
+        if e and len(e.get("c", [])) >= 20 and days_since(e.get("to")) <= STALE_AFTER_DAYS:
+            skipped += 1
+            continue
+
         e = hist.setdefault(tick, {"from": stamp, "to": stamp, "c": []})
         if e.get("to") == stamp and e["c"]:
             continue
@@ -215,6 +236,9 @@ def accumulate(hist):
         e["to"] = stamp
         e.setdefault("from", stamp)
         n += 1
+
+    if skipped:
+        print(f"Left {skipped} Yahoo series untouched (already current).")
     return n
 
 

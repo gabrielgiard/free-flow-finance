@@ -180,6 +180,24 @@ def prices_from_history():
     return out
 
 
+def check_price_chart_agreement(companies):
+    """The displayed price and the chart's final point must be the same number.
+
+    They are read from the same array, so any disagreement means something
+    wrote to that series after it was fetched. That happened once already:
+    the accumulator was stapling stale quotes onto clean Yahoo data. This
+    check exists so it can never happen silently again.
+    """
+    hist_px = prices_from_history()
+    bad = [c["t"] for c in companies
+           if c["t"] in hist_px and abs(c["price"] - hist_px[c["t"]]) > 0.01]
+    if bad:
+        print(f"  WARNING: price disagrees with chart end-point for "
+              f"{len(bad)} companies: {', '.join(bad[:8])}"
+              + (" ..." if len(bad) > 8 else ""))
+    return bad
+
+
 def apply_live_prices(companies):
     """Set every price from the freshest source available.
 
@@ -352,6 +370,7 @@ def main():
 
     apply_fundamentals(companies)
     apply_live_prices(companies)
+    check_price_chart_agreement(companies)
     meta = dict(META)
     stamp_date(meta)
 
