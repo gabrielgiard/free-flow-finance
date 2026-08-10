@@ -117,8 +117,9 @@ def load_companies():
     from companies.autos_global_frontier import AUTOS, GLOBAL, FRONTIER
     from companies.expansion import EXPANSION
     from companies.expansion2 import EXPANSION2
+    from companies.expansion3 import EXPANSION3
     return (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
-            + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2)
+            + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3)
 
 
 # A close older than this is not used as a price. Covers a long weekend plus
@@ -251,9 +252,40 @@ def apply_live_prices(companies):
     stale = [c["t"] for c in companies
              if c["t"] not in prices and c["t"] not in hist_px]
     if stale:
-        print(f"  {len(stale)} still on stored estimates: {', '.join(stale[:10])}"
-              + (" ..." if len(stale) > 10 else ""))
+        # Name every one. A count alone is easy to skim past; a list of tickers
+        # tells you exactly which company pages are showing an estimate rather
+        # than a real price, so you can chase them.
+        print(f"  {len(stale)} of {len(companies)} still on stored estimates "
+              f"(no live price found):")
+        for i in range(0, len(stale), 12):
+            print("    " + " ".join(stale[i:i + 12]))
+        print("    -> these need a working Yahoo symbol in fetch_history.py")
+    else:
+        print(f"  every one of {len(companies)} companies has a live price.")
     return fetched
+
+
+# Absolute limits on fetched fundamentals, in billions of dollars except
+# shares which is billions of shares. A value outside these is a feed error.
+FUNDAMENTAL_BOUNDS = {
+    "rev":     (0.01, 1000.0),      # $10m to $1tn of annual revenue
+    "shares":  (0.001, 30.0),       # 1m to 30bn shares outstanding
+    "netdebt": (-2000.0, 2000.0),   # +/- $2tn net debt or net cash
+}
+
+
+def finite(v):
+    """True only for a real, usable number.
+
+    bool is a subclass of int in Python, so True would otherwise pass as 1.
+    NaN and infinity are floats and pass isinstance checks happily, then
+    propagate silently through every subsequent calculation until a fair
+    value comes out as nan. Everything that reads fetched data goes through
+    here.
+    """
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    return v == v and v not in (float("inf"), float("-inf"))
 
 
 def apply_fundamentals(companies):
@@ -267,30 +299,321 @@ def apply_fundamentals(companies):
     try:
         with open(path) as f:
             fund = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("No fundamentals.json — using the figures in companies/*.py")
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        print("No usable fundamentals.json — using the figures in companies/*.py")
+        return
+    # A list, string or number is valid JSON but not what this expects, and
+    # calling .get() on it crashes the build.
+    if not isinstance(fund, dict):
+        print(f"fundamentals.json is a {type(fund).__name__}, not an object "
+              f"— ignoring it")
         return
 
     applied = {"rev": 0, "shares": 0, "netdebt": 0}
+    out_of_range = []
     for c in companies:
         got = fund.get(c["t"])
         if not isinstance(got, dict):
             continue
         for field in ("rev", "shares", "netdebt"):
             v = got.get(field)
-            if not isinstance(v, (int, float)):
+            if not finite(v):
                 continue
-            # revenue and share count must be positive; net debt may be
-            # negative, which simply means the company holds net cash
-            if field in ("rev", "shares") and v <= 0:
+            # Bounds on both sides. Checking only for positive numbers let a
+            # hostile 1e12 revenue through, which produced a fair value of
+            # $2.4m per share. No company in this library has revenue above
+            # $1tn, more than 30bn shares, or net debt beyond $2tn — anything
+            # outside those is a data fault, not a business.
+            lo, hi = FUNDAMENTAL_BOUNDS[field]
+            if not (lo <= v <= hi):
+                out_of_range.append(f"{c['t']} {field}={v:,.4g}")
                 continue
             c[field] = float(v)
             applied[field] += 1
+
+    if out_of_range:
+        print(f"  rejected {len(out_of_range)} fundamentals outside sane bounds: "
+              + ", ".join(out_of_range[:6])
+              + (" ..." if len(out_of_range) > 6 else ""))
 
     stamp = fund.get("_fetched_at", "unknown")[:10]
     print(f"Applied fundamentals from {stamp}: "
           f"{applied['rev']} revenue, {applied['shares']} share counts, "
           f"{applied['netdebt']} net debt figures")
+
+
+# The risk-free rate every WACC in this library was originally set against.
+# Do not change it: it is the historical anchor. The current rate is fetched
+# separately, and each company's WACC moves by the difference.
+BASE_RISK_FREE = 0.0463
+
+# Guard rails on automatic recalibration. A fetched figure outside these
+# bounds is more likely a data problem than a real change, so it is reported
+# and ignored rather than applied.
+MAX_MARGIN_SHIFT = 0.15      # 15 percentage points
+MIN_WACC = 0.055
+MAX_WACC = 0.180
+
+
+def current_risk_free():
+    """Latest 10-year Treasury yield from the chart history, as a decimal.
+
+    Yahoo quotes ^TNX as the yield times ten, so 43.1 means 4.31%.
+    Returns None if unavailable, in which case WACC is left untouched.
+    """
+    path = os.path.join(HERE, "docs", "history.js")
+    try:
+        text = open(path).read()
+    except FileNotFoundError:
+        return None
+    prefix = "var FF_HISTORY = "
+    if not text.startswith(prefix):
+        return None
+    try:
+        hist = json.loads(text[len(prefix):].rstrip().rstrip(";"))
+    except json.JSONDecodeError:
+        return None
+
+    entry = hist.get("^TNX")
+    if not isinstance(entry, dict) or not entry.get("c"):
+        return None
+    raw = entry["c"][-1]
+    if not isinstance(raw, (int, float)):
+        return None
+    rf = raw / 1000.0                     # 43.1 -> 0.0431
+    return rf if 0.005 < rf < 0.12 else None
+
+
+def recalibrate_model(companies):
+    """Update the inputs that drive fair value, from real data.
+
+    Two things happen here, and both are arithmetic rather than judgement:
+
+    1. WACC moves with the risk-free rate. Every discount rate was set against
+       a 4.63% ten-year Treasury. When that rate changes, the cost of capital
+       changes for everyone. Each company keeps its own risk premium exactly
+       as written -- only the common base moves -- so the relative ranking
+       between companies is untouched.
+
+    2. The starting free cash flow margin is rebased to what the company is
+       actually earning, using the revenue and free cash flow that
+       fetch_fundamentals.py pulls. A model whose starting point drifted away
+       from reality is stale no matter how good the original thinking was.
+
+    What is deliberately NOT touched: the five-year growth path, the year-five
+    margin target, and the terminal growth rate. Those are forecasts, not
+    measurements. No feed can produce them and they should change when the
+    analyst revisits a company, not when a number moves.
+    """
+    rf_now = current_risk_free()
+    wacc_moved = margin_moved = 0
+    rejected = []
+
+    # --- 1. WACC follows the risk-free rate -----------------------------
+    if rf_now is not None:
+        delta = rf_now - BASE_RISK_FREE
+        if abs(delta) >= 0.0005:          # ignore noise below 5 basis points
+            for c in companies:
+                new = c["wacc"] + delta
+                if not (MIN_WACC <= new <= MAX_WACC):
+                    rejected.append(f"{c['t']} wacc {new:.3f} out of bounds")
+                    continue
+                if new <= c["tg"] + 0.005:   # discount rate must exceed growth
+                    rejected.append(f"{c['t']} wacc would fall below terminal growth")
+                    continue
+                c["wacc"] = round(new, 5)
+                wacc_moved += 1
+            print(f"Risk-free rate {BASE_RISK_FREE*100:.2f}% -> {rf_now*100:.2f}% "
+                  f"({delta*10000:+.0f} bp): repriced {wacc_moved} WACCs")
+        else:
+            print(f"Risk-free rate unchanged at {rf_now*100:.2f}% — WACC untouched")
+    else:
+        print("No Treasury yield available — WACC left at stored values")
+
+    # --- 2. Rebase the starting margin to actuals ------------------------
+    try:
+        fund = json.load(open(os.path.join(HERE, "fundamentals.json")))
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        fund = {}
+    if not isinstance(fund, dict):
+        fund = {}
+
+    big_moves = []
+    for c in companies:
+        got = fund.get(c["t"])
+        if not isinstance(got, dict):
+            continue
+        rev, fcf = got.get("rev"), got.get("fcf")
+        if not (finite(rev) and finite(fcf)) or rev <= 0:
+            continue
+        actual = fcf / rev
+        # A company modelled as profitable that reports a negative margin is
+        # usually a one-off or a data artefact. Report it, do not act on it.
+        if actual <= 0 < c["m0"]:
+            rejected.append(f"{c['t']} actual margin {actual:.1%} is negative")
+            continue
+        shift = actual - c["m0"]
+        if abs(shift) > MAX_MARGIN_SHIFT:
+            big_moves.append(f"{c['t']:6s} modelled {c['m0']:>6.1%} -> actual {actual:>6.1%}")
+            continue
+        if abs(shift) < 0.002:
+            continue
+        c["m0"] = round(actual, 4)
+        # Keep the year-five target above the new starting point if the
+        # original model assumed expansion; do not silently invert the thesis.
+        if c["m1"] < c["m0"]:
+            c["m1"] = round(c["m0"], 4)
+        margin_moved += 1
+
+    if margin_moved:
+        print(f"Rebased {margin_moved} starting margins to reported free cash flow")
+    if big_moves:
+        print(f"  {len(big_moves)} margins moved more than "
+              f"{MAX_MARGIN_SHIFT:.0%} and were NOT applied — review by hand:")
+        for b in big_moves[:12]:
+            print("    " + b)
+        if len(big_moves) > 12:
+            print(f"    ... and {len(big_moves)-12} more")
+    if rejected:
+        print(f"  {len(rejected)} recalibrations rejected by guard rails")
+
+    return {"wacc": wacc_moved, "margin": margin_moved}
+
+
+# --- forecast recalibration bounds -----------------------------------------
+# Every one of these exists because an unbounded automatic model will happily
+# extrapolate a single odd quarter into a decade of nonsense.
+G1_MIN, G1_MAX = -0.25, 0.60      # year-one growth, hard clamp
+G1_MAX_STEP = 0.20                # how far year-one growth may move in one run
+FADE_FLOOR = 0.02                 # growth never fades below this by year five
+M1_MAX_EXPANSION = 0.08           # margin may be forecast to expand by 8pp, no more
+MIN_FORECAST_YEARS = 5
+
+
+def sector_long_growth(companies):
+    """Median observed long-run growth per sector, used to shape the fade.
+
+    Anchoring the tail of the forecast to what a sector actually does is more
+    defensible than picking a number, and it updates itself as the data does.
+    """
+    buckets = {}
+    for c in companies:
+        g = c.get("_growth_long")
+        if finite(g) and -0.2 < g < 0.6:
+            buckets.setdefault(c["sec"], []).append(g)
+    out = {}
+    for sec, vals in buckets.items():
+        vals.sort()
+        med = vals[len(vals) // 2] if len(vals) % 2 else \
+              (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
+        out[sec] = max(FADE_FLOOR, min(0.18, med))
+    return out
+
+
+def recalibrate_forecasts(companies):
+    """Rebuild the five-year growth path and margin target from observed data.
+
+    THE RULE, stated once so it can be checked:
+
+      Year one growth  = the company's actual trailing revenue growth, clamped
+                         to a sane band and limited in how far it may move from
+                         the previous assumption in a single run.
+
+      Years two to five = a smooth geometric fade from year one toward the
+                         median long-run growth of that company's sector.
+
+      Year five margin = current margin plus a bounded convergence toward the
+                         sector median margin, so a company earning far below
+                         its peers is assumed to close part of the gap, and one
+                         earning far above is assumed to give some back.
+
+    This makes the library systematic rather than hand-tuned. That is a real
+    trade: it is consistent and reproducible across every company, and it
+    cannot capture a company-specific insight that the numbers do not yet
+    show. The thesis and risk sections carry that judgement instead.
+    """
+    try:
+        fund = json.load(open(os.path.join(HERE, "fundamentals.json")))
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        fund = None
+    if not isinstance(fund, dict):
+        print("No usable fundamentals.json — forecasts left at stored values")
+        return {"growth": 0, "margin": 0}
+
+    # stash fetched long-run growth so sector medians can be computed
+    for c in companies:
+        got = fund.get(c["t"])
+        if isinstance(got, dict):
+            c["_growth_long"] = got.get("growth_long")
+
+    sector_g = sector_long_growth(companies)
+
+    # sector median current margin, for the year-five target
+    m_buckets = {}
+    for c in companies:
+        m_buckets.setdefault(c["sec"], []).append(c["m0"])
+    sector_m = {}
+    for sec, vals in m_buckets.items():
+        vals.sort()
+        sector_m[sec] = vals[len(vals) // 2] if len(vals) % 2 else \
+                        (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
+
+    grown = margined = 0
+    clamped = []
+
+    for c in companies:
+        got = fund.get(c["t"])
+        if not isinstance(got, dict):
+            continue
+
+        # ---- growth path -------------------------------------------------
+        g_actual = got.get("growth_ttm")
+        if finite(g_actual):
+            old_g1 = c["growth"][0]
+            g1 = max(G1_MIN, min(G1_MAX, g_actual))
+            if abs(g1 - g_actual) > 0.001:
+                clamped.append(f"{c['t']:6s} growth {g_actual:>7.1%} clamped to {g1:>6.1%}")
+            # do not let one print swing the whole forecast
+            if g1 - old_g1 > G1_MAX_STEP:
+                g1 = old_g1 + G1_MAX_STEP
+            elif old_g1 - g1 > G1_MAX_STEP:
+                g1 = old_g1 - G1_MAX_STEP
+
+            target = sector_g.get(c["sec"], 0.05)
+            target = max(FADE_FLOOR, min(g1, target))   # never fade upward
+            path = []
+            for yr in range(MIN_FORECAST_YEARS):
+                # geometric glide from g1 to target across the five years
+                w = yr / (MIN_FORECAST_YEARS - 1)
+                path.append(round(g1 * (1 - w) + target * w, 4))
+            if path != c["growth"]:
+                c["growth"] = path
+                grown += 1
+
+        # ---- year-five margin target -------------------------------------
+        peer_m = sector_m.get(c["sec"], c["m0"])
+        gap = peer_m - c["m0"]
+        # close a third of the gap to the sector, bounded either way
+        move = max(-M1_MAX_EXPANSION, min(M1_MAX_EXPANSION, gap / 3.0))
+        new_m1 = round(c["m0"] + move, 4)
+        # a company already earning well should not be forecast into losses
+        if new_m1 > 0 and abs(new_m1 - c["m1"]) > 0.002:
+            c["m1"] = new_m1
+            margined += 1
+
+    for c in companies:
+        c.pop("_growth_long", None)
+
+    print(f"Forecasts: {grown} growth paths rebuilt from actual revenue growth, "
+          f"{margined} margin targets reset to sector convergence")
+    if clamped:
+        print(f"  {len(clamped)} growth rates fell outside the "
+              f"{G1_MIN:.0%} to {G1_MAX:.0%} band and were clamped:")
+        for x in clamped[:10]:
+            print("    " + x)
+        if len(clamped) > 10:
+            print(f"    ... and {len(clamped)-10} more")
+    return {"growth": grown, "margin": margined}
 
 
 def validate(companies):
@@ -369,10 +692,39 @@ def main():
         print(f"  warning: {w}")
 
     apply_fundamentals(companies)
+    recalibrate_model(companies)
+    recalibrate_forecasts(companies)
     apply_live_prices(companies)
     check_price_chart_agreement(companies)
     meta = dict(META)
     stamp_date(meta)
+
+    # Last line of defence. If anything above let a bad number through, stop
+    # here rather than publishing a nan fair value.
+    # Last line of defence. Rather than failing the whole run, drop any company
+    # whose inputs are unusable and carry on — one bad feed entry should not
+    # take the site down, but it must never be published either.
+    clean, dropped = [], []
+    for c in companies:
+        bad = None
+        for k in ("price", "shares", "rev", "netdebt", "m0", "m1", "wacc", "tg"):
+            if not finite(c.get(k)):
+                bad = f"{k}={c.get(k)!r}"
+                break
+        if bad is None and not all(finite(g) for g in c.get("growth", [])):
+            bad = "growth path"
+        if bad:
+            dropped.append(f"{c['t']} ({bad})")
+        else:
+            clean.append(c)
+    if dropped:
+        print(f"  DROPPED {len(dropped)} companies with unusable inputs: "
+              + ", ".join(dropped[:8]) + (" ..." if len(dropped) > 8 else ""))
+        print("  These are excluded from the site rather than published wrong.")
+    companies = clean
+    if not companies:
+        print("No companies survived validation — refusing to overwrite data.js")
+        return 1
 
     out = [build(c) for c in companies]
 

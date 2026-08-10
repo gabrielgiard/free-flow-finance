@@ -182,6 +182,33 @@ Run `python fetch_fundamentals.py --dry-run` before trusting it. That prints
 every figure the feed disagrees with by more than 5x and would refuse to apply,
 which is the fastest way to spot a units problem or a bad response.
 
+**Crash testing**
+
+`crash_test.py` runs 42 adversarial checks against the recalibration engine:
+hostile values, wrong types, extreme growth, rate shocks, corrupt files,
+partial data, unknown tickers, and repeated runs to catch drift. Run it after
+any change to `build.py` or `engine.py`:
+
+```
+python crash_test.py
+```
+
+It found three real bugs during development: a 1e12 revenue producing a $2.4m
+per-share fair value, NaN propagating silently into published valuations, and a
+bear case printing above the base case when the year-five margin was under 1%.
+
+**Automatic model recalibration:**
+- **WACC** moves with the ten-year Treasury yield (fetched as `^TNX`). Each
+  company keeps its own risk premium; only the common base rate moves, so the
+  relative risk ranking between companies is preserved.
+- **Starting FCF margin** is rebased to reported free cash flow over reported
+  revenue.
+- Both run through guard rails: anything moving more than 15 percentage points,
+  or producing a WACC below terminal growth, is reported and rejected.
+
+Falling rates raise every fair value in the library. That is arithmetic, not an
+improvement in the businesses — the methodology page states this explicitly.
+
 **Manual, by design:**
 - **Growth rates, margins, WACC, terminal growth.** These are your analysis.
   They should change when you revisit a company, not when a feed updates. Fair

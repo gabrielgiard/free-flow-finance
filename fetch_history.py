@@ -55,7 +55,11 @@ TWELVE_PAUSE = 8.0        # free tier allows 8 calls/minute
 STALE_AFTER_DAYS = 4
 HISTORY_PATH = os.path.join(HERE, "docs", "history.js")
 
-MARKET = ["SPY", "QQQ", "GLD", "BNO"]      # homepage sparklines
+# Homepage sparklines, plus ^TNX -- the 10-year Treasury yield. That last one
+# is not decorative: it is the risk-free rate every WACC in the library is
+# built from, so fetching it lets the model recalibrate itself when rates move.
+# Yahoo quotes ^TNX as the yield times ten (43.0 means 4.30%).
+MARKET = ["SPY", "QQQ", "GLD", "BNO", "^TNX"]
 
 # Foreign primaries Finnhub's free tier does not cover. Yahoo does, using
 # exchange suffixes -- .PA Paris, .SW Zurich, .DE Frankfurt, .KS Korea,

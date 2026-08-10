@@ -96,8 +96,25 @@ def fundamentals_for(symbol, key):
     if rps and out.get("shares"):
         out["rev"] = round(rps * out["shares"], 2)            # $/share x Bn shares = $B
 
-    # Free cash flow, same approach. Used to sanity-check the margin
-    # assumption rather than to overwrite it.
+    # Actual trailing revenue growth. This is a measurement, not a forecast,
+    # and it is what lets the model anchor its year-one growth assumption to
+    # what the company is genuinely doing rather than what was guessed when
+    # the entry was written.
+    for k in ("revenueGrowthTTMYoy", "revenueGrowthQuarterlyYoy",
+              "revenueGrowthAnnual"):
+        g = m.get(k)
+        if isinstance(g, (int, float)) and -60 < g < 300:
+            out["growth_ttm"] = round(g / 100.0, 4)     # API reports percent
+            break
+
+    # Longer-run growth, used to shape the fade rather than year one.
+    for k in ("revenueGrowth5Y", "revenueGrowth3Y"):
+        g = m.get(k)
+        if isinstance(g, (int, float)) and -40 < g < 150:
+            out["growth_long"] = round(g / 100.0, 4)
+            break
+
+    # Free cash flow, same approach. Used to rebase the starting margin.
     fcfps = first_of(m, "freeCashFlowPerShareTTM", "cashFlowPerShareTTM",
                      "freeCashFlowPerShareAnnual")
     if fcfps and out.get("shares"):

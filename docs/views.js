@@ -584,6 +584,33 @@ function viewMethodology() {
         </div>
       </div>
       <div style="margin-top:50px;">
+        <h2 style="font-size:22px;margin-bottom:14px;">How the model stays current</h2>
+        <p style="max-width:720px;font-size:14px;margin-bottom:22px;">A valuation library that never revises its inputs goes stale. Some of that updating can be done mechanically, and some cannot. This is the line between them.</p>
+        <div class="card" style="margin-bottom:26px;">
+          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Updated automatically</div>
+          <ul class="bullets cat">
+            <li><strong style="color:var(--text)">Share prices</strong> — every weekday, from market data.</li>
+            <li><strong style="color:var(--text)">Revenue, share count and net debt</strong> — refreshed from reported figures, so the starting point of every model tracks what companies actually report rather than what was assumed when it was written.</li>
+            <li><strong style="color:var(--text)">Discount rates</strong> — every WACC here was set against a 4.63% ten-year Treasury yield. When that rate moves, the cost of capital moves for everyone, so each company's WACC shifts by the same amount. Each keeps its own risk premium exactly as written, so the relative ranking between companies is unchanged.</li>
+            <li><strong style="color:var(--text)">Starting cash flow margin</strong> — rebased to reported free cash flow divided by reported revenue.</li>
+            <li><strong style="color:var(--text)">The five-year growth path</strong> — year one is set to the company's actual trailing revenue growth, then faded geometrically toward the median long-run growth of its sector. Year one is clamped to a &minus;25% to +60% band and may not move more than 20 points in a single run, so one unusual quarter cannot swing a decade of forecast.</li>
+            <li><strong style="color:var(--text)">The year-five margin target</strong> — set to the current margin plus one third of the gap to the sector median, capped at 8 points of movement either way. A company earning far below its peers is assumed to close part of that gap; one earning far above is assumed to give some back.</li>
+          </ul>
+          <p style="font-size:12px;color:var(--text-dim);margin:16px 0 0;">Every automatic change runs through guard rails. A figure that moves more than 15 percentage points, or produces a discount rate below the terminal growth rate, is reported and ignored rather than applied — those are almost always data problems, not real changes.</p>
+        </div>
+        <div class="card" style="margin-bottom:26px;">
+          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Not updated automatically, on purpose</div>
+          <ul class="bullets risk">
+            <li>The terminal growth rate — the assumption about the very long run, where no recent data point is informative.</li>
+            <li>Every word of the thesis, risks, catalysts and street view.</li>
+            <li>Which companies are covered at all.</li>
+          </ul>
+          <p style="font-size:12px;color:var(--text-dim);margin:14px 0 0;">This makes the library systematic rather than hand-tuned, and that is a genuine trade-off worth stating. A rules-based model is consistent and reproducible across every company, and it cannot be quietly nudged toward a conclusion. What it cannot do is capture an insight the numbers do not yet show — a management change, a regulatory shift, a product about to land. That judgement lives in the written sections, which is exactly why they are still written by hand.</p>
+        </div>
+        <div class="comp-note" style="margin-bottom:34px;">
+          <b>One consequence worth stating plainly.</b> Falling interest rates raise every fair value in this library, because a lower discount rate makes future cash flows worth more today. If the ratings here look more positive than they did last quarter, check the risk-free rate before concluding the companies improved. The arithmetic moves before the businesses do.
+        </div>
+
         <h2 style="font-size:22px;margin-bottom:14px;">Market context</h2>
         <p style="max-width:720px;font-size:14px;margin-bottom:22px;">Valuations do not sit in a vacuum. This is the environment these models were built in, updated as it changes.</p>
         <div class="card">

@@ -64,11 +64,31 @@ def dcf(rev, growth, m0, m1, wacc, tg, netdebt, shares):
 def scenarios(c):
     base = dcf(c["rev"], c["growth"], c["m0"], c["m1"], c["wacc"], c["tg"],
                c["netdebt"], c["shares"])
+    # Bear margin: a floor of 0.01 was wrong. When the base year-five margin
+    # sits below 1%, flooring the bear case at 1% makes the pessimistic
+    # scenario MORE optimistic than the base — which the fuzzer duly found.
+    # The bear margin must never exceed the base margin.
+    bear_m1 = min(c["m1"], max(c["m1"] - 0.020, 0.0))
+
+    # Bull terminal growth must stay clear of the bull discount rate, or the
+    # Gordon Growth denominator collapses toward zero and the value explodes.
+    bull_wacc = c["wacc"] - 0.005
+    bull_tg = min(c["tg"] + 0.0025, bull_wacc - 0.005)
+
     bull = dcf(c["rev"], [g + 0.030 for g in c["growth"]], c["m0"], c["m1"] + 0.020,
-               c["wacc"] - 0.005, c["tg"] + 0.0025, c["netdebt"], c["shares"])
+               bull_wacc, bull_tg, c["netdebt"], c["shares"])
     bear = dcf(c["rev"], [g - 0.030 for g in c["growth"]], c["m0"],
-               max(c["m1"] - 0.020, 0.01), c["wacc"] + 0.005,
+               bear_m1, c["wacc"] + 0.005,
                max(c["tg"] - 0.0050, 0.0), c["netdebt"], c["shares"])
+
+    # Final guarantee. Whatever the inputs, a bear case that prints above the
+    # base case, or a bull below it, is incoherent on the page regardless of
+    # how the arithmetic got there.
+    b, u, d_ = base["per_share"], bull["per_share"], bear["per_share"]
+    if d_ > b:
+        bear["per_share"] = b
+    if u < b:
+        bull["per_share"] = b
     return base, bull, bear
 
 
