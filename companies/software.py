@@ -2,7 +2,7 @@ from .schema import C
 
 SOFTWARE = [
 C("MSFT", "Microsoft Corporation", "software", "Redmond, Washington, USA", 1975,
-  "Satya Nadella", "Nasdaq", 390.49, 7.35, 40.0, 325.0,
+  "Satya Nadella", "Nasdaq", 499.99, 7.35, 40.0, 325.0,
   [0.14, 0.13, 0.12, 0.11, 0.10], 0.26, 0.30, 0.085, 0.030,
   "Founded in 1975 by Bill Gates and Paul Allen in Albuquerque, now headquartered in Redmond, Washington. Satya Nadella has been CEO since 2014 and rebuilt the company around cloud. Three segments: Intelligent Cloud (Azure, the number-two public cloud, plus SQL Server and GitHub), Productivity and Business Processes (Microsoft 365, Teams, Dynamics, LinkedIn) and More Personal Computing (Windows, Xbox, Surface, Bing). Its partnership with OpenAI put Copilot into Office, Windows and GitHub, and Azure is the primary cloud for a large share of commercial AI workloads.",
   [("Intelligent Cloud", 43), ("Productivity & Business Processes", 33), ("More Personal Computing", 24)],
@@ -62,7 +62,7 @@ C("META", "Meta Platforms, Inc.", "software", "Menlo Park, California, USA", 200
   (5, 4, 5, 4)),
 
 C("ORCL", "Oracle Corporation", "software", "Austin, Texas, USA", 1977,
-  "Safra Catz", "NYSE", 140.27, 2.85, 95.0, 62.0,
+  "Safra Catz", "NYSE", 132.49, 2.85, 95.0, 62.0,
   [0.22, 0.20, 0.17, 0.14, 0.11], 0.14, 0.24, 0.100, 0.030,
   "Founded in 1977 by Larry Ellison, Bob Miner and Ed Oates. Ellison remains chairman and CTO; Safra Catz is CEO. Headquarters moved to Austin, Texas. Oracle sells database software — still the standard for large enterprise transactional systems — plus Fusion and NetSuite cloud applications. Its Oracle Cloud Infrastructure business signed enormous multi-year AI training contracts, taking remaining performance obligations above $520B by the end of fiscal Q2 2026. The stock fell from $328 to $140, one of the largest mega-cap drawdowns of the cycle.",
   [("Cloud Services & License Support", 74), ("Cloud & On-Premise License", 9), ("Hardware & Services", 17)],
@@ -107,7 +107,7 @@ C("NOW", "ServiceNow, Inc.", "software", "Santa Clara, California, USA", 2004,
   (5, 5, 5, 5)),
 
 C("PLTR", "Palantir Technologies", "software", "Denver, Colorado, USA", 2003,
-  "Alex Karp", "Nasdaq", 178.15, 2.45, -5.5, 5.2,
+  "Alex Karp", "Nasdaq", 133.76, 2.45, -5.5, 5.2,
   [0.42, 0.34, 0.27, 0.21, 0.17], 0.36, 0.42, 0.115, 0.032,
   "Founded in 2003 by Peter Thiel, Alex Karp, Joe Lonsdale, Stephen Cohen and Nathan Gettings, initially funded partly by the CIA's venture arm. Karp is CEO; headquarters moved to Denver in 2020. Palantir builds data integration and decision software: Gotham for defence and intelligence, Foundry for commercial enterprises, Apollo for deployment, and AIP, the Artificial Intelligence Platform that connects large language models to a customer's operational data. Its US commercial business has been growing far faster than the government side that originally built the company.",
   [("US Government", 42), ("US Commercial", 33), ("International", 25)],
@@ -197,7 +197,7 @@ C("SHOP", "Shopify Inc.", "software", "Ottawa, Canada", 2006,
   (4, 5, 4, 5)),
 
 C("CRWD", "CrowdStrike Holdings", "software", "Austin, Texas, USA", 2011,
-  "George Kurtz", "Nasdaq", 520.00, 0.25, -3.5, 5.2,
+  "George Kurtz", "Nasdaq", 206.77, 0.25, -3.5, 5.2,
   [0.24, 0.22, 0.19, 0.16, 0.14], 0.30, 0.36, 0.100, 0.032,
   "Founded in 2011 by George Kurtz, Dmitri Alperovitch and Gregg Marston, with the insight that endpoint security should be delivered from the cloud rather than installed as software. Kurtz is CEO, headquarters in Austin. The Falcon platform uses a single lightweight agent to deliver endpoint detection, identity protection, cloud workload security, log management through Falcon LogScale, and exposure management. Customers add modules over time, which is the core of the business model. CrowdStrike rose 8.5% in the week to 21 July 2026, among the strongest large-cap performers.",
   [("Subscription", 95), ("Professional Services", 5)],

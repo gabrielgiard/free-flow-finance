@@ -137,7 +137,7 @@ EXPANSION = [
       (5, 4, 4, 5)),
 
     C("PANW", "Palo Alto Networks, Inc.", "software", "Santa Clara, California, USA", 2005,
-      "Nikesh Arora", "Nasdaq", 205.00, 0.66, -2.5, 9.2,
+      "Nikesh Arora", "Nasdaq", 354.02, 0.66, -2.5, 9.2,
       [0.15, 0.14, 0.12, 0.11, 0.10], 0.27, 0.32, 0.100, 0.030,
       "Founded in 2005 by Nir Zuk, who had helped build the first stateful firewall at Check Point. Nikesh Arora, previously of Google and SoftBank, became CEO in 2018 and drove an aggressive acquisition programme. Palo Alto sells network security, cloud security and security operations software, and has pushed a platformisation strategy — persuading customers to consolidate multiple point vendors onto one platform in exchange for better pricing.",
       [("Network Security", 55), ("Cloud Security (Prisma)", 25), ("Security Operations (Cortex)", 20)],

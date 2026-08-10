@@ -112,7 +112,7 @@ EXPANSION3 = [
 
     # ===================== SOFTWARE & INTERNET =====================
     C("NET", "Cloudflare, Inc.", "software", "San Francisco, California, USA", 2009,
-      "Matthew Prince", "NYSE", 195.00, 0.35, -1.0, 2.1,
+      "Matthew Prince", "NYSE", 273.04, 0.35, -1.0, 2.1,
       [0.28, 0.25, 0.21, 0.18, 0.15], 0.10, 0.24, 0.115, 0.032,
       "Founded in 2009 by Matthew Prince, Lee Holloway and Michelle Zatlyn out of a Harvard Business School project. Prince still runs it. Cloudflare operates a global network sitting between websites and their visitors, providing security, performance acceleration and increasingly compute. Its edge network spans hundreds of cities, which lets it run code close to users rather than in distant data centres.",
       [("Application Services", 78), ("Network Services", 15), ("Developer & Other", 7)],

@@ -216,7 +216,7 @@ C("COIN", "Coinbase Global, Inc.", "frontier", "Remote-first, USA", 2012,
   (4, 4, 3, 4)),
 
 C("CRWV", "CoreWeave, Inc.", "frontier", "Livingston, New Jersey, USA", 2017,
-  "Michael Intrator", "Nasdaq", 82.00, 0.49, 14.0, 8.5,
+  "Michael Intrator", "Nasdaq", 77.12, 0.49, 14.0, 8.5,
   [0.55, 0.40, 0.30, 0.22, 0.17], 0.05, 0.20, 0.145, 0.032,
   "Founded in 2017 by Michael Intrator, Brian Venturo and Brannin McBee as a cryptocurrency mining operation, then repurposed its GPU fleet for AI workloads. Headquartered in Livingston, New Jersey. CoreWeave is a specialised cloud provider that rents NVIDIA GPU capacity to AI labs and enterprises under long-term contracts, competing with the hyperscalers on speed of deployment rather than breadth of services. Microsoft and OpenAI have been among its largest customers. The stock fell nearly 14% on 1 July 2026 after Meta unveiled Meta Compute, a plan to resell its own surplus AI capacity to outside customers — a direct threat given that CoreWeave itself holds a $21 billion supply contract with Meta.",
   [("GPU cloud compute contracts", 96), ("Other services", 4)],
