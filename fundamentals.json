@@ -233,7 +233,7 @@
     "fcf": 175.71,
     "growth_long": 0.0737,
     "growth_ttm": 0.0274,
-    "netdebt": 1875.05
+    "netdebt": 1864.73
   },
   "BAC": {
     "fcf": 26.75,
@@ -759,7 +759,7 @@
     "fcf": 286.93,
     "growth_long": 0.122,
     "growth_ttm": 0.1122,
-    "netdebt": -124.6,
+    "netdebt": -92.55,
     "shares": 4.0496
   },
   "INTC": {
@@ -1200,7 +1200,7 @@
   "PDD": {
     "growth_long": 0.4865,
     "growth_ttm": 0.0986,
-    "netdebt": 619.94,
+    "netdebt": 628.5,
     "shares": 5.6936
   },
   "PEP": {
@@ -1766,5 +1766,5 @@
     "rev": 9.55,
     "shares": 0.4192
   },
-  "_fetched_at": "2026-08-10T10:45:25Z"
+  "_fetched_at": "2026-08-10T12:19:17Z"
 }
