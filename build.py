@@ -328,6 +328,15 @@ def apply_fundamentals(companies):
             if not (lo <= v <= hi):
                 out_of_range.append(f"{c['t']} {field}={v:,.4g}")
                 continue
+            # Revenue is derived from a per-share figure times a share count,
+            # so an error in either multiplies out. If the fetched number is
+            # nowhere near the stored one, trust the stored one.
+            if field == "rev" and finite(c.get("rev")) and c["rev"] > 0:
+                ratio = v / c["rev"]
+                if ratio > MAX_REVENUE_RATIO or ratio < 1 / MAX_REVENUE_RATIO:
+                    out_of_range.append(
+                        f"{c['t']} rev {v:,.1f} vs stored {c['rev']:,.1f}")
+                    continue
             c[field] = float(v)
             applied[field] += 1
 
@@ -347,10 +356,25 @@ def apply_fundamentals(companies):
 # separately, and each company's WACC moves by the difference.
 BASE_RISK_FREE = 0.0463
 
+# Filled in at build time: the hand-written assumptions, kept so a company
+# with a broken recalibration can be reverted rather than published wrong.
+ORIGINAL_ASSUMPTIONS = {}
+
 # Guard rails on automatic recalibration. A fetched figure outside these
 # bounds is more likely a data problem than a real change, so it is reported
 # and ignored rather than applied.
-MAX_MARGIN_SHIFT = 0.15      # 15 percentage points
+MAX_MARGIN_SHIFT = 0.15      # how far a margin may move in one run
+
+# Absolute plausibility. The relative check above was not enough: a fetched
+# margin of 274% moved a long way AND was impossible, but only the movement
+# was being tested. Almost no real company sustains a free cash flow margin
+# above 55%, and one below -50% is a data fault rather than a business.
+MARGIN_FLOOR, MARGIN_CEILING = -0.50, 0.55
+
+# Fetched revenue must be in the same universe as what the model already has.
+# Revenue is derived as revenue-per-share x share count, so an error in either
+# multiplies. A figure more than this far from the stored value is rejected.
+MAX_REVENUE_RATIO = 2.5
 MIN_WACC = 0.055
 MAX_WACC = 0.180
 
@@ -438,7 +462,7 @@ def recalibrate_model(companies):
     if not isinstance(fund, dict):
         fund = {}
 
-    big_moves = []
+    big_moves, implausible = [], []
     for c in companies:
         got = fund.get(c["t"])
         if not isinstance(got, dict):
@@ -447,6 +471,10 @@ def recalibrate_model(companies):
         if not (finite(rev) and finite(fcf)) or rev <= 0:
             continue
         actual = fcf / rev
+        # Impossible on its face, regardless of how far it moved.
+        if not (MARGIN_FLOOR <= actual <= MARGIN_CEILING):
+            implausible.append(f"{c['t']:6s} implied margin {actual:>8.1%}")
+            continue
         # A company modelled as profitable that reports a negative margin is
         # usually a one-off or a data artefact. Report it, do not act on it.
         if actual <= 0 < c["m0"]:
@@ -467,6 +495,14 @@ def recalibrate_model(companies):
 
     if margin_moved:
         print(f"Rebased {margin_moved} starting margins to reported free cash flow")
+    if implausible:
+        print(f"  {len(implausible)} implied margins were outside "
+              f"{MARGIN_FLOOR:.0%} to {MARGIN_CEILING:.0%} and were rejected as "
+              f"impossible (the revenue feed is unreliable for these):")
+        for x in implausible[:10]:
+            print("    " + x)
+        if len(implausible) > 10:
+            print(f"    ... and {len(implausible)-10} more")
     if big_moves:
         print(f"  {len(big_moves)} margins moved more than "
               f"{MAX_MARGIN_SHIFT:.0%} and were NOT applied — review by hand:")
@@ -483,7 +519,13 @@ def recalibrate_model(companies):
 # --- forecast recalibration bounds -----------------------------------------
 # Every one of these exists because an unbounded automatic model will happily
 # extrapolate a single odd quarter into a decade of nonsense.
-G1_MIN, G1_MAX = -0.25, 0.60      # year-one growth, hard clamp
+# Year-one growth band. The original 60% ceiling was far too permissive:
+# the feed reported JPMorgan growing 109% and Royal Bank 135%, which is not
+# something large banks do. Clamping those to 60% still published a fiction.
+# Anything above this is now REJECTED rather than clamped, because a number
+# that wrong is not a signal worth partially trusting.
+G1_MIN, G1_MAX = -0.25, 0.45
+G1_REJECT_ABOVE = 0.60            # beyond this the datum is discarded entirely
 G1_MAX_STEP = 0.20                # how far year-one growth may move in one run
 FADE_FLOOR = 0.02                 # growth never fades below this by year five
 M1_MAX_EXPANSION = 0.08           # margin may be forecast to expand by 8pp, no more
@@ -559,7 +601,7 @@ def recalibrate_forecasts(companies):
                         (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
 
     grown = margined = 0
-    clamped = []
+    clamped, discarded = [], []
 
     for c in companies:
         got = fund.get(c["t"])
@@ -568,6 +610,10 @@ def recalibrate_forecasts(companies):
 
         # ---- growth path -------------------------------------------------
         g_actual = got.get("growth_ttm")
+        if finite(g_actual) and abs(g_actual) > G1_REJECT_ABOVE:
+            # Not a real growth rate. Keep the stored assumption.
+            discarded.append(f"{c['t']:6s} reported growth {g_actual:>8.1%}")
+            g_actual = None
         if finite(g_actual):
             old_g1 = c["growth"][0]
             g1 = max(G1_MIN, min(G1_MAX, g_actual))
@@ -606,6 +652,14 @@ def recalibrate_forecasts(companies):
 
     print(f"Forecasts: {grown} growth paths rebuilt from actual revenue growth, "
           f"{margined} margin targets reset to sector convergence")
+    if discarded:
+        print(f"  {len(discarded)} reported growth rates exceeded "
+              f"{G1_REJECT_ABOVE:.0%} and were discarded as implausible "
+              f"(stored assumption kept):")
+        for x in discarded[:10]:
+            print("    " + x)
+        if len(discarded) > 10:
+            print(f"    ... and {len(discarded)-10} more")
     if clamped:
         print(f"  {len(clamped)} growth rates fell outside the "
               f"{G1_MIN:.0%} to {G1_MAX:.0%} band and were clamped:")
@@ -691,6 +745,16 @@ def main():
     for w in warn_implausible(companies):
         print(f"  warning: {w}")
 
+    # Snapshot the hand-written assumptions before anything touches them, so
+    # a company whose recalibration produces nonsense can fall back to them.
+    global ORIGINAL_ASSUMPTIONS
+    ORIGINAL_ASSUMPTIONS = {
+        c["t"]: {"growth": list(c["growth"]), "m0": c["m0"], "m1": c["m1"],
+                 "wacc": c["wacc"], "tg": c["tg"], "rev": c["rev"],
+                 "shares": c["shares"], "netdebt": c["netdebt"]}
+        for c in companies
+    }
+
     apply_fundamentals(companies)
     recalibrate_model(companies)
     recalibrate_forecasts(companies)
@@ -726,7 +790,45 @@ def main():
         print("No companies survived validation — refusing to overwrite data.js")
         return 1
 
-    out = [build(c) for c in companies]
+    # ---- final output sanity gate ------------------------------------
+    # Whatever survived the input checks, a fair value implying several
+    # thousand percent upside is not a research finding, it is a broken
+    # input. Rebuild those companies from their stored assumptions rather
+    # than publishing the number.
+    from engine import build as _build
+    out, reverted = [], []
+    for c in companies:
+        row = _build(c)
+        # A negative fair value is a legitimate result when a company's debt
+        # exceeds the present value of its cash flows. The site already renders
+        # those as "N/M" rather than a negative price, so they must not be
+        # caught by a gate meant for broken inputs.
+        legitimately_negative = row.get("fv", 0) <= 0
+        implausible = (not finite(row.get("upside"))
+                       or (not legitimately_negative
+                           and not (-0.98 <= row["upside"] <= 3.0)))
+        if implausible:
+            original = ORIGINAL_ASSUMPTIONS.get(c["t"])
+            if original:
+                fixed = dict(c)
+                fixed.update(original)
+                candidate = _build(fixed)
+                if finite(candidate.get("upside")) and -0.98 <= candidate["upside"] <= 3.0:
+                    reverted.append(f"{c['t']} ({row['upside']*100:+,.0f}%)")
+                    out.append(candidate)
+                    continue
+            reverted.append(f"{c['t']} ({row['upside']*100:+,.0f}%, dropped)")
+            continue
+        out.append(row)
+
+    if reverted:
+        print(f"  REVERTED {len(reverted)} companies whose recalibrated upside was "
+              f"implausible (> 300% or < -98%):")
+        for r in reverted[:12]:
+            print("    " + r)
+        if len(reverted) > 12:
+            print(f"    ... and {len(reverted)-12} more")
+        print("    These use their stored assumptions instead of the fetched data.")
 
     # sector aggregates + peer sets, used by the sector pages and comps tables
     sectors = [dict(s) for s in SECTORS]

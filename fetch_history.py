@@ -28,6 +28,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -100,7 +101,11 @@ def _get(url, headers=None, timeout=25):
 
 def from_yahoo(symbol):
     """(dates, closes) oldest-first from Yahoo's chart endpoint, or (None, why)."""
-    data, err = _get(YAHOO.format(symbol), headers={"User-Agent": UA})
+    # ^TNX and other index symbols start with a caret, which is not valid in a
+    # URL path unencoded — the request silently fails, which is why the
+    # Treasury yield never arrived and WACC never recalibrated.
+    data, err = _get(YAHOO.format(urllib.parse.quote(symbol, safe="")),
+                     headers={"User-Agent": UA})
     if err:
         return None, err
 

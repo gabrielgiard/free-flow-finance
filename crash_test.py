@@ -151,7 +151,11 @@ rc, out = run_build()
 check("5 build survives extreme growth", rc == 0, f"exit {rc}")
 d = load_built()
 worst = max(abs(c["growth"][0]) for c in d["companies"])
-check("5 growth clamped to band", worst <= build.G1_MAX + 1e-9, f"max |g1| = {worst}")
+# growth is now either clamped to G1_MAX or discarded outright, and a
+# discarded datum leaves the stored assumption in place — which may legitimately
+# sit above G1_MAX. What must hold is that nothing absurd survives.
+check("5 growth stays plausible", worst <= build.G1_REJECT_ABOVE + 1e-9,
+      f"max |g1| = {worst}")
 invariants(load_built(), "5")
 
 # ---------- 6. rate shocks -------------------------------------------
