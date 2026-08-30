@@ -38,21 +38,23 @@ jobs:
       # OPTIONAL. Yahoo (in the history step below) is the real price source
       # and needs no key at all. This adds intraday precision when it works,
       # and is skipped entirely when it does not. It can never fail the run.
-      - name: Fetch intraday quotes (optional)
-        continue-on-error: true
+      # PRICES. Tries Finnhub, then Twelve Data, then Yahoo per company, so
+      # no single source going down can freeze the site. Fails the job loudly
+      # if every source fails for every company — silence is what let prices
+      # sit stale for six days once.
+      - name: Fetch current prices
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
         run: |
-          if [ -z "$FINNHUB_API_KEY" ]; then
-            echo "No Finnhub key set — skipping. Prices come from Yahoo below."
-            exit 0
+          python fetch_prices.py
+          if [ ! -f prices.json ]; then
+            echo "::error::prices.json was not produced. Every source failed."
+            exit 1
           fi
-          python fetch_prices.py || echo "Quote fetch failed — Yahoo will cover it."
+          echo "prices.json: $(wc -c < prices.json) bytes"
 
-      # THIS IS THE PRICE SOURCE. Pulls a year of daily closes per company
-      # from Yahoo (no API key), which drives both the charts and every price
-      # on the site. If this step works, the site is current.
-      - name: Fetch prices and chart history from Yahoo
+      - name: Update chart history
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
         run: |
