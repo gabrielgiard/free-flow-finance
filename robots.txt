@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://free-flow-finance.pages.dev/sitemap.xml

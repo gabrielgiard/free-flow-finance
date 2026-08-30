@@ -13,6 +13,8 @@ script produces.
 
 import json
 import os
+import time
+import time
 import statistics
 import sys
 
@@ -87,23 +89,55 @@ def coverage_stats(companies, sectors):
     }
 
 
+def _iso_to_words(iso):
+    months = ["January", "February", "March", "April", "May", "June", "July",
+              "August", "September", "October", "November", "December"]
+    y, mo, d = iso[:10].split("-")
+    return f"{int(d)} {months[int(mo) - 1]} {y}"
+
+
 def stamp_date(meta):
-    """Set the homepage date from when prices were last fetched."""
+    """Set the homepage date from whichever source is actually freshest,
+    and record how many days old that is.
+
+    The previous version only ever looked at prices.json. That is exactly
+    the failure this project hit: when Finnhub was the thing not updating,
+    the displayed date silently stayed put even though the underlying
+    numbers might have moved via a different path, or vice versa. This now
+    reflects reality regardless of which pipe is currently working.
+    """
+    candidates = []
     try:
         with open(os.path.join(HERE, "prices.json")) as f:
             iso = json.load(f).get("_fetched_at", "")[:10]
+            if len(iso) == 10:
+                candidates.append(iso)
     except (FileNotFoundError, json.JSONDecodeError):
-        return
-    if len(iso) != 10:
-        return
-    try:
-        y, mo, d = iso.split("-")
-        months = ["January", "February", "March", "April", "May", "June", "July",
-                  "August", "September", "October", "November", "December"]
-        meta["asof"] = f"{int(d)} {months[int(mo) - 1]} {y}"
-        print(f"Homepage dated {meta['asof']} from prices.json")
-    except (ValueError, IndexError):
         pass
+    try:
+        text = open(os.path.join(HERE, "docs", "history.js")).read()
+        hist = json.loads(text[len("var FF_HISTORY = "):].rstrip().rstrip(";"))
+        dates = [e.get("to", "")[:10] for e in hist.values()
+                if isinstance(e, dict) and e.get("to")]
+        if dates:
+            candidates.append(max(dates))
+    except (FileNotFoundError, json.JSONDecodeError, ValueError, KeyError):
+        pass
+
+    if not candidates:
+        meta["price_age_days"] = 9999
+        return
+    newest = max(candidates)
+    try:
+        meta["asof"] = _iso_to_words(newest)
+    except (ValueError, IndexError):
+        return
+
+    y, mo, d = (int(x) for x in newest.split("-"))
+    age = int((time.time() - time.mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
+    meta["price_age_days"] = age
+    flag = "  <-- STALE, check the pipeline" if age > STALE_WARN_DAYS else ""
+    print(f"Homepage dated {meta['asof']} ({age} days old){flag}")
 
 
 def load_companies():
@@ -128,6 +162,133 @@ def load_companies():
 MAX_PRICE_AGE_DAYS = 5
 
 
+def prices_from_history():
+    """Latest close for every series in docs/history.js.
+
+    This costs nothing -- the file is already built for the charts, and its
+    last point IS the most recent close. It covers companies the quote feed
+    misses entirely, including foreign listings, so nothing is left stranded
+    on a hardcoded estimate.
+    """
+    path = os.path.join(HERE, "docs", "history.js")
+    try:
+        text = open(path).read()
+    except FileNotFoundError:
+        return {}
+    prefix = "var FF_HISTORY = "
+    if not text.startswith(prefix):
+        return {}
+    try:
+        hist = json.loads(text[len(prefix):].rstrip().rstrip(";"))
+    except json.JSONDecodeError:
+        return {}
+
+    # Only trust a close that is actually recent. A price that is weeks old is
+    # worse than an honest estimate, because it looks live and is not.
+    import time as _time
+    def _days_old(ds):
+        if not isinstance(ds, str) or len(ds) < 10:
+            return 9999
+        try:
+            y, m, d = (int(x) for x in ds[:10].split("-"))
+            return int((_time.time() - _time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))) / 86400)
+        except (ValueError, OverflowError):
+            return 9999
+
+    out, stale = {}, 0
+    for tick, entry in hist.items():
+        if tick.startswith("_") or not isinstance(entry, dict):
+            continue
+        closes = entry.get("c")
+        if not (isinstance(closes, list) and closes):
+            continue
+        last = closes[-1]
+        if not (isinstance(last, (int, float)) and last > 0):
+            continue
+        if _days_old(entry.get("to")) > MAX_PRICE_AGE_DAYS:
+            stale += 1
+            continue
+        out[tick] = float(last)
+    if stale:
+        print(f"  ignored {stale} chart closes older than "
+              f"{MAX_PRICE_AGE_DAYS} days — too stale to use as a price")
+    return out
+
+
+def check_price_chart_agreement(companies):
+    """The displayed price and the chart's final point must be the same number.
+
+    They are read from the same array, so any disagreement means something
+    wrote to that series after it was fetched. That happened once already:
+    the accumulator was stapling stale quotes onto clean Yahoo data. This
+    check exists so it can never happen silently again.
+    """
+    hist_px = prices_from_history()
+    bad = [c["t"] for c in companies
+           if c["t"] in hist_px and abs(c["price"] - hist_px[c["t"]]) > 0.01]
+    if bad:
+        print(f"  WARNING: price disagrees with chart end-point for "
+              f"{len(bad)} companies: {', '.join(bad[:8])}"
+              + (" ..." if len(bad) > 8 else ""))
+    return bad
+
+
+def apply_live_prices(companies):
+    """Set every price by picking the freshest reading from TWO independent
+    sources, rather than trusting one.
+
+    WHY BOTH, EVERY TIME: this project has been through Stooq dying, FRED
+    blocking datacentre IPs, and Yahoo apparently getting throttled after
+    sustained use. Every free, undocumented source has failed eventually.
+    There is no version of "pick the reliable one" that stays true forever.
+    The only durable fix is to stop depending on any single source working
+    on any given day.
+
+    THE RULE: for each company, compare the Finnhub quote (prices.json) and
+    the chart history's last close (docs/history.js). Take whichever is
+    actually fresh. If only one exists, use it. If neither does, fall back to
+    the stored estimate, same as always.
+
+    A stale close is worse than an honest estimate because it looks live and
+    is not, so anything older than MAX_PRICE_AGE_DAYS is discarded outright
+    regardless of which source it came from.
+    """
+    path = os.path.join(HERE, "prices.json")
+    quote_age_days = 9999
+    try:
+        with open(path) as f:
+            prices = json.load(f)
+        fetched = prices.get("_fetched_at", "")
+        if isinstance(fetched, str) and len(fetched) >= 10:
+            y, mo, d = (int(x) for x in fetched[:10].split("-"))
+            quote_age_days = int((__import__("time").time()
+                                  - __import__("time").mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        prices = {}
+
+    hist_px = prices_from_history()   # already filtered to <= MAX_PRICE_AGE_DAYS old
+
+    quote_fresh = quote_age_days <= MAX_PRICE_AGE_DAYS
+    from_quote = from_hist = 0
+
+    for c in companies:
+        px = prices.get(c["t"]) if quote_fresh else None
+        hp = hist_px.get(c["t"])
+        has_px = isinstance(px, (int, float)) and px > 0
+        has_hp = isinstance(hp, (int, float)) and hp > 0
+
+        # Both fresh: prefer the quote feed, since it can be same-day intraday
+        # while the chart close is always yesterday's or today's settle.
+        if has_px:
+            c["price"] = float(px)
+            from_quote += 1
+        elif has_hp:
+            c["price"] = float(hp)
+            from_hist += 1
+        # else: keep the stored estimate untouched.
+
+    print(f"Prices: {from_quote} from Finnhub quote (age {quote_age_days}d), "
+          f"{from_hist} from chart history")
 def prices_from_history():
     """Latest close for every series in docs/history.js.
 
@@ -249,6 +410,23 @@ def apply_live_prices(companies):
     print(f"Prices: {from_hist} from chart history"
           + (f", {n} from the quote feed" if n else "")
           + f" (quotes fetched {fetched})")
+    # Loud staleness alarm. Prices froze for six days once and nobody noticed,
+    # because the site kept serving the last good numbers without complaint.
+    age = None
+    stamp = prices.get("_fetched_at", "")
+    if isinstance(stamp, str) and len(stamp) >= 10:
+        try:
+            y, mo, d = (int(x) for x in stamp[:10].split("-"))
+            age = int((time.time() - time.mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
+        except (ValueError, OverflowError):
+            age = None
+    if age is not None and age > 3:
+        print(f"  {'!' * 60}")
+        print(f"  PRICES ARE {age} DAYS OLD (last fetched {stamp[:10]}).")
+        print(f"  The quote fetcher is not running or not committing.")
+        print(f"  Run: python fetch_prices.py --test")
+        print(f"  {'!' * 60}")
+
     stale = [c["t"] for c in companies
              if c["t"] not in prices and c["t"] not in hist_px]
     if stale:
@@ -355,6 +533,10 @@ def apply_fundamentals(companies):
 # Do not change it: it is the historical anchor. The current rate is fetched
 # separately, and each company's WACC moves by the difference.
 BASE_RISK_FREE = 0.0463
+
+# If the freshest price data is older than this, the site says so
+# out loud instead of quietly showing week-old numbers as current.
+STALE_WARN_DAYS = 3
 
 # Filled in at build time: the hand-written assumptions, kept so a company
 # with a broken recalibration can be reverted rather than published wrong.
@@ -481,7 +663,12 @@ def recalibrate_model(companies):
             rejected.append(f"{c['t']} actual margin {actual:.1%} is negative")
             continue
         shift = actual - c["m0"]
-        if abs(shift) > MAX_MARGIN_SHIFT:
+        # For thin-margin businesses a 15pp move is not a refinement, it is a
+        # different company. Scale the tolerance to the margin itself.
+        tolerance = MAX_MARGIN_SHIFT
+        if 0 < c["m0"] < 0.10:
+            tolerance = max(0.01, c["m0"] * 0.75)
+        if abs(shift) > tolerance:
             big_moves.append(f"{c['t']:6s} modelled {c['m0']:>6.1%} -> actual {actual:>6.1%}")
             continue
         if abs(shift) < 0.002:
@@ -639,8 +826,18 @@ def recalibrate_forecasts(companies):
         # ---- year-five margin target -------------------------------------
         peer_m = sector_m.get(c["sec"], c["m0"])
         gap = peer_m - c["m0"]
-        # close a third of the gap to the sector, bounded either way
+        # Close a third of the gap to the sector, bounded either way.
         move = max(-M1_MAX_EXPANSION, min(M1_MAX_EXPANSION, gap / 3.0))
+
+        # Thin-margin businesses need a much tighter bound. A health insurer
+        # or drug distributor earns ~2% on enormous revenue, so moving its
+        # margin by even two points multiplies free cash flow several times
+        # over and produces a fair value implying +500% upside. The absolute
+        # bound has to scale with the starting margin, not sit at a flat 8pp.
+        if 0 < c["m0"] < 0.10:
+            cap = max(0.004, c["m0"] * 0.35)   # at most a third of the margin
+            move = max(-cap, min(cap, move))
+
         new_m1 = round(c["m0"] + move, 4)
         # a company already earning well should not be forecast into losses
         if new_m1 > 0 and abs(new_m1 - c["m1"]) > 0.002:
@@ -897,6 +1094,18 @@ def main():
     print(f"\nRatings: {ratings}")
     print(f"Total coverage: ${sum(c['mcap'] for c in out)/1000:.2f}T market cap")
     print(f"\nWrote {target} ({os.path.getsize(target)/1024:.0f} KB)")
+
+    # Static, indexable pages. The app routes on the URL fragment, which search
+    # engines treat as a single page — so without these, all 234 write-ups are
+    # invisible to anyone searching for a company by name.
+    try:
+        import seo_pages
+        seo_pages.generate(data)
+    except Exception as e:
+        # Never let page generation break the data build. The site still works
+        # without static pages; it is simply not findable.
+        print(f"SEO page generation failed ({type(e).__name__}: {e}) — "
+              f"site data is fine, static pages skipped")
     print("Open docs/index.html in a browser to view the site.")
     return 0
 

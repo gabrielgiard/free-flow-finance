@@ -1,22 +1,25 @@
-"""Fetch live share prices from Finnhub and write them to prices.json.
+"""Fetch one current price per company, from whichever source answers.
 
-Run this BEFORE build.py. The flow is:
+WHY THIS IS BUILT THIS WAY
 
-    fetch_prices.py  ->  prices.json  ->  build.py  ->  docs/data.js
+This project has now lost three "free forever" price sources: Stooq retired its
+CSV endpoint, FRED began refusing datacentre traffic, and Yahoo's unofficial
+chart endpoint rate-limits aggressively once you hit it a few hundred times a
+day on a schedule. Each time, prices silently froze.
 
-Why a separate file instead of editing the company files directly: your
-assumptions (revenue, margins, WACC) are things you decide and should live in
-version control as your work. Prices are just market data that changes every
-day. Keeping them apart means an API outage can never corrupt your models --
-build.py simply falls back to the price already stored in the company file.
+So this does not depend on any one of them. It tries three independent sources
+per company and takes the first that answers:
 
-The API key is read from the FINNHUB_API_KEY environment variable. Never paste
-it into a file you commit. Locally:
+    1. Finnhub      60 calls/minute, no daily cap on US equities. Needs a key.
+    2. Twelve Data  800 calls/day, 8/minute. Needs a key.
+    3. Yahoo        No key at all. Fragile, so it goes last.
 
-    export FINNHUB_API_KEY=your_key_here      # macOS / Linux
-    setx FINNHUB_API_KEY "your_key_here"      # Windows
+234 companies fits comfortably inside any one of those budgets. All three would
+have to fail simultaneously for prices to stop — and if that happens, the log
+says so loudly rather than quietly serving month-old numbers.
 
-On GitHub it lives in Settings -> Secrets and variables -> Actions.
+    python fetch_prices.py            # normal run
+    python fetch_prices.py --test     # check each source on 3 symbols
 """
 
 import json
@@ -24,113 +27,212 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from build import load_companies  # noqa: E402
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 
-API = "https://finnhub.io/api/v1/quote?symbol={}&token={}"
+FINNHUB = "https://finnhub.io/api/v1/quote?symbol={}&token={}"
+TWELVE = "https://api.twelvedata.com/price?symbol={}&apikey={}"
+YAHOO = ("https://query1.finance.yahoo.com/v8/finance/chart/{}"
+         "?range=1d&interval=1d")
 
-# Finnhub's free tier covers US-listed stocks only (ADRs included). These names
-# trade on foreign exchanges or thin OTC lines that need a paid plan, so we skip
-# them and keep the hardcoded price from the company file.
-# If you upgrade to a paid plan, delete entries from this set and add the proper
-# Finnhub symbol to SYMBOL_MAP below (e.g. "MC": "MC.PA").
-# These stay skipped for the QUOTE feed, but they are no longer stranded:
-# fetch_history.py pulls them from Yahoo using exchange suffixes and converts
-# to USD, and build.py falls back to that last close. So they do get real
-# prices now, just by a different route.
-#
-# ADR alternative: several of these have US-listed ADR lines that Finnhub does
-# cover on the free tier -- LVMUY (LVMH), NSRGY (Nestle), SIEGY (Siemens),
-# LRLCY (L'Oreal). Swapping the ticker here would make them auto-update, but
-# ADR prices differ from the primary listing by the ADR ratio and some lines
-# are thinly traded, so check each returns a sensible quote before switching.
-SKIP = {
-    "MC",        # LVMH            - Euronext Paris  (ADR: LVMUY)
-    "OR",        # L'Oreal         - Euronext Paris  (ADR: LRLCY)
-    "NESN",      # Nestle          - SIX Swiss       (ADR: NSRGY)
-    "SIE",       # Siemens         - Frankfurt/XETRA (ADR: SIEGY)
-    "005930",    # Samsung         - Korea Exchange
-    "RELIANCE",  # Reliance        - NSE / BSE
-    "TCEHY",     # Tencent ADR     - thin OTC line
-    "BYDDY",     # BYD ADR         - thin OTC line
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+
+OUT = os.path.join(HERE, "prices.json")
+
+# Foreign primaries Finnhub does not cover on the free tier. Yahoo does, using
+# exchange suffixes, with an approximate FX rate to convert to USD.
+FOREIGN = {
+    "MC":       ("MC.PA",       1.08),
+    "OR":       ("OR.PA",       1.08),
+    "NESN":     ("NESN.SW",     1.13),
+    "SIE":      ("SIE.DE",      1.08),
+    "005930":   ("005930.KS",   0.00072),
+    "RELIANCE": ("RELIANCE.NS", 0.0115),
+    "TCEHY":    ("TCEHY",       1.0),
+    "BYDDY":    ("BYDDY",       1.0),
 }
 
-# Where your ticker differs from Finnhub's symbol, map it here.
-SYMBOL_MAP = {
-    "BRK.B": "BRK.B",
-}
 
-RATE_LIMIT_SLEEP = 1.1  # free tier is 60 calls/minute; ~1.1s keeps us under it
+def usable_price(v):
+    """True only for a real, finite, positive number.
+
+    Two traps caught in testing: bool is a subclass of int in Python, so a
+    JSON `true` passes an isinstance check and becomes a price of $1.00. And
+    float("Infinity") parses without error, then propagates through every
+    downstream calculation. Both must be rejected here, at the boundary.
+    """
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    return v == v and v not in (float("inf"), float("-inf")) and v > 0
 
 
-def quote(symbol, key):
-    """Return the current price for one symbol, or None if unavailable."""
-    url = API.format(symbol, key)
+def _get(url, headers=None, timeout=15, retries=2):
+    """GET with a short exponential backoff. Transient 429s and timeouts are
+    normal on free tiers; giving up on the first one wastes a working source."""
+    for attempt in range(retries + 1):
+        try:
+            req = urllib.request.Request(url, headers=headers or {})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode()), None
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 502, 503, 504) and attempt < retries:
+                time.sleep(2 ** attempt)
+                continue
+            return None, f"HTTP {e.code}"
+        except Exception as e:
+            if attempt < retries:
+                time.sleep(2 ** attempt)
+                continue
+            return None, type(e).__name__
+    return None, "retries exhausted"
+
+
+def from_finnhub(sym, key):
+    if not key:
+        return None, "no key"
+    data, err = _get(FINNHUB.format(urllib.parse.quote(sym), key))
+    if err:
+        return None, err
+    px = data.get("c") if isinstance(data, dict) else None
+    if usable_price(px):
+        return float(px), None
+    return None, "no price in response"
+
+
+def from_twelve(sym, key):
+    if not key:
+        return None, "no key"
+    data, err = _get(TWELVE.format(urllib.parse.quote(sym), key))
+    if err:
+        return None, err
+    if isinstance(data, dict) and data.get("status") == "error":
+        return None, str(data.get("message", "error"))[:50]
+    raw = data.get("price") if isinstance(data, dict) else None
+    if isinstance(raw, bool):
+        return None, "boolean, not a price"
     try:
-        with urllib.request.urlopen(url, timeout=15) as r:
-            data = json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
-        print(f"  ! {symbol}: HTTP {e.code}")
-        return None
-    except Exception as e:
-        print(f"  ! {symbol}: {type(e).__name__} {e}")
-        return None
-    price = data.get("c")
-    # Finnhub returns c=0 for symbols it has no data for, rather than an error
-    if not price:
-        print(f"  ! {symbol}: no data returned (free tier may not cover it)")
-        return None
-    return float(price)
+        px = float(raw)
+    except (TypeError, ValueError):
+        return None, "unparseable price"
+    if not usable_price(px):
+        return None, "not a usable price"
+    return px, None
+
+
+def from_yahoo(sym):
+    data, err = _get(YAHOO.format(urllib.parse.quote(sym, safe="")),
+                     headers={"User-Agent": UA})
+    if err:
+        return None, err
+    try:
+        meta = data["chart"]["result"][0]["meta"]
+    except (KeyError, IndexError, TypeError):
+        return None, "unexpected shape"
+    for field in ("regularMarketPrice", "previousClose", "chartPreviousClose"):
+        px = meta.get(field)
+        if usable_price(px):
+            return float(px), None
+    return None, "no price in meta"
+
+
+def price_for(ticker, fh_key, td_key):
+    """First source that answers wins. Returns (price, source, error)."""
+    ysym, fx = FOREIGN.get(ticker, (ticker, 1.0))
+
+    # Foreign primaries: only Yahoo covers them, and the result needs
+    # converting out of the local currency.
+    if ticker in FOREIGN:
+        px, err = from_yahoo(ysym)
+        if px:
+            return round(px * fx, 2), "yahoo", None
+        return None, None, f"yahoo: {err}"
+
+    px, e1 = from_finnhub(ticker, fh_key)
+    if px:
+        return round(px, 2), "finnhub", None
+    px, e2 = from_twelve(ticker, td_key)
+    if px:
+        return round(px, 2), "twelvedata", None
+    px, e3 = from_yahoo(ticker)
+    if px:
+        return round(px, 2), "yahoo", None
+    return None, None, f"finnhub: {e1}; twelve: {e2}; yahoo: {e3}"
 
 
 def main():
-    key = os.environ.get("FINNHUB_API_KEY")
-    if not key:
-        print("ERROR: FINNHUB_API_KEY is not set. See the docstring in this file.")
-        return 1
+    args = sys.argv[1:]
+    fh_key = os.environ.get("FINNHUB_API_KEY")
+    td_key = os.environ.get("TWELVEDATA_API_KEY")
 
+    if "--test" in args:
+        print("Testing each source on three symbols.\n")
+        for sym in ("AAPL", "MSFT", "NVDA"):
+            f, ef = from_finnhub(sym, fh_key)
+            t, et = from_twelve(sym, td_key)
+            y, ey = from_yahoo(sym)
+            print(f"  {sym:6s} finnhub {f or ef!s:<22} "
+                  f"twelve {t or et!s:<22} yahoo {y or ey}")
+            time.sleep(1)
+        print("\nAny one working source is enough to keep prices current.")
+        return 0
+
+    if not fh_key and not td_key:
+        print("Neither FINNHUB_API_KEY nor TWELVEDATA_API_KEY is set.")
+        print("Yahoo alone will be tried, but it rate-limits and should not be "
+              "relied on. Add at least one key.")
+
+    from build import load_companies
     companies = load_companies()
-    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prices.json")
 
-    # Start from whatever we fetched last time, so one bad run never wipes the file
-    try:
-        with open(out_path) as f:
-            prices = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        prices = {}
+    prices, sources, failures = {}, {}, []
+    print(f"Fetching {len(companies)} prices "
+          f"(finnhub -> twelvedata -> yahoo)\n")
 
-    targets = [c for c in companies if c["t"] not in SKIP]
-    print(f"Fetching {len(targets)} prices ({len(SKIP)} skipped as non-US listings)\n")
-
-    ok = fail = 0
-    for i, c in enumerate(targets, 1):
-        sym = SYMBOL_MAP.get(c["t"], c["t"])
-        px = quote(sym, key)
+    for i, c in enumerate(companies, 1):
+        px, src, err = price_for(c["t"], fh_key, td_key)
         if px:
-            old = prices.get(c["t"])
             prices[c["t"]] = px
-            delta = f"  ({(px/old-1)*100:+.1f}%)" if old else ""
-            print(f"  {i:3d}/{len(targets)} {c['t']:<9} ${px:,.2f}{delta}")
-            ok += 1
+            sources[src] = sources.get(src, 0) + 1
         else:
-            fail += 1
-        time.sleep(RATE_LIMIT_SLEEP)
+            failures.append(f"{c['t']}: {err}")
+        # Finnhub allows 60/minute. One second between calls keeps every
+        # source inside its limit without needing to track them separately.
+        time.sleep(1.05)
+        if i % 40 == 0 or i == len(companies):
+            print(f"  {i:3d}/{len(companies)}  {len(prices)} ok, "
+                  f"{len(failures)} failed")
+
+    if not prices:
+        print("\nEVERY SOURCE FAILED FOR EVERY COMPANY.")
+        print("Check that your API keys are set and still valid.")
+        print("Existing prices are left untouched.")
+        return 1
 
     prices["_fetched_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    with open(out_path, "w") as f:
+    with open(OUT, "w") as f:
         json.dump(prices, f, indent=2, sort_keys=True)
 
-    print(f"\nUpdated {ok} prices, {fail} failed, {len(SKIP)} skipped.")
-    print(f"Wrote {out_path}")
+    got = ", ".join(f"{v} from {k}" for k, v in sorted(sources.items()))
+    print(f"\nFetched {len(prices)-1} prices ({got})")
+    if failures:
+        print(f"{len(failures)} failed:")
+        for f_ in failures[:10]:
+            print("  - " + f_)
+        if len(failures) > 10:
+            print(f"  ... and {len(failures)-10} more")
 
-    print("\nNow run:  python build.py")
-
-    # Only fail the job if essentially everything broke -- a handful of misses
-    # is normal and shouldn't stop the site from rebuilding.
-    if ok == 0:
-        print("ERROR: no prices were fetched at all. Check your API key.")
-        return 1
+    # A health signal the workflow can act on: if most companies failed,
+    # something systemic is wrong and it should be visible, not buried.
+    if len(failures) > len(companies) * 0.25:
+        print(f"\nWARNING: {len(failures)} of {len(companies)} failed. "
+              f"A source may have started blocking. Run --test to check each one.")
+    print(f"Wrote {OUT}")
     return 0
 
+
+if __name__ == "__main__":
+    sys.exit(main())

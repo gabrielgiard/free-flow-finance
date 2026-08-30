@@ -36,8 +36,8 @@ sys.path.insert(0, HERE)
 
 from build import load_companies  # noqa: E402
 
-YAHOO = ("https://query1.finance.yahoo.com/v8/finance/chart/{}"
-         "?range=1y&interval=1d")
+YAHOO_HOSTS = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]
+YAHOO_PATH = "/v8/finance/chart/{}?range=1y&interval=1d"
 TWELVE = ("https://api.twelvedata.com/time_series"
           "?symbol={}&interval=1day&outputsize={}&apikey={}")
 

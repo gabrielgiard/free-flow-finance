@@ -182,6 +182,28 @@ Run `python fetch_fundamentals.py --dry-run` before trusting it. That prints
 every figure the feed disagrees with by more than 5x and would refuse to apply,
 which is the fastest way to spot a units problem or a bad response.
 
+**Search visibility**
+
+`seo_pages.py` writes a real HTML file per company and sector at build time:
+
+```
+docs/company/NVDA/index.html   ->  /company/NVDA/
+docs/sector/semis/index.html   ->  /sector/semis/
+docs/sitemap.xml
+docs/robots.txt
+```
+
+The app routes on the URL fragment (`/#/company/NVDA`). Everything after `#`
+is a pointer within one document, so search engines see a single page rather
+than 234. These static files carry the research as real markup, plus title,
+description, canonical URL, Open Graph tags and JSON-LD.
+
+**Set `SITE_URL` in `seo_pages.py` to your real domain before publishing.**
+A canonical pointing at the wrong host tells Google to index elsewhere.
+
+After deploying, submit the sitemap in Google Search Console. Indexing usually
+takes one to three weeks to start showing traffic.
+
 **Crash testing**
 
 `crash_test.py` runs 42 adversarial checks against the recalibration engine:
