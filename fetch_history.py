@@ -104,8 +104,17 @@ def from_yahoo(symbol):
     # ^TNX and other index symbols start with a caret, which is not valid in a
     # URL path unencoded — the request silently fails, which is why the
     # Treasury yield never arrived and WACC never recalibrated.
-    data, err = _get(YAHOO.format(urllib.parse.quote(symbol, safe="")),
-                     headers={"User-Agent": UA})
+    quoted = urllib.parse.quote(symbol, safe="")
+
+    # Try each Yahoo host in turn — query1 is the one that gets rate-limited
+    # or blocked from shared datacentre IPs (like GitHub Actions runners)
+    # first; query2 often still answers when query1 doesn't.
+    data, err = None, "no hosts tried"
+    for host in YAHOO_HOSTS:
+        url = f"https://{host}{YAHOO_PATH.format(quoted)}"
+        data, err = _get(url, headers={"User-Agent": UA})
+        if not err:
+            break
     if err:
         return None, err
 
