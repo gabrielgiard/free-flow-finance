@@ -274,12 +274,15 @@ const TABS = [
   ['dcf', 'DCF & Valuation'],
   ['comps', 'Comparables'],
   ['thesis', 'Thesis & Ratings'],
+  ['case', 'Your Case'],
 ];
 
 function viewCompany(ticker) {
   const c = byT(ticker);
   if (!c) return view404();
   if (!STATE.activeTab[ticker]) STATE.activeTab[ticker] = 'overview';
+  // A shared "Your case" link opens on the tab that shows the sender's numbers.
+  if (caseDecode(caseQuery())) STATE.activeTab[ticker] = 'case';
   const active = STATE.activeTab[ticker];
 
   const tabsHTML = TABS.map(([id, label]) =>
@@ -293,6 +296,7 @@ function viewCompany(ticker) {
     dcf: panelDCF(c),
     comps: panelComps(c),
     thesis: panelThesis(c),
+    case: panelCase(c),
   };
   const panelsHTML = TABS.map(([id]) =>
     `<div class="co-panel ${active === id ? 'active' : ''}" data-panel="${id}">${panels[id]}</div>`
@@ -327,6 +331,15 @@ function viewCompany(ticker) {
   <section style="padding-top:34px;">
     <div class="wrap">${panelsHTML}</div>
   </section>`;
+}
+
+/* Your Case: the visitor's own DCF. The tab carries its own copy of the
+   price chart so the fair-value line and gap bracket can follow the
+   sliders, while the Overview chart keeps showing the model's view. */
+function panelCase(c) {
+  return `
+  <div style="margin-bottom:18px">${priceChartSVG(c.t, c.fv, c.price)}</div>
+  ${caseHTML(c)}`;
 }
 
 function panelOverview(c) {

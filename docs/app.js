@@ -10,7 +10,9 @@ const APP = document.getElementById('app');
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 function renderRoute() {
-  const hash = location.hash.replace(/^#\/?/, '');
+  // Anything after "?" is options for the page (a shared "Your case" link
+  // carries ?case=...), not part of which page to show.
+  const hash = location.hash.replace(/^#\/?/, '').split('?')[0];
   const [route, arg] = hash.split('/');
   let html, navKey = 'home';
 
@@ -32,6 +34,7 @@ function renderRoute() {
   updateSidebarActive(navKey, arg ? decodeURIComponent(arg) : null);
   markDecorativeSvgs();
   mountPriceCharts(APP);
+  mountCasePanels(APP);
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -52,7 +55,7 @@ function go(hash) { location.hash = hash; }
 function currentSectorKey() {
   // strip a leading "#" or "#/" the same way renderRoute does, so this always
   // agrees with which sector view is actually on screen
-  return location.hash.replace(/^#\/?/, '').split('/')[1];
+  return location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1];
 }
 
 /* ---------------------------------- sidebar ------------------------------

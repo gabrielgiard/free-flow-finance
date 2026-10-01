@@ -407,7 +407,8 @@ function priceChartSVG(key, fv, price) {
          aria-label="Share price chart for ${escapeHtml(key)}. Latest close ${FMT.usd(last)} on ${pcFmtDate(lastDate)}${fv > 0 ? `, against a fair value of ${FMT.usd(fv)}` : ''}. Use the left and right arrow keys to step through daily closes."></div>
     <figcaption class="pc-key">
       <span><i class="k-line"></i>Daily close</span>
-      ${fv > 0 ? `<span><i class="k-fv"></i>Today's fair value</span>` : ''}
+      <span class="pc-k-fv"${fv > 0 ? '' : ' hidden'}><i class="k-fv"></i><span class="pc-k-fv-text">Today's fair value</span></span>
+      <span class="pc-k-model" hidden><i class="k-model"></i>Model's fair value</span>
       <span class="pc-note"></span>
     </figcaption>
     ${series.closes.length < 8 ? historyThinNote(series.closes.length) : ''}
@@ -476,6 +477,11 @@ function pcRender(fig) {
   const uid = 'pc' + st.uid;
 
   let fvLayer = '';
+  const mfv = st.modelFv;
+  const ghost = st.custom && mfv > 0 && mfv >= lo && mfv <= hi;
+  if (ghost) {
+    fvLayer += `<line x1="${padL}" x2="${plotR}" y1="${Y(mfv).toFixed(1)}" y2="${Y(mfv).toFixed(1)}" class="pc-fvghost"/>`;
+  }
   if (showFV) {
     const fy = Y(fv);
     const up = fv >= lastV;
@@ -483,10 +489,10 @@ function pcRender(fig) {
     const bx = plotR + 18;
     const midY = (fy + ly) / 2;
     const labelAbove = fy > padT + 22;
-    fvLayer = `
+    fvLayer += `
       <line x1="${padL}" x2="${plotR}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-fvline"/>
       <text x="${(plotR - 6).toFixed(1)}" y="${(labelAbove ? fy - 8 : fy + 16).toFixed(1)}"
-            class="pc-fvlabel" text-anchor="end">Fair value ${FMT.usd(fv)}</text>
+            class="pc-fvlabel" text-anchor="end">${st.custom ? 'Your fair value' : 'Fair value'} ${FMT.usd(fv)}</text>
       <g class="pc-gap">
         <line x1="${lx.toFixed(1)}" x2="${bx}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" class="pc-gap-lead"/>
         <line x1="${plotR}" x2="${bx}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-gap-lead"/>
@@ -524,6 +530,12 @@ function pcRender(fig) {
   </svg>`;
   st.drawn = true;
 
+  const kfv = fig.querySelector('.pc-k-fv'), kmodel = fig.querySelector('.pc-k-model');
+  if (kfv) {
+    kfv.hidden = !(fv > 0);
+    kfv.querySelector('.pc-k-fv-text').textContent = st.custom ? 'Your fair value' : "Today's fair value";
+  }
+  if (kmodel) kmodel.hidden = !ghost;
   const note = fig.querySelector('.pc-note');
   if (note) note.textContent = (fv > 0 && !showFV)
     ? `Fair value is ${FMT.pct(fv / lastV - 1, 0)} from the price — too far to draw on the same scale. The gap is the finding; see the DCF tab.`
@@ -582,6 +594,18 @@ function pcHover(fig, i) {
   clipL.setAttribute('width', x); clipR.setAttribute('x', x); clipR.setAttribute('width', W - x);
   svg.classList.add('scrubbing');
   pcReadout(fig, i);
+}
+
+/* Called by the "Your case" panel: redraw with the visitor's fair value,
+   keeping the model's as a faint reference line. */
+function pcSetFV(fig, fv, modelFv, custom) {
+  const st = fig._pc;
+  if (!st) return;
+  st.fv = fv > 0 ? fv : 0;
+  st.modelFv = modelFv;
+  st.custom = !!custom;
+  pcRender(fig);
+  if (st.hover != null) pcHover(fig, st.hover);
 }
 
 let pcUid = 0;

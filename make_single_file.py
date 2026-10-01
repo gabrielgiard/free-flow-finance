@@ -19,7 +19,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DOCS = os.path.join(HERE, "docs")
 OUT = os.path.join(HERE, "FreeFlow-Finance.html")
 
-SCRIPTS = ["data.js", "history.js", "charts.js", "views.js", "app.js"]
+SCRIPTS = ["data.js", "history.js", "track-record.js", "charts.js", "case.js",
+           "views.js", "app.js"]
+
+# Optional data files and what to put in their place when missing. Without
+# the track-record fallback, the inlined page left FF_TRACK_RECORD undefined
+# and the Track Record page crashed.
+OPTIONAL = {
+    "history.js": ("var FF_HISTORY = {};",
+                   "docs/history.js not found — charts will show their empty state. "
+                   "Run fetch_history.py first to include them."),
+    "track-record.js": ("var FF_TRACK_RECORD = [];", None),
+}
 
 
 def read(name, required=True):
@@ -43,11 +54,12 @@ def main():
 
     parts = []
     for name in SCRIPTS:
-        body = read(name, required=(name != "history.js"))
+        body = read(name, required=name not in OPTIONAL)
         if body is None:
-            print("Note: docs/history.js not found — charts will show their "
-                  "empty state. Run fetch_history.py first to include them.")
-            parts.append("var FF_HISTORY = {};")
+            fallback, note = OPTIONAL[name]
+            if note:
+                print("Note: " + note)
+            parts.append(fallback)
             continue
         parts.append(body)
 
