@@ -313,11 +313,69 @@ def apply_fundamentals(companies):
         return
 
     applied = {"rev": 0, "shares": 0, "netdebt": 0}
-    out_of_range = []
+    out_of_range, share_fixes = [], []
+    hist_px = prices_from_history()
     for c in companies:
         got = fund.get(c["t"])
         if not isinstance(got, dict):
             continue
+        ref = hist_px.get(c["t"])
+        ref_px = ref[0] if ref else c.get("price")
+
+        # ---- share count: must be on the same basis as the price ----------
+        # For a foreign company the feed often reports HOME-market shares,
+        # while the price is per US share (ADR), and one ADR can be 2, 5 or 8
+        # home shares. TSMC's 25.9bn Taiwan shares against a per-ADR price made
+        # its market cap $11.8tn and its fair value 5x too low. Two checks:
+        #   1. If the feed gives a market cap, market cap / our price IS the
+        #      share count on our price's basis. Prefer it when they disagree.
+        #   2. Whatever survives must be within 0.625x-1.6x of the stored count.
+        #      Buybacks and dilution do not move a count 2x in a year; an ADR
+        #      ratio or an unrecorded split does.
+        v = got.get("shares")
+        mcap = got.get("mcap")
+        if finite(v) and finite(mcap) and mcap > 0 and finite(ref_px) and ref_px > 0:
+            implied = mcap / ref_px
+            if abs(v / implied - 1) > 0.25:
+                share_fixes.append(f"{c['t']} {v:.3f} -> {implied:.3f}")
+                got = dict(got, shares=round(implied, 4))
+        v = got.get("shares")
+        stored = c.get("shares")
+        if finite(v) and finite(stored) and stored > 0 and not (0.625 <= v / stored <= 1.6):
+            # A stock split moves the share count and the price by the same
+            # factor in opposite directions (Booking: 25x the shares at 1/25th
+            # the price). That is a real change and must be accepted. An ADR
+            # mix-up moves the share count while the price stays put.
+            r = v / stored
+            p = ref_px / c["price"] if finite(ref_px) and finite(c.get("price")) and c["price"] > 0 else None
+            if p and 0.6 <= r * p <= 1.6:
+                share_fixes.append(f"{c['t']} {stored:.3f} -> {v:.3f} (stock split, ~{r:.0f}:1)")
+            else:
+                out_of_range.append(f"{c['t']} shares {v:,.3f} vs stored {stored:,.3f} "
+                                    f"({r:.1f}x, price {'steady' if p and 0.6 < p < 1.6 else 'unknown'})")
+                got = {k: x for k, x in got.items() if k != "shares"}
+
+        # ---- net debt ------------------------------------------------------
+        # Banks are modelled with net debt at zero on purpose (debt is their
+        # raw material, see the Financials sector note), so the feed's figure
+        # must never replace it. For everyone else the feed's net debt is
+        # enterprise value minus market cap, two numbers it stamps at
+        # different moments -- on a $5tn company a few days of price movement
+        # alone is hundreds of billions. NVIDIA came through at +$222bn net
+        # debt when it holds net cash. So a change is accepted only if it is
+        # within 35% of a year's revenue; bigger moves (a debt-funded
+        # takeover) are logged for a human to enter by hand.
+        nd = got.get("netdebt")
+        if finite(nd):
+            if c.get("sec") == "financials" and c.get("netdebt") == 0:
+                got = {k: x for k, x in got.items() if k != "netdebt"}
+            else:
+                limit = max(10.0, 0.35 * (c.get("rev") or 0))
+                if abs(nd - c.get("netdebt", 0)) > limit:
+                    out_of_range.append(f"{c['t']} net debt {nd:,.1f} vs stored "
+                                        f"{c.get('netdebt', 0):,.1f}")
+                    got = {k: x for k, x in got.items() if k != "netdebt"}
+
         for field in ("rev", "shares", "netdebt"):
             v = got.get(field)
             if not finite(v):
@@ -343,10 +401,16 @@ def apply_fundamentals(companies):
             c[field] = float(v)
             applied[field] += 1
 
+    if share_fixes:
+        print(f"  {len(share_fixes)} share counts corrected "
+              f"(ADR share basis or stock split): "
+              + ", ".join(share_fixes[:8]))
     if out_of_range:
-        print(f"  rejected {len(out_of_range)} fundamentals outside sane bounds: "
-              + ", ".join(out_of_range[:6])
-              + (" ..." if len(out_of_range) > 6 else ""))
+        # Every one is named: these are the figures someone should check by hand.
+        print(f"  rejected {len(out_of_range)} fundamentals as implausible "
+              f"(kept the stored value):")
+        for x in out_of_range:
+            print("    " + x)
 
     stamp = fund.get("_fetched_at", "unknown")[:10]
     print(f"Applied fundamentals from {stamp}: "

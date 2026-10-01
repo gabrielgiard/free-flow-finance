@@ -458,7 +458,7 @@ EXPANSION2 = [
       (5, 3, 4, 5)),
 
     C("ORLY", "O'Reilly Automotive, Inc.", "consumer", "Springfield, Missouri, USA", 1957,
-      "Brad Beckham", "Nasdaq", 100.00, 8.60, 6.0, 17.0,
+      "Brad Beckham", "Nasdaq", 100.00, 0.81, 6.0, 17.0,
       [0.06, 0.06, 0.06, 0.05, 0.05], 0.14, 0.16, 0.080, 0.026,
       "Founded in 1957 by the O'Reilly family in Springfield, Missouri. Brad Beckham became CEO in 2024. O'Reilly sells automotive parts through around 6,300 stores to both professional mechanics and consumers doing their own repairs. The dual-market model is the key: professional customers need parts delivered within minutes, which requires a dense store and distribution network that online retailers cannot economically replicate.",
       [("Do-It-Yourself", 55), ("Professional Installer", 45)],

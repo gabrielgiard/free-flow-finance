@@ -32,7 +32,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from build import load_companies                    # noqa: E402
-from fetch_prices import SKIP, SYMBOL_MAP           # noqa: E402
+from fetch_prices import FOREIGN                    # noqa: E402
+
+# Local foreign listings (LVMH in Paris, Nestle in Zurich, Samsung in Seoul...)
+# are not on Finnhub's free tier, so asking for them only burns calls. US-
+# listed ADRs like TCEHY and BYDDY are covered and stay in. This used to import
+# SKIP and SYMBOL_MAP from fetch_prices.py, which no longer has them -- the
+# import crashed on every run, and the old workflow's "|| echo" hid it, so
+# fundamentals had silently stopped updating.
+SKIP = {t for t, (ysym, _fx) in FOREIGN.items() if ysym != t}
+SYMBOL_MAP = {}
 
 PROFILE = "https://finnhub.io/api/v1/stock/profile2?symbol={}&token={}"
 METRIC = "https://finnhub.io/api/v1/stock/metric?symbol={}&metric=all&token={}"
@@ -83,6 +92,11 @@ def fundamentals_for(symbol, key):
     if shares_m:
         out["shares"] = round(shares_m / 1000.0, 4)
     mcap_m = first_of(prof, "marketCapitalization")   # also millions
+    if mcap_m:
+        # Saved so build.py can derive the share count on the same basis as
+        # the price (market cap / price). For ADRs the feed's own share count
+        # is often in home-market shares, which is a different unit.
+        out["mcap"] = round(mcap_m / 1000.0, 2)          # $B
 
     met, err = get(METRIC.format(symbol, key))
     time.sleep(PAUSE)
@@ -177,7 +191,11 @@ def main():
                 if ratio > SANITY_RATIO or ratio < 1 / SANITY_RATIO:
                     big_moves.append(
                         f"{c['t']:6s} {label:9s} model {old:>10,.2f} -> feed {new:>10,.2f}")
-                    got.pop(field)      # too far out to trust; keep the model value
+                    # Share counts are passed through: build.py can tell a
+                    # stock split (price moved by the same factor) from a
+                    # data error, and dropping them here hid Booking's split.
+                    if field != "shares":
+                        got.pop(field)  # too far out to trust; keep the model value
 
         data[c["t"]] = got
         if i % 20 == 0 or i == len(companies):

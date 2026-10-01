@@ -16,7 +16,7 @@ EXPANSION = [
 
     # ===================== SEMICONDUCTORS =====================
     C("ADI", "Analog Devices, Inc.", "semis", "Wilmington, Massachusetts, USA", 1965,
-      "Vincent Roche", "Nasdaq", 245.00, 4.96, 5.0, 10.4,
+      "Vincent Roche", "Nasdaq", 245.00, 0.485, 5.0, 10.4,
       [0.14, 0.12, 0.10, 0.08, 0.07], 0.33, 0.36, 0.090, 0.028,
       "Founded in 1965 by Ray Stata and Matthew Lorber. Vincent Roche has run it since 2013. Analog Devices makes the chips that connect the physical world to the digital one — amplifiers, converters and power management parts that turn temperature, pressure, sound and motion into data a processor can use. The 2017 Linear Technology and 2021 Maxim Integrated acquisitions built one of the two dominant analog franchises. Analog parts sell for a few dollars but stay in a product for a decade or more, which makes the revenue unusually durable compared with digital chips.",
       [("Industrial", 44), ("Automotive", 30), ("Communications", 13), ("Consumer", 13)],
@@ -167,7 +167,7 @@ EXPANSION = [
       (5, 3, 5, 4)),
 
     C("BKNG", "Booking Holdings Inc.", "software", "Norwalk, Connecticut, USA", 1996,
-      "Glenn Fogel", "Nasdaq", 5400.00, 0.032, 10.0, 24.5,
+      "Glenn Fogel", "Nasdaq", 216.00, 0.81, 10.0, 24.5,   # 25-for-1 split, Apr 2026
       [0.09, 0.08, 0.08, 0.07, 0.06], 0.31, 0.34, 0.090, 0.026,
       "Founded in 1996 as Priceline and renamed Booking Holdings in 2018 after its most valuable asset, the Amsterdam-based Booking.com acquired in 2005. Glenn Fogel has been CEO since 2017. It is the largest online travel agency in the world, connecting travellers with hotels, flights and rental cars and taking a commission. Its European hotel network is the deepest of any platform, and the business converts an unusually high share of revenue into free cash flow.",
       [("Agency bookings", 55), ("Merchant bookings", 39), ("Advertising & Other", 6)],
@@ -561,9 +561,9 @@ EXPANSION = [
       (3, 2, 3, 3)),
 
     C("OXY", "Occidental Petroleum Corporation", "energy", "Houston, Texas, USA", 1920,
-      "Vicki Hollub", "NYSE", 48.00, 0.98, 25.0, 27.0,
+      "Richard Jackson", "NYSE", 48.00, 0.98, 25.0, 27.0,
       [0.02, 0.03, 0.03, 0.03, 0.02], 0.22, 0.25, 0.100, 0.020,
-      "Founded in 1920 and built into a major by Armand Hammer. Vicki Hollub has been CEO since 2016, the first woman to lead a large US oil company. Occidental produces oil and gas primarily in the Permian Basin, the Gulf of Mexico and the Middle East, and also owns OxyChem, a substantial chemicals business. Berkshire Hathaway holds a large stake. The company is also the most committed major to direct air capture, building carbon removal facilities in Texas.",
+      "Founded in 1920 and built into a major by Armand Hammer. Richard Jackson was promoted to president and chief executive in 2026, succeeding Vicki Hollub, who had led the company since 2016 as the first woman to run a large US oil producer. Occidental produces oil and gas primarily in the Permian Basin, the Gulf of Mexico and the Middle East, and also owns OxyChem, a substantial chemicals business. Berkshire Hathaway holds a large stake. The company is also the most committed major to direct air capture, building carbon removal facilities in Texas.",
       [("Oil & Gas", 72), ("OxyChem", 19), ("Midstream & Marketing", 9)],
       ["High-quality Permian acreage with low breakeven costs.",
        "OxyChem provides genuinely diversifying cash flow uncorrelated with oil prices.",

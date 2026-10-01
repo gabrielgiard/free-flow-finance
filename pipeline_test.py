@@ -36,6 +36,23 @@ shutil.copytree(SRC, work, dirs_exist_ok=True,
 os.chdir(work)
 sys.path.insert(0, work)
 
+# ------------------------------------------------------------------------
+section("0. Every script the workflow runs can start")
+# fetch_fundamentals.py once imported names that fetch_prices.py no longer
+# had. It crashed on every run for weeks and nobody saw, because the workflow
+# swallowed the error. Importing each script here catches that class of bug.
+import importlib  # noqa: E402
+for mod in ("market_calendar", "fetch_prices", "fetch_history", "fetch_fundamentals",
+            "build", "check_freshness", "seo_pages", "engine"):
+    try:
+        importlib.import_module(mod)
+        check(f"{mod}.py imports", True)
+    except Exception as e:
+        check(f"{mod}.py imports", False, f"{type(e).__name__}: {e}")
+r = subprocess.run([sys.executable, "fetch_fundamentals.py"], capture_output=True, text=True,
+                   env={k: v for k, v in os.environ.items() if k != "FINNHUB_API_KEY"})
+check("fetch_fundamentals.py runs with no key", r.returncode == 0, r.stderr[-200:])
+
 import market_calendar as cal  # noqa: E402
 import fetch_history as fh     # noqa: E402
 
@@ -174,6 +191,65 @@ build.log_rating_changes(old_data, [{"t": "AAA", "n": "Aaa", "rating": "Sell", "
 text = open(tr).read()
 log = json.loads(text[len("var FF_TRACK_RECORD = "):].rstrip().rstrip(";\n"))
 check("track record keeps old entries and adds new", [e["ticker"] for e in log] == ["OLD", "AAA"], log)
+
+
+# ------------------------------------------------------------------------
+section("5b. Fundamentals guards (ADR share counts, net debt)")
+# TSMC: the feed returned 25.9bn Taiwan shares while the price is per ADR
+# (1 ADR = 5 shares). That made the fair value 5x too low on the live site.
+def run_fund(companies, fund, hist):
+    json.dump(fund, open("fundamentals.json", "w"))
+    write_hist(hist)
+    build.apply_fundamentals(companies)
+    return companies
+
+h_px = lambda px: fh.encode([lastiso], [px])
+from build import load_companies as _lc  # noqa: E402
+lib_pre = {c["t"]: c for c in _lc()}
+cos = [
+    {"t": "TSM",  "sec": "semis",      "price": 380.0, "shares": 5.19, "netdebt": -55.0, "rev": 145.0},
+    {"t": "BABA", "sec": "global",     "price": 140.0, "shares": 2.35, "netdebt": -25.0, "rev": 140.0},
+    {"t": "AAPL", "sec": "software",   "price": 250.0, "shares": 15.0, "netdebt": 0.0,   "rev": 400.0},
+    {"t": "JPM",  "sec": "financials", "price": 300.0, "shares": 2.80, "netdebt": 0.0,   "rev": 170.0},
+    {"t": "XOM",  "sec": "energy",     "price": 110.0, "shares": 4.30, "netdebt": 30.0,  "rev": 340.0},
+    {"t": "NVDA", "sec": "semis",      "price": 195.0, "shares": 24.4, "netdebt": -50.0, "rev": 213.0},
+    {"t": "BKNG", "sec": "software",   "price": 5400.0, "shares": 0.032, "netdebt": 10.0, "rev": 24.5},
+]
+fund = {
+    "TSM":  {"shares": 25.93, "mcap": 2365.0, "rev": 148.8, "netdebt": -60.0},  # ADR mismatch, mcap known
+    "BABA": {"shares": 18.80, "rev": 135.0},                                    # 8x, no mcap
+    "AAPL": {"shares": 14.6, "mcap": 3650.0, "rev": 410.0, "netdebt": 5.0},     # normal buyback
+    "JPM":  {"shares": 2.75, "netdebt": 380.0},                                 # bank: keep zero
+    "XOM":  {"netdebt": 400.0},                                                 # impossible swing
+    "NVDA": {"netdebt": 222.0, "shares": 24.2},                                 # EV-minus-mcap noise
+    "BKNG": {"shares": 0.81},                                                   # 25-for-1 split
+    "_fetched_at": stamp,
+}
+hist5 = {"TSM": h_px(456.0), "BABA": h_px(107.0), "AAPL": h_px(250.0),
+         "JPM": h_px(300.0), "XOM": h_px(110.0), "NVDA": h_px(228.0), "BKNG": h_px(161.0)}
+res = {c["t"]: c for c in run_fund([dict(c) for c in cos], fund, hist5)}
+check("ADR share count re-based to market cap / price (TSM ~5.19bn)", abs(res["TSM"]["shares"] - 2365 / 456) < 0.01,
+      res["TSM"]["shares"])
+check("ADR's revenue still applied (it's a correct total)", res["TSM"]["rev"] == 148.8)
+check("8x share jump with no market cap rejected (BABA keeps 2.35bn)", res["BABA"]["shares"] == 2.35, res["BABA"]["shares"])
+check("normal buyback still applied (AAPL 15.0 -> 14.6bn)", res["AAPL"]["shares"] == 14.6, res["AAPL"]["shares"])
+check("bank net debt stays at zero by design", res["JPM"]["netdebt"] == 0.0, res["JPM"]["netdebt"])
+check("bank share count still updates", res["JPM"]["shares"] == 2.75)
+check("impossible net-debt swing rejected (XOM keeps 30)", res["XOM"]["netdebt"] == 30.0, res["XOM"]["netdebt"])
+check("NVIDIA's +$222bn 'net debt' rejected (keeps net cash)", res["NVDA"]["netdebt"] == -50.0, res["NVDA"]["netdebt"])
+check("NVIDIA's small share-count change still applied", res["NVDA"]["shares"] == 24.2)
+check("stock split accepted (BKNG 0.032 -> 0.81bn at 1/25th the price)", res["BKNG"]["shares"] == 0.81, res["BKNG"]["shares"])
+check("BKNG stored data updated for its April 2026 split", abs(lib_pre["BKNG"]["shares"] - 0.81) < 0.01
+      and lib_pre["BKNG"]["price"] < 1000)
+
+# Stored share counts must match reality: price x shares should be a sane
+# market cap for its revenue. ADI (4.96bn) and ORLY (8.6bn) were 10x typos.
+from build import load_companies  # noqa: E402
+lib = {c["t"]: c for c in load_companies()}
+check("ADI stored share count fixed (0.485bn, not 4.96)", abs(lib["ADI"]["shares"] - 0.485) < 0.01)
+check("ORLY stored share count fixed (0.81bn, not 8.6)", abs(lib["ORLY"]["shares"] - 0.81) < 0.01)
+odd = [t for t, c in lib.items() if c["rev"] > 1 and c["price"] * c["shares"] / c["rev"] > 100]
+check("no stored company implies over 100x price/sales (catches 10x typos)", not odd, odd)
 
 
 # ------------------------------------------------------------------------
