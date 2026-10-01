@@ -1,21 +1,29 @@
+# This is a copy of .github/workflows/update-prices.yml, kept for reference.
+# If you ever need to recreate the workflow, paste this whole file into
+# .github/workflows/update-prices.yml in your repository.
+
 name: Update prices and rebuild site
 
-# Runs automatically on a schedule, and whenever you click "Run workflow"
-# in the Actions tab. Markets are closed at weekends, so this only runs on
-# weekdays.
+# Three scheduled attempts every weekday evening, New York time. The first
+# does the work; the other two are backups, because GitHub delays and
+# sometimes drops scheduled runs when it is busy -- one dropped run used to
+# mean a whole day of stale prices. A backup that finds today's close already
+# on the site stops after about thirty seconds.
+#
+# Odd minutes on purpose: GitHub is busiest at :00 and :30, which is when
+# scheduled runs get delayed or skipped.
 on:
   schedule:
-    # 22:30 UTC Mon-Fri = ~6:30pm New York, after the US close.
-    # For every-other-day instead, change MON-FRI to MON,WED,FRI
-    - cron: "30 22 * * MON-FRI"
-  workflow_dispatch:        # lets you trigger it manually from the Actions tab
+    - cron: "23 21 * * 1-5"   # main run   — 5:23pm New York (4:23pm in winter)
+    - cron: "47 23 * * 1-5"   # backup     — 7:47pm New York
+    - cron: "13 3 * * 2-6"    # last try   — 11:13pm New York; raises the alarm
+  workflow_dispatch:          # "Run workflow" button in the Actions tab
 
-# The job commits the regenerated data file back to the repo, so it needs
-# write access to repository contents.
+# The job commits regenerated data back to the repo.
 permissions:
   contents: write
 
-# If a run is already going, don't start a second one on top of it.
+# Never run two updates on top of each other.
 concurrency:
   group: update-prices
   cancel-in-progress: false
@@ -23,85 +31,111 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # The last scheduled try, and any manual run, must leave the site on the
+      # latest close or go red. Earlier tries are allowed one day of slack so a
+      # brief outage that the next try fixes does not send a false alarm.
+      STRICT: ${{ github.event.schedule == '13 3 * * 2-6' || github.event_name == 'workflow_dispatch' }}
+
     steps:
       - name: Check out the repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0          # full history, so a retry can rebase cleanly
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      # Gather all the data first, then build the site from it. Order matters:
-      # build.py reads prices.json and market.json, so both fetches must
-      # complete before it runs.
-      # OPTIONAL. Yahoo (in the history step below) is the real price source
-      # and needs no key at all. This adds intraday precision when it works,
-      # and is skipped entirely when it does not. It can never fail the run.
-      # PRICES. Tries Finnhub, then Twelve Data, then Yahoo per company, so
-      # no single source going down can freeze the site. Fails the job loudly
-      # if every source fails for every company — silence is what let prices
-      # sit stale for six days once.
+      - name: Is today's close already on the site?
+        id: fresh
+        run: python check_freshness.py --github-output
+
+      # Everything below runs unless a backup run finds the site already
+      # current. A manual run always does the full update.
+
+      # Each fetch step may fail without stopping the run -- one source being
+      # down must never block the others. Whether the run as a whole worked is
+      # decided once, at the end, by checking what the site actually shows.
       - name: Fetch current prices
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-        run: |
-          python fetch_prices.py
-          if [ ! -f prices.json ]; then
-            echo "::error::prices.json was not produced. Every source failed."
-            exit 1
-          fi
-          echo "prices.json: $(wc -c < prices.json) bytes"
+        run: python fetch_prices.py
 
       - name: Update chart history
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-        run: |
-          python fetch_history.py || echo "History fetch failed — existing data stands."
-          echo "--- result ---"
-          if [ -f docs/history.js ]; then
-            echo "docs/history.js: $(wc -c < docs/history.js) bytes"
-          else
-            echo "::warning::docs/history.js missing — prices will not update."
-          fi
+        run: python fetch_history.py
 
-      # Revenue, share count and net debt. Runs weekly rather than daily --
-      # fundamentals change quarterly, and this uses ~400 API calls.
-      # Never fails the job: if it errors, the previous figures stand.
+      # Revenue, share count and net debt change quarterly, and this uses
+      # ~400 API calls, so it runs on Mondays and on manual runs only.
       - name: Update company fundamentals (Mondays, or any manual run)
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: |
           if [ "$(date -u +%u)" = "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            python fetch_fundamentals.py || echo "Fundamentals update failed — keeping existing figures."
+            python fetch_fundamentals.py
           else
             echo "Not Monday — skipping fundamentals refresh."
           fi
-        env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
 
-      - name: Rebuild the site data
-        run: |
-          python build.py
-          echo "--- after build ---"
-          ls -l docs/data.js prices.json 2>&1 || true
+      - name: Rebuild the site
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        run: python build.py
 
-      - name: Commit the updated data
+      - name: Commit and push
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name  "freeflow-bot"
           git config user.email "actions@github.com"
-          # One file per line, deliberately. "git add a b c" aborts entirely
-          # if any single path is missing, staging nothing at all — and the
-          # trailing || true hides that. This cost us weeks of stale prices.
-          for f in prices.json docs/data.js docs/history.js fundamentals.json market.json; do
-            [ -e "$f" ] && git add "$f"
+
+          # Everything the build writes. The SEO pages (docs/company,
+          # docs/sector) and the track record were missing from this list
+          # before, so Google's copies of every company page kept the prices
+          # from the day they were first uploaded.
+          for f in prices.json fundamentals.json \
+                   docs/data.js docs/history.js docs/track-record.js \
+                   docs/company docs/sector docs/sitemap.xml docs/robots.txt; do
+            if [ -e "$f" ]; then git add -A -- "$f"; fi
           done
-          echo "Staged:"; git diff --staged --name-only | sed 's/^/  /'
-          # git commit exits non-zero when nothing changed (e.g. a holiday),
-          # which is normal and shouldn't fail the run.
+
           if git diff --staged --quiet; then
-            echo "No price changes today — nothing to commit."
+            echo "Nothing changed — nothing to commit."
+            exit 0
+          fi
+          echo "Committing:"; git diff --staged --stat | tail -n 5
+          git commit -q -m "Update prices $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          # If you pushed something while this was running, the first push is
+          # rejected. Rebase onto your change and try again rather than failing.
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo "Pushed."
+              exit 0
+            fi
+            echo "Push rejected — rebasing onto the latest commit and retrying ($attempt/3)."
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            sleep 5
+          done
+          exit 1
+
+      # The one check that matters. A red run here means the site is behind;
+      # GitHub emails you about failed scheduled runs, so staleness can no
+      # longer go unnoticed for days.
+      - name: Is the site showing the latest close?
+        if: always()
+        run: |
+          if [ "$STRICT" = "true" ]; then
+            python check_freshness.py --fail-behind 1
           else
-            git commit -m "Update prices $(date -u +'%Y-%m-%d')"
-            git push
-            echo "Pushed updated prices."
+            python check_freshness.py --fail-behind 2
           fi
