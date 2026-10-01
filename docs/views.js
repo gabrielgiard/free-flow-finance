@@ -13,6 +13,15 @@ function sectorMeta(k) { return FF_DATA.sectors.find(s => s.k === k); }
 function inSector(k) { return FF_DATA.companies.filter(c => c.sec === k); }
 function fmtSector(k) { const s = sectorMeta(k); return s ? s.n : k; }
 
+/* "close · Sep 30" next to a price, so a visit at 9am reads as yesterday's
+   close rather than as a broken live quote. A company with no market price
+   at all is labelled as an estimate. */
+function priceDateLabel(c) {
+  if (!c.pd) return 'estimate';
+  const d = pcParseISO(c.pd);
+  return d ? 'close · ' + pcFmtDate(d, false) : 'close';
+}
+
 function crumbs(...parts) {
   return `<div class="co-crumb">` + parts.map((p, i) =>
     i === parts.length - 1
@@ -97,13 +106,20 @@ function viewHome() {
     <div class="wrap">
       <div class="hero-inner">
         <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
-        <h1>One model. <em>${cov.n}</em> companies. Every fair value built the same way.</h1>
+        <h1>One model. ${cov.n} companies. Every fair value built the same way.</h1>
         <p class="lede">A discounted cash flow, comparable-company set, investment thesis and target price for ${cov.n} of the world's largest and most-talked-about public companies — built with a single consistent methodology so you can actually compare them, not just read about them.</p>
         <div class="hero-cta">
           <button class="btn btn-violet" data-route="sector" data-key="semis">${ICN.arrow.replace('currentColor','#fff')} Explore the coverage</button>
           <button class="btn btn-ghost" data-route="methodology">How the model works</button>
         </div>
       </div>
+      ${(m.price_lag ?? ((m.price_age_days ?? 0) > 3 ? 2 : 0)) >= 2 ? `
+      <div class="comp-note" style="border-left-color:var(--red);margin-bottom:18px">
+        <b>Prices are from the ${m.asof} close.</b> The daily update has missed
+        ${m.price_lag ?? 'several'} market sessions since then &mdash; every
+        valuation below uses those closing prices rather than the latest ones.
+        The page itself works; the update job needs a look.
+      </div>` : ''}
       <div class="snapshot-strip">
         <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${cov.n}</div></div>
         <div class="snap-item"><div class="snap-label">Sectors</div><div class="snap-value">${cov.sectors}</div></div>
@@ -129,7 +145,7 @@ function viewHome() {
     <div class="wrap">
       <div class="section-head">
         <div><h2>Where the model sees the most upside</h2><p class="sub">Ranked by upside to our discounted cash flow fair value versus the current share price.</p></div>
-        <span class="section-link" data-route="screener">Screen all ${cov.n} companies ${ICN.arrow}</span>
+        <span class="section-link" data-route="screener">Screen all ${cov.n} companies</span>
       </div>
       <div class="two-col" style="grid-template-columns: 1fr 1fr;">
         <div class="table-wrap">
@@ -292,12 +308,12 @@ function viewCompany(ticker) {
           <div>
             <h1 class="co-name">${c.n}</h1>
             <div class="co-sub">
-              <span class="mono">${c.exch}</span><span>·</span><span>${c.hq}</span><span>·</span><span>Founded ${c.founded}</span>
+              <span>Listed on <span class="mono">${c.exch}</span>. Based in ${c.hq}, founded ${c.founded}.</span>
             </div>
           </div>
         </div>
         <div class="co-price-block">
-          <div class="co-price">${FMT.usd(c.price)}<span class="cur"> current</span></div>
+          <div class="co-price">${FMT.usd(c.price)}<span class="cur"> ${priceDateLabel(c)}</span></div>
           <div class="co-fv-row">
             <span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span>
             <span class="co-fv">FV ${fvStr(c.fv)}</span>
@@ -359,7 +375,7 @@ function panelModel(c) {
   return `
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:12px;">Revenue &amp; Free Cash Flow Projection</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:12px;">Revenue &amp; Free Cash Flow Projection</h4>
       ${sparklineSVG(c.model, 'rev', 'var(--lilac)')}
       <div class="table-wrap" style="margin-top:18px;">
         <table class="ff-table model-table">
@@ -371,7 +387,7 @@ function panelModel(c) {
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Model Assumptions</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Model Assumptions</div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">Discount rate (WACC)</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pctPlain(c.wacc)}</span></div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">Terminal growth rate</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pctPlain(c.tg)}</span></div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">5-yr revenue CAGR</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pct(c.cagr5)}</span></div>
@@ -388,19 +404,19 @@ function panelDCF(c) {
   return `
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Discounted Cash Flow Build-Up</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Discounted Cash Flow Build-Up</h4>
       <div class="card">${dcfWaterfallHTML(c.dcf, c.shares)}</div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin:28px 0 14px;">Sensitivity: Fair Value by WACC &amp; Terminal Growth</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin:28px 0 14px;">Sensitivity: Fair Value by WACC &amp; Terminal Growth</h4>
       <div class="table-wrap" style="padding:18px;">${sensitivityGridHTML(c.grid, c.price)}</div>
       <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Green cells sit above the current share price of ${FMT.usd(c.price)}; red cells sit below it. Small changes to either input move the fair value a lot — that sensitivity is the honest reason no DCF should be read as a precise number.</p>
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;">Target Price</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">Target Price</div>
         <div style="font-family:var(--font-mono);font-size:38px;color:var(--gold-soft);line-height:1;">${fvStr(c.fv)}</div>
         <div style="margin-top:10px;"><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span> <span class="mono ${upClass(c.upside)}" style="margin-left:10px;font-size:13px;">${FMT.pct(c.upside)} vs current price</span></div>
       </div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:14px;">Bear / Base / Bull Range</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:14px;">Bear / Base / Bull Range</h4>
       <div class="card">
         ${(c.fv_bear <= 0 && c.fv <= 0 && c.fv_bull <= 0)
           ? `<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Every scenario here — bear, base, and even bull — comes out at or below zero, so a visual range bar against the ${FMT.usd(c.price)} current price would just be three overlapping points miles from the mark. That's the finding: on a conventional cash-flow basis, we can't construct a scenario where the operating business justifies the current price.</p>`
@@ -456,11 +472,11 @@ function panelThesis(c) {
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;">FreeFlow Score</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">FreeFlow Score</div>
         ${scoreRowsHTML(c.scores)}
       </div>
       <div class="card">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;">Rating &amp; Target</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:12px;">Rating &amp; Target</div>
         <span class="rating-pill ${ratingClass(c.rating)}" style="font-size:14px;padding:8px 16px;">${c.rating}</span>
         <div style="margin-top:14px;font-family:var(--font-mono);font-size:26px;color:var(--gold-soft)">${fvStr(c.fv)}</div>
         <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">12-month DCF fair value · ${FMT.pct(c.upside)} vs. ${FMT.usd(c.price)} current</div>
@@ -522,6 +538,58 @@ function viewAbout() {
 }
 
 /* ============================== METHODOLOGY ============================ */
+function viewTrackRecord() {
+  const log = (typeof FF_TRACK_RECORD !== 'undefined' && Array.isArray(FF_TRACK_RECORD))
+    ? FF_TRACK_RECORD : [];
+  const rows = [...log].reverse();
+
+  const body = rows.length ? rows.map(r => {
+    const actual = r.fv > 0 ? (r.price_now / r.fv - 1) : null;
+    return `
+      <tr>
+        <td class="mono">${r.date}</td>
+        <td class="tk" data-route="company" data-ticker="${r.ticker}" style="cursor:pointer">${r.ticker}</td>
+        <td>${r.name}</td>
+        <td class="num">${r.from}</td>
+        <td class="num">${r.to}</td>
+        <td class="num">${FMT.usd(r.price_then)} &rarr; ${FMT.usd(r.price_now)}</td>
+        <td class="num ${actual!==null && actual>=0 ? 'up':'down'}">${actual!==null ? FMT.pct(actual) : '—'}</td>
+      </tr>`;
+  }).join('') : '';
+
+  return `
+  <section class="co-hero">
+    <div class="wrap">
+      ${crumbs({ href: '#/', label: 'Home' }, { label: 'Track Record' })}
+      <div class="eyebrow">Every rating change, dated</div>
+      <h1 style="font-size:32px;max-width:700px;">What the model has changed its mind about, and when.</h1>
+      <p style="max-width:640px;font-size:14.5px;">Ratings move when the recalibration engine updates on real data — a
+        price move, a margin change, a rate shift. Every change is logged here automatically, with the price at the
+        time. There is no backfilled history: this only records what happens from the day it was switched on.</p>
+    </div>
+  </section>
+  <section style="padding-top:8px;">
+    <div class="wrap">
+      ${rows.length ? `
+        <div class="table-wrap">
+          <table class="ff-table">
+            <thead><tr>
+              <th>Date</th><th>Ticker</th><th>Company</th><th class="num">From</th>
+              <th class="num">To</th><th class="num">Price then &rarr; now</th>
+              <th class="num">vs. fair value now</th>
+            </tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>` : `
+        <div class="empty-state">
+          <h3 style="color:var(--text);font-size:18px;">No changes logged yet</h3>
+          <p>This page updates automatically the next time a rating changes on real data — nothing to do,
+             and nothing here is backfilled. Check back after the model's next recalibration.</p>
+        </div>`}
+    </div>
+  </section>`;
+}
+
 function viewMethodology() {
   const steps = [
     ['1', 'Project revenue and free cash flow, five years out', 'For each company we set a five-year revenue growth path and a free cash flow margin that glides from where it is today toward a realistic year-5 target. Free cash flow is the cash a business generates after paying for operations and reinvesting in itself — the number that actually belongs to shareholders.'],
@@ -573,7 +641,7 @@ function viewMethodology() {
         <div>${stepsHTML}</div>
         <div>
           <div class="card" style="margin-bottom:20px;">
-            <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Rating Scale</div>
+            <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Rating Scale</div>
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
               <tbody>${ratingRows}</tbody>
             </table>
@@ -587,7 +655,7 @@ function viewMethodology() {
         <h2 style="font-size:22px;margin-bottom:14px;">How the model stays current</h2>
         <p style="max-width:720px;font-size:14px;margin-bottom:22px;">A valuation library that never revises its inputs goes stale. Some of that updating can be done mechanically, and some cannot. This is the line between them.</p>
         <div class="card" style="margin-bottom:26px;">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Updated automatically</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Updated automatically</div>
           <ul class="bullets cat">
             <li><strong style="color:var(--text)">Share prices</strong> — every weekday, from market data.</li>
             <li><strong style="color:var(--text)">Revenue, share count and net debt</strong> — refreshed from reported figures, so the starting point of every model tracks what companies actually report rather than what was assumed when it was written.</li>
@@ -599,7 +667,7 @@ function viewMethodology() {
           <p style="font-size:12px;color:var(--text-dim);margin:16px 0 0;">Every automatic change runs through guard rails. A figure that moves more than 15 percentage points, or produces a discount rate below the terminal growth rate, is reported and ignored rather than applied — those are almost always data problems, not real changes.</p>
         </div>
         <div class="card" style="margin-bottom:26px;">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Not updated automatically, on purpose</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Not updated automatically, on purpose</div>
           <ul class="bullets risk">
             <li>The terminal growth rate — the assumption about the very long run, where no recent data point is informative.</li>
             <li>Every word of the thesis, risks, catalysts and street view.</li>
@@ -614,7 +682,7 @@ function viewMethodology() {
         <h2 style="font-size:22px;margin-bottom:14px;">Market context</h2>
         <p style="max-width:720px;font-size:14px;margin-bottom:22px;">Valuations do not sit in a vacuum. This is the environment these models were built in, updated as it changes.</p>
         <div class="card">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">As of late July 2026</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">As of late July 2026</div>
           <ul class="bullets cat">
             <li><strong style="color:var(--text)">Rates are not falling.</strong> The Federal Reserve, now chaired by Kevin Warsh, has held its target range at 3.50&ndash;3.75%, and markets have been pricing in the possibility of a <em style="color:var(--gold-soft);font-style:normal">hike</em> rather than cuts. Every discount rate in this library assumes a cost of capital consistent with that, not with the era of near-zero rates.</li>
             <li><strong style="color:var(--text)">The AI capital cycle is being questioned for the first time.</strong> Hyperscalers are on course to spend somewhere between $600bn and $700bn on AI infrastructure in 2026, up sharply on last year. In July, semiconductor stocks fell hard &mdash; more than a trillion dollars of sector value &mdash; not because demand disappointed, but because investors began asking what return that spending will earn. Alphabet fell around 7% in a week after <em style="color:var(--gold-soft);font-style:normal">raising</em> its capex guidance.</li>
@@ -1012,7 +1080,7 @@ function panelFinancials(c) {
 
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Earnings Quality &amp; Margins</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Earnings Quality &amp; Margins</h4>
       <div class="card" style="margin-bottom:20px;">
         ${pctlBar('Free cash flow margin', FMT.pctPlain(c.m0), c.pctl.m0,
           'share of revenue that becomes free cash')}
@@ -1028,7 +1096,7 @@ function panelFinancials(c) {
         </p>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Revenue Composition</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Revenue Composition</h4>
       <div class="table-wrap" style="margin-bottom:20px;">
         <table class="ff-table" style="font-size:13px;">
           <thead><tr><th>Segment</th><th class="num">Revenue</th><th class="num">Share</th><th></th></tr></thead>
@@ -1041,7 +1109,7 @@ function panelFinancials(c) {
         </table>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Valuation vs Sector</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Valuation vs Sector</h4>
       <div class="card">
         ${pctlBar('EV / Sales', FMT.x(c.ev_sales), c.pctl.ev_sales,
           `sector median ${s.med_ev_sales}x`)}
@@ -1059,7 +1127,7 @@ function panelFinancials(c) {
     </div>
 
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Balance Sheet</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Balance Sheet</h4>
       <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
         <div class="stat-cell"><div class="label">Net ${c.netdebt >= 0 ? 'Debt' : 'Cash'}</div>
           <div class="value" style="color:${c.netdebt >= 0 ? 'var(--text)' : 'var(--green)'}">${FMT.usdB(Math.abs(c.netdebt))}</div></div>
@@ -1069,7 +1137,7 @@ function panelFinancials(c) {
       </div>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:26px;">${leverageNote}</p>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Cash Flow Bridge</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Cash Flow Bridge</h4>
       <div class="card" style="margin-bottom:20px;">
         <div class="fin-row"><span>Trailing revenue</span><span class="mono">${FMT.usdB(c.rev)}</span></div>
         <div class="fin-row"><span>× Free cash flow margin</span><span class="mono">${FMT.pctPlain(c.m0)}</span></div>
@@ -1082,7 +1150,7 @@ function panelFinancials(c) {
           <span class="mono">${FMT.pct(c.ttm_fcf > 0 ? y5.fcf / c.ttm_fcf - 1 : 0)}</span></div>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Where the Value Sits</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Where the Value Sits</h4>
       <div class="card">
         <div class="fin-row"><span>Next 10 years of cash flow</span><span class="mono">${(100 - c.tv_pct).toFixed(0)}%</span></div>
         <div class="fin-row"><span>Everything after year 10</span><span class="mono">${c.tv_pct.toFixed(0)}%</span></div>

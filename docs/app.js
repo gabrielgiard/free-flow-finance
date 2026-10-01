@@ -21,6 +21,7 @@ function renderRoute() {
   else if (route === 'portfolio') { html = viewPortfolio(); navKey = 'portfolio'; }
   else if (route === 'about') { html = viewAbout(); navKey = 'about'; }
   else if (route === 'methodology') { html = viewMethodology(); navKey = 'methodology'; }
+  else if (route === 'track-record') { html = viewTrackRecord(); navKey = 'track-record'; }
   else { html = view404(); }
 
   APP.innerHTML = html;
@@ -30,6 +31,8 @@ function renderRoute() {
   updateNavActive(navKey, arg);
   updateSidebarActive(navKey, arg ? decodeURIComponent(arg) : null);
   markDecorativeSvgs();
+  mountPriceCharts(APP);
+  updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
 
@@ -99,6 +102,10 @@ function buildSidebar() {
       <div class="sb-link" data-route="methodology" data-navlink="methodology">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
         Methodology
+      </div>
+      <div class="sb-link" data-route="track-record" data-navlink="track-record">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 9 4-18 3 9h4"/></svg>
+        Track Record
       </div>
       <div class="sb-head">Tools</div>
       <div class="sb-link" data-route="screener" data-navlink="screener">
@@ -351,6 +358,26 @@ buildSidebar();
 markDecorativeSvgs();   // header, sidebar and footer icons on first paint
 window.addEventListener('hashchange', renderRoute);
 renderRoute();
+
+/* Point search engines at the static version of whatever is on screen.
+   Without this the app route and the indexable page look like duplicate
+   content, and Google picks one arbitrarily. */
+function updateCanonical(navKey, arg) {
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'canonical';
+    document.head.appendChild(link);
+  }
+  const base = location.origin + location.pathname.replace(/index\.html$/, '');
+  if (navKey === 'company' && arg) {
+    link.href = base + 'company/' + decodeURIComponent(arg) + '/';
+  } else if (navKey === 'sector' && arg) {
+    link.href = base + 'sector/' + arg + '/';
+  } else {
+    link.href = base;
+  }
+}
 
 /* ---------------------------------- screener helpers -------------------- */
 function refreshScreener() {

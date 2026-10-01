@@ -73,30 +73,45 @@ layout GitHub Pages serves without any extra configuration.
 
 ## Automatic daily price updates
 
-`.github/workflows/update-prices.yml` refreshes prices and rebuilds the site on
-a schedule, without you touching anything.
+`.github/workflows/update-prices.yml` refreshes every price and chart and
+rebuilds the site each weekday evening, without you touching anything.
 
 **Setup (one time):**
 
 1. Sign up at [finnhub.io](https://finnhub.io) and copy your free API key.
+   Optionally do the same at [twelvedata.com](https://twelvedata.com).
 2. In your repo: **Settings → Secrets and variables → Actions → New repository
-   secret**.
-3. Name it exactly `FINNHUB_API_KEY` and paste the key as the value.
-4. Go to the **Actions** tab and enable workflows if prompted.
+   secret**. Add `FINNHUB_API_KEY` (and `TWELVEDATA_API_KEY` if you have one).
+3. Go to the **Actions** tab and enable workflows if prompted.
 
-It now runs at 22:30 UTC every weekday (just after the US close), commits the
-new prices, and GitHub Pages redeploys automatically.
+**When it runs** (times are New York):
 
-**To change the frequency**, edit the `cron` line in the workflow:
+| Run       | Time     | What it does                                              |
+| --------- | -------- | --------------------------------------------------------- |
+| Main      | 5:23pm   | Fetches prices and a year of charts, rebuilds, commits    |
+| Backup    | 7:47pm   | Only does anything if the main run didn't land            |
+| Last try  | 11:13pm  | Same, and turns the run **red** if the site is still behind |
 
-| Schedule            | cron line                     |
-| ------------------- | ----------------------------- |
-| Every weekday       | `30 22 * * MON-FRI`           |
-| Every other weekday | `30 22 * * MON,WED,FRI`       |
-| Weekly (Fridays)    | `30 22 * * FRI`               |
+GitHub sometimes delays or drops scheduled runs when it is busy, which is why
+there are three. A backup that finds today's close already on the site stops
+in about thirty seconds. A red run means the site is behind, and GitHub emails
+you about failed scheduled runs, so staleness can no longer go unnoticed.
 
-You can also trigger a run by hand any time from the **Actions** tab →
-*Update prices and rebuild site* → **Run workflow**.
+You can also run it by hand: **Actions → Update prices and rebuild site → Run
+workflow**. A manual run always does the full update.
+
+**How a price gets onto the page:**
+
+1. `fetch_prices.py` gets one quote per company (Finnhub → Twelve Data → Yahoo).
+2. `fetch_history.py` re-downloads a full year of daily closes for every
+   company from Yahoo (Twelve Data as backup), every run. Where both fail, it
+   adds that day's quote to the existing chart, properly dated.
+3. `build.py` sets each price to the chart's last close, so the price and the
+   chart beside it always agree, and dates the site by those closes.
+4. `check_freshness.py` confirms the site shows the latest market close.
+
+**Tests:** `python pipeline_test.py` (update pipeline, no network needed) and
+`python crash_test.py` (valuation engine).
 
 ### Why prices aren't fetched in the browser
 
@@ -105,67 +120,26 @@ source where anyone could copy it and burn through your quota. Fetching on a
 schedule in GitHub Actions keeps the key in encrypted Secrets, and has the
 bonus that the site stays a plain static file that loads instantly.
 
-### Running the fetch locally
+### Running it locally
 
 ```bash
 export FINNHUB_API_KEY=your_key_here    # macOS / Linux
 python fetch_prices.py
+python fetch_history.py                 # --test checks the sources and exits
 python build.py
+python check_freshness.py               # is the site on the latest close?
 ```
-
-### A note on coverage
-
-Finnhub's free tier covers US-listed stocks, including ADRs — that is 92 of the
-100 companies here. Eight names trade on foreign exchanges that need a paid
-plan, so they are listed in `SKIP` at the top of `fetch_prices.py` and keep
-their hardcoded prices: LVMH, L'Oréal, Nestlé, Siemens, Samsung, Reliance,
-Tencent and BYD. If you upgrade, remove them from `SKIP` and add their Finnhub
-symbols to `SYMBOL_MAP`.
 
 ---
 
 ## Price charts
 
-Each company page shows a year of daily closes with your DCF fair value drawn
-across it as a gold dashed line — so you can see at a glance whether the market
-is trading above or below your target, and how that gap has moved. The homepage
-market strip carries 90-day sparklines for the S&P, Nasdaq, VIX and Brent.
-
-```bash
-python fetch_history.py           # backfill a year, then append today
-python fetch_history.py --test    # check 3 symbols and exit
-python fetch_history.py --no-backfill   # append today only, skip Stooq
-```
-
-**Two sources, in this order of reliability:**
-
-**Homepage market levels — FRED.** The S&P 500, Nasdaq, VIX, Brent crude and
-10-year Treasury figures (and the sparklines under them) come from FRED, the
-Federal Reserve Bank of St. Louis. No API key, official government source,
-series IDs are listed in `FRED_SERIES` in `fetch_history.py`.
-
-**Company price charts — two sources:**
-
-1. **Accumulate from `prices.json`** — every scheduled run appends that day's
-   close. This is the dependable path: it reuses the same free Finnhub quotes
-   that already power the site. It starts empty and fills out a day at a time,
-   so a chart becomes readable after two or three weeks of runs.
-2. **Backfill from Stooq** (stooq.com) — *currently not working.* As of July
-   2026 it returns "no data" for every symbol, so the year-of-history backfill
-   fails and the accumulator does all the work. The code still tries it in case
-   the service returns; it can't break anything if it doesn't. Run
-   `python fetch_history.py --test` to check both sources.
-
-**Why not Finnhub for history:** their `/stock/candle` endpoint was moved to the
-premium tiers and returns 403 on a free key. Quotes are free; candles are not.
-
-**Empty charts are expected at first.** Every company page works fully without
-them — the valuation, comps and thesis don't depend on chart data. Six names
-with foreign primary listings (LVMH, L'Oréal, Nestlé, Siemens, Samsung,
-Reliance) are in `STOOQ_SKIP` and also in `fetch_prices.py`'s `SKIP`, so their
-charts stay empty until you add a data source that covers those exchanges.
-
-Run `python fetch_history.py --test` to check whether Stooq still responds.
+Each company page shows up to a year of daily closes, with today's DCF fair
+value as a gold dashed line and a bracket at the right edge showing the gap
+between the two (green for upside, red for downside). Drag or hover to read any
+day's close; ranges from one month to a year. Foreign listings (LVMH, L'Oréal,
+Nestlé, Siemens, Samsung, Reliance) come from Yahoo using exchange suffixes and
+are converted to US dollars, see `FOREIGN` in `fetch_history.py`.
 
 ---
 

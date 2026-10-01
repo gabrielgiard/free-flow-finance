@@ -14,7 +14,6 @@ script produces.
 import json
 import os
 import time
-import time
 import statistics
 import sys
 
@@ -96,48 +95,32 @@ def _iso_to_words(iso):
     return f"{int(d)} {months[int(mo) - 1]} {y}"
 
 
-def stamp_date(meta):
-    """Set the homepage date from whichever source is actually freshest,
-    and record how many days old that is.
+def stamp_date(meta, companies):
+    """Date the site by the prices it actually shows.
 
-    The previous version only ever looked at prices.json. That is exactly
-    the failure this project hit: when Finnhub was the thing not updating,
-    the displayed date silently stayed put even though the underlying
-    numbers might have moved via a different path, or vice versa. This now
-    reflects reality regardless of which pipe is currently working.
+    The date is the most common closing date across all companies -- not the
+    newest file timestamp anywhere, which could say "today" while most prices
+    were days old. Also records how many trading sessions behind that is, so
+    the homepage can warn visitors and check_freshness.py can raise an alarm.
     """
-    candidates = []
-    try:
-        with open(os.path.join(HERE, "prices.json")) as f:
-            iso = json.load(f).get("_fetched_at", "")[:10]
-            if len(iso) == 10:
-                candidates.append(iso)
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
-    try:
-        text = open(os.path.join(HERE, "docs", "history.js")).read()
-        hist = json.loads(text[len("var FF_HISTORY = "):].rstrip().rstrip(";"))
-        dates = [e.get("to", "")[:10] for e in hist.values()
-                if isinstance(e, dict) and e.get("to")]
-        if dates:
-            candidates.append(max(dates))
-    except (FileNotFoundError, json.JSONDecodeError, ValueError, KeyError):
-        pass
-
-    if not candidates:
+    import market_calendar as cal
+    dates = [c.get("pd") for c in companies if c.get("pd")]
+    meta["updated_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if not dates:
+        meta["price_date"] = None
         meta["price_age_days"] = 9999
+        meta["price_lag"] = 99
+        print("Homepage date: no market prices at all  <-- STALE, check the pipeline")
         return
-    newest = max(candidates)
-    try:
-        meta["asof"] = _iso_to_words(newest)
-    except (ValueError, IndexError):
-        return
-
-    y, mo, d = (int(x) for x in newest.split("-"))
-    age = int((time.time() - time.mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
-    meta["price_age_days"] = age
-    flag = "  <-- STALE, check the pipeline" if age > STALE_WARN_DAYS else ""
-    print(f"Homepage dated {meta['asof']} ({age} days old){flag}")
+    newest_common = max(set(dates), key=lambda d: (dates.count(d), d))
+    meta["price_date"] = newest_common
+    meta["asof"] = _iso_to_words(newest_common)
+    meta["price_age_days"] = _days_old(newest_common)
+    lag = cal.trading_days_between(cal.parse_iso(newest_common), cal.last_close_date())
+    meta["price_lag"] = lag
+    flag = "  <-- STALE, check the pipeline" if lag >= 1 else ""
+    print(f"Homepage dated {meta['asof']} "
+          f"({lag} trading day{'s' if lag != 1 else ''} behind the latest close){flag}")
 
 
 def load_companies():
@@ -162,14 +145,7 @@ def load_companies():
 MAX_PRICE_AGE_DAYS = 5
 
 
-def prices_from_history():
-    """Latest close for every series in docs/history.js.
-
-    This costs nothing -- the file is already built for the charts, and its
-    last point IS the most recent close. It covers companies the quote feed
-    misses entirely, including foreign listings, so nothing is left stranded
-    on a hardcoded estimate.
-    """
+def _load_history_file():
     path = os.path.join(HERE, "docs", "history.js")
     try:
         text = open(path).read()
@@ -182,160 +158,41 @@ def prices_from_history():
         hist = json.loads(text[len(prefix):].rstrip().rstrip(";"))
     except json.JSONDecodeError:
         return {}
-
-    # Only trust a close that is actually recent. A price that is weeks old is
-    # worse than an honest estimate, because it looks live and is not.
-    import time as _time
-    def _days_old(ds):
-        if not isinstance(ds, str) or len(ds) < 10:
-            return 9999
-        try:
-            y, m, d = (int(x) for x in ds[:10].split("-"))
-            return int((_time.time() - _time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))) / 86400)
-        except (ValueError, OverflowError):
-            return 9999
-
-    out, stale = {}, 0
-    for tick, entry in hist.items():
-        if tick.startswith("_") or not isinstance(entry, dict):
-            continue
-        closes = entry.get("c")
-        if not (isinstance(closes, list) and closes):
-            continue
-        last = closes[-1]
-        if not (isinstance(last, (int, float)) and last > 0):
-            continue
-        if _days_old(entry.get("to")) > MAX_PRICE_AGE_DAYS:
-            stale += 1
-            continue
-        out[tick] = float(last)
-    if stale:
-        print(f"  ignored {stale} chart closes older than "
-              f"{MAX_PRICE_AGE_DAYS} days — too stale to use as a price")
-    return out
+    return hist if isinstance(hist, dict) else {}
 
 
-def check_price_chart_agreement(companies):
-    """The displayed price and the chart's final point must be the same number.
-
-    They are read from the same array, so any disagreement means something
-    wrote to that series after it was fetched. That happened once already:
-    the accumulator was stapling stale quotes onto clean Yahoo data. This
-    check exists so it can never happen silently again.
-    """
-    hist_px = prices_from_history()
-    bad = [c["t"] for c in companies
-           if c["t"] in hist_px and abs(c["price"] - hist_px[c["t"]]) > 0.01]
-    if bad:
-        print(f"  WARNING: price disagrees with chart end-point for "
-              f"{len(bad)} companies: {', '.join(bad[:8])}"
-              + (" ..." if len(bad) > 8 else ""))
-    return bad
-
-
-def apply_live_prices(companies):
-    """Set every price by picking the freshest reading from TWO independent
-    sources, rather than trusting one.
-
-    WHY BOTH, EVERY TIME: this project has been through Stooq dying, FRED
-    blocking datacentre IPs, and Yahoo apparently getting throttled after
-    sustained use. Every free, undocumented source has failed eventually.
-    There is no version of "pick the reliable one" that stays true forever.
-    The only durable fix is to stop depending on any single source working
-    on any given day.
-
-    THE RULE: for each company, compare the Finnhub quote (prices.json) and
-    the chart history's last close (docs/history.js). Take whichever is
-    actually fresh. If only one exists, use it. If neither does, fall back to
-    the stored estimate, same as always.
-
-    A stale close is worse than an honest estimate because it looks live and
-    is not, so anything older than MAX_PRICE_AGE_DAYS is discarded outright
-    regardless of which source it came from.
-    """
-    path = os.path.join(HERE, "prices.json")
-    quote_age_days = 9999
+def _days_old(ds):
+    """Calendar days since an ISO date; 9999 if missing or malformed."""
+    if not isinstance(ds, str) or len(ds) < 10:
+        return 9999
     try:
-        with open(path) as f:
-            prices = json.load(f)
-        fetched = prices.get("_fetched_at", "")
-        if isinstance(fetched, str) and len(fetched) >= 10:
-            y, mo, d = (int(x) for x in fetched[:10].split("-"))
-            quote_age_days = int((__import__("time").time()
-                                  - __import__("time").mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
-    except (FileNotFoundError, json.JSONDecodeError, ValueError):
-        prices = {}
+        y, m, d = (int(x) for x in ds[:10].split("-"))
+        return int((time.time() - time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))) / 86400)
+    except (ValueError, OverflowError):
+        return 9999
 
-    hist_px = prices_from_history()   # already filtered to <= MAX_PRICE_AGE_DAYS old
 
-    quote_fresh = quote_age_days <= MAX_PRICE_AGE_DAYS
-    from_quote = from_hist = 0
-
-    for c in companies:
-        px = prices.get(c["t"]) if quote_fresh else None
-        hp = hist_px.get(c["t"])
-        has_px = isinstance(px, (int, float)) and px > 0
-        has_hp = isinstance(hp, (int, float)) and hp > 0
-
-        # Both fresh: prefer the quote feed, since it can be same-day intraday
-        # while the chart close is always yesterday's or today's settle.
-        if has_px:
-            c["price"] = float(px)
-            from_quote += 1
-        elif has_hp:
-            c["price"] = float(hp)
-            from_hist += 1
-        # else: keep the stored estimate untouched.
-
-    print(f"Prices: {from_quote} from Finnhub quote (age {quote_age_days}d), "
-          f"{from_hist} from chart history")
 def prices_from_history():
-    """Latest close for every series in docs/history.js.
+    """{ticker: (last close, its date)} for every chart that is recent.
 
-    This costs nothing -- the file is already built for the charts, and its
-    last point IS the most recent close. It covers companies the quote feed
-    misses entirely, including foreign listings, so nothing is left stranded
-    on a hardcoded estimate.
+    The chart's last point IS the latest close, and fetch_history.py tops it
+    up with the day's quote when Yahoo misses a symbol -- so this is the one
+    number that is both fresh and guaranteed to match the chart beside it.
     """
-    path = os.path.join(HERE, "docs", "history.js")
-    try:
-        text = open(path).read()
-    except FileNotFoundError:
-        return {}
-    prefix = "var FF_HISTORY = "
-    if not text.startswith(prefix):
-        return {}
-    try:
-        hist = json.loads(text[len(prefix):].rstrip().rstrip(";"))
-    except json.JSONDecodeError:
-        return {}
-
-    # Only trust a close that is actually recent. A price that is weeks old is
-    # worse than an honest estimate, because it looks live and is not.
-    import time as _time
-    def _days_old(ds):
-        if not isinstance(ds, str) or len(ds) < 10:
-            return 9999
-        try:
-            y, m, d = (int(x) for x in ds[:10].split("-"))
-            return int((_time.time() - _time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))) / 86400)
-        except (ValueError, OverflowError):
-            return 9999
-
     out, stale = {}, 0
-    for tick, entry in hist.items():
+    for tick, entry in _load_history_file().items():
         if tick.startswith("_") or not isinstance(entry, dict):
             continue
         closes = entry.get("c")
         if not (isinstance(closes, list) and closes):
             continue
         last = closes[-1]
-        if not (isinstance(last, (int, float)) and last > 0):
+        if isinstance(last, bool) or not isinstance(last, (int, float)) or not last > 0:
             continue
         if _days_old(entry.get("to")) > MAX_PRICE_AGE_DAYS:
             stale += 1
             continue
-        out[tick] = float(last)
+        out[tick] = (float(last), entry.get("to", "")[:10])
     if stale:
         print(f"  ignored {stale} chart closes older than "
               f"{MAX_PRICE_AGE_DAYS} days — too stale to use as a price")
@@ -345,14 +202,12 @@ def prices_from_history():
 def check_price_chart_agreement(companies):
     """The displayed price and the chart's final point must be the same number.
 
-    They are read from the same array, so any disagreement means something
-    wrote to that series after it was fetched. That happened once already:
-    the accumulator was stapling stale quotes onto clean Yahoo data. This
-    check exists so it can never happen silently again.
+    Both come from the same array now, so any disagreement means something
+    wrote to one and not the other. Loud, so it can never happen silently.
     """
     hist_px = prices_from_history()
     bad = [c["t"] for c in companies
-           if c["t"] in hist_px and abs(c["price"] - hist_px[c["t"]]) > 0.01]
+           if c["t"] in hist_px and abs(c["price"] - hist_px[c["t"]][0]) > 0.01]
     if bad:
         print(f"  WARNING: price disagrees with chart end-point for "
               f"{len(bad)} companies: {', '.join(bad[:8])}"
@@ -361,86 +216,56 @@ def check_price_chart_agreement(companies):
 
 
 def apply_live_prices(companies):
-    """Set every price from the freshest source available.
+    """Set every company's price, and record which day it is from.
 
-    ORDER OF PREFERENCE, deliberately changed:
+    One rule, in order:
 
-      1. docs/history.js  -- the last close of the chart series. This is now
-                             the PRIMARY source, not a fallback. The history
-                             fetcher pulls a year of daily closes from Yahoo,
-                             needs no API key, and is the one part of this
-                             pipeline proven to run and commit successfully.
-                             Its newest point is by definition the latest
-                             close, so it is a price feed we already have.
+      1. The chart's last close (docs/history.js). fetch_history.py refreshes
+         every chart on every run and adds the day's quote to any chart Yahoo
+         missed, so this is the freshest number available AND it matches the
+         chart on the same page by construction.
+      2. The quote in prices.json, only for a company that has no usable
+         chart at all.
+      3. The stored estimate in companies/*.py, as a last resort -- with no
+         date, so the site can say it is an estimate.
 
-      2. prices.json      -- Finnhub intraday quotes, if present. Fresher
-                             within the trading day, but it depends on an API
-                             key and has repeatedly failed to produce a file.
-                             Treated as a bonus, never a requirement.
-
-      3. companies/*.py   -- the stored estimate. Last resort only.
-
-    Nothing here can fail the build. A missing or stale source is skipped and
-    the next one down is used."""
-    path = os.path.join(HERE, "prices.json")
+    There used to be two versions of this function in this file, and the
+    second (the one Python actually ran) put the chart first while the chart
+    was only refreshed every four days. The price froze with it. Both the
+    duplicate and the four-day rule are gone.
+    """
     try:
-        with open(path) as f:
-            prices = json.load(f)
+        with open(os.path.join(HERE, "prices.json")) as f:
+            quotes = json.load(f)
+        if not isinstance(quotes, dict):
+            quotes = {}
     except (FileNotFoundError, json.JSONDecodeError):
-        # Missing or corrupt quote file is not fatal: chart history is an
-        # independent source and should still be used. Returning early here
-        # was a bug — it threw away perfectly good prices.
-        print("No usable prices.json — falling back to chart history.")
-        prices = {}
-    hist_px = prices_from_history()
-    from_hist = n = 0
-    for c in companies:
-        # 1. chart history first — the source that actually works
-        hp = hist_px.get(c["t"])
-        if isinstance(hp, (int, float)) and hp > 0:
-            c["price"] = float(hp)
-            from_hist += 1
-            continue
-        # 2. quote feed, if it happened to produce anything
-        px = prices.get(c["t"])
-        if isinstance(px, (int, float)) and px > 0:
-            c["price"] = float(px)
-            n += 1
-    fetched = prices.get("_fetched_at", "unknown time")
-    print(f"Prices: {from_hist} from chart history"
-          + (f", {n} from the quote feed" if n else "")
-          + f" (quotes fetched {fetched})")
-    # Loud staleness alarm. Prices froze for six days once and nobody noticed,
-    # because the site kept serving the last good numbers without complaint.
-    age = None
-    stamp = prices.get("_fetched_at", "")
-    if isinstance(stamp, str) and len(stamp) >= 10:
-        try:
-            y, mo, d = (int(x) for x in stamp[:10].split("-"))
-            age = int((time.time() - time.mktime((y, mo, d, 12, 0, 0, 0, 0, -1))) / 86400)
-        except (ValueError, OverflowError):
-            age = None
-    if age is not None and age > 3:
-        print(f"  {'!' * 60}")
-        print(f"  PRICES ARE {age} DAYS OLD (last fetched {stamp[:10]}).")
-        print(f"  The quote fetcher is not running or not committing.")
-        print(f"  Run: python fetch_prices.py --test")
-        print(f"  {'!' * 60}")
+        quotes = {}
+    q_date = quotes.get("_fetched_at", "")[:10] if isinstance(quotes.get("_fetched_at"), str) else ""
+    q_fresh = _days_old(q_date) <= MAX_PRICE_AGE_DAYS
 
-    stale = [c["t"] for c in companies
-             if c["t"] not in prices and c["t"] not in hist_px]
-    if stale:
-        # Name every one. A count alone is easy to skim past; a list of tickers
-        # tells you exactly which company pages are showing an estimate rather
-        # than a real price, so you can chase them.
-        print(f"  {len(stale)} of {len(companies)} still on stored estimates "
-              f"(no live price found):")
-        for i in range(0, len(stale), 12):
-            print("    " + " ".join(stale[i:i + 12]))
-        print("    -> these need a working Yahoo symbol in fetch_history.py")
-    else:
-        print(f"  every one of {len(companies)} companies has a live price.")
-    return fetched
+    hist_px = prices_from_history()
+    from_hist = from_quote = 0
+    estimates = []
+    for c in companies:
+        hp = hist_px.get(c["t"])
+        px = quotes.get(c["t"]) if q_fresh else None
+        if hp:
+            c["price"], c["pd"] = hp
+            from_hist += 1
+        elif isinstance(px, (int, float)) and not isinstance(px, bool) and px > 0:
+            c["price"], c["pd"] = float(px), q_date
+            from_quote += 1
+        else:
+            c["pd"] = None                 # stored estimate, not a market price
+            estimates.append(c["t"])
+
+    print(f"Prices: {from_hist} from chart closes, {from_quote} from quotes only, "
+          f"{len(estimates)} on stored estimates")
+    if estimates:
+        for i in range(0, len(estimates), 12):
+            print("    " + " ".join(estimates[i:i + 12]))
+    return q_date
 
 
 # Absolute limits on fetched fundamentals, in billions of dollars except
@@ -584,10 +409,17 @@ def current_risk_free():
     if not isinstance(entry, dict) or not entry.get("c"):
         return None
     raw = entry["c"][-1]
-    if not isinstance(raw, (int, float)):
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
         return None
-    rf = raw / 1000.0                     # 43.1 -> 0.0431
-    return rf if 0.005 < rf < 0.12 else None
+    # The CBOE index is the yield x10 (43.1 = 4.31%), but Yahoo's chart feed
+    # has returned it both ways (43.1 and 4.31). Dividing 4.31 by 1000 gave
+    # 0.43%, which the bounds check rejected -- silently switching off the
+    # WACC recalibration. Read the scale from the number itself.
+    rf = raw / 1000.0 if raw > 20 else raw / 100.0
+    if 0.005 < rf < 0.12:
+        return rf
+    print(f"  ^TNX value {raw} does not look like a yield — WACC left unchanged")
+    return None
 
 
 def recalibrate_model(companies):
@@ -928,6 +760,68 @@ def warn_implausible(companies):
     return warnings
 
 
+TRACK_RECORD_PATH = os.path.join(HERE, "docs", "track-record.js")
+
+
+def log_rating_changes(old_data_path, new_companies):
+    """Compare new ratings against the currently-live data.js and log any
+    that changed to track-record.json, with today's date and both prices.
+
+    This is the entire track record: no backfilled history, because none
+    was ever recorded. It starts at zero entries and only ever grows real
+    ones, which is the only version of "track record" that means anything
+    on a site whose whole argument is not fabricating data.
+    """
+    try:
+        old_text = open(old_data_path).read()
+        old_data = json.loads(old_text[len("const FF_DATA = "):].rstrip().rstrip(";"))
+        old_ratings = {c["t"]: (c["rating"], c["price"]) for c in old_data["companies"]}
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        old_ratings = {}   # first run ever — nothing to diff against yet
+
+    # The file is JavaScript ("var FF_TRACK_RECORD = [...];"), not bare JSON.
+    # Reading it with json.load always failed, so every new rating change
+    # silently replaced the whole log instead of adding to it.
+    try:
+        text = open(TRACK_RECORD_PATH).read().strip()
+        prefix = "var FF_TRACK_RECORD = "
+        if text.startswith(prefix):
+            text = text[len(prefix):]
+        log = json.loads(text.rstrip(";"))
+        if not isinstance(log, list):
+            log = []
+    except (FileNotFoundError, json.JSONDecodeError):
+        log = []
+
+    today = time.strftime("%Y-%m-%d")
+    added = 0
+    for c in new_companies:
+        prev = old_ratings.get(c["t"])
+        if prev is None or prev[0] == c["rating"]:
+            continue   # new company, or no change — nothing to log
+        log.append({
+            "date": today, "ticker": c["t"], "name": c["n"],
+            "from": prev[0], "to": c["rating"],
+            "price_then": prev[1], "price_now": c["price"],
+            "fv": c["fv"],
+        })
+        added += 1
+
+    if added:
+        log = log[-500:]   # cap growth; oldest entries are the least useful
+        # Written as `var X = [...]`, not bare JSON. A <script src> tag runs
+        # its contents as JavaScript -- a bare JSON array is technically
+        # legal JS (an unused expression) and loads with no error, but never
+        # assigns to anything. Confirmed this in the browser: the page
+        # showed zero rows with real data sitting in the file. Same fix
+        # data.js and history.js already use.
+        with open(TRACK_RECORD_PATH, "w") as f:
+            f.write("var FF_TRACK_RECORD = ")
+            json.dump(log, f, separators=(",", ":"))
+            f.write(";\n")
+        print(f"Track record: {added} rating change(s) logged for {today}")
+
+
 def main():
     companies = load_companies()
     print(f"Loaded {len(companies)} companies")
@@ -958,7 +852,7 @@ def main():
     apply_live_prices(companies)
     check_price_chart_agreement(companies)
     meta = dict(META)
-    stamp_date(meta)
+    stamp_date(meta, companies)
 
     # Last line of defence. If anything above let a bad number through, stop
     # here rather than publishing a nan fair value.
@@ -993,7 +887,7 @@ def main():
     # input. Rebuild those companies from their stored assumptions rather
     # than publishing the number.
     from engine import build as _build
-    out, reverted = [], []
+    out, reverted, unresolved = [], [], []
     for c in companies:
         row = _build(c)
         # A negative fair value is a legitimate result when a company's debt
@@ -1014,7 +908,15 @@ def main():
                     reverted.append(f"{c['t']} ({row['upside']*100:+,.0f}%)")
                     out.append(candidate)
                     continue
-            reverted.append(f"{c['t']} ({row['upside']*100:+,.0f}%, dropped)")
+            # Stored assumptions are also extreme. That is a data quality
+            # problem with this company's inputs, not a reason to make it
+            # vanish. Dropping it silently changed the site's company count
+            # without explanation, which is worse than publishing a figure
+            # with a known caveat. Publish the analyst's own numbers and shout
+            # about it in the log instead.
+            fallback = _build(dict(c, **(original or {})))
+            unresolved.append(f"{c['t']} ({fallback['upside']*100:+,.0f}%)")
+            out.append(fallback)
             continue
         out.append(row)
 
@@ -1026,6 +928,14 @@ def main():
         if len(reverted) > 12:
             print(f"    ... and {len(reverted)-12} more")
         print("    These use their stored assumptions instead of the fetched data.")
+
+    if unresolved:
+        print(f"\n  {len(unresolved)} companies produce implausible upside even from "
+              f"their STORED assumptions — an input is probably wrong:")
+        for u in unresolved:
+            print("    " + u)
+        print("    They are still published (the count must never change silently),")
+        print("    but their share count, revenue or margin needs checking by hand.")
 
     # sector aggregates + peer sets, used by the sector pages and comps tables
     sectors = [dict(s) for s in SECTORS]
@@ -1072,12 +982,31 @@ def main():
                 else:
                     p["pctl"][metric] = 50
 
+    # Invariant: the number of companies published must equal the number
+    # loaded. The count on the homepage silently fell from 234 to 231 once,
+    # because the sanity gate was dropping companies with no announcement.
+    # If this ever fires again, it should be loud and unmissable.
+    if len(out) != len(companies):
+        print(f"\n{'!' * 64}")
+        print(f"  COMPANY COUNT CHANGED: loaded {len(companies)}, publishing {len(out)}.")
+        print(f"  {len(companies) - len(out)} companies disappeared during the build.")
+        print(f"  The site will show the wrong number. This must be fixed.")
+        print(f"{'!' * 64}\n")
+
     meta.update(coverage_stats(out, sectors))
     data = {"sectors": sectors, "companies": out, "meta": meta}
 
     docs = os.path.join(HERE, "docs")
     os.makedirs(docs, exist_ok=True)
     target = os.path.join(docs, "data.js")
+
+    # Track record: compare this run's ratings against whatever data.js
+    # already exists, BEFORE it gets overwritten below. This is the only
+    # honest way to build a track record — there is no stored history of
+    # past ratings to backfill, so the log starts empty today and grows one
+    # real entry at a time from here on. Never invent a past entry.
+    log_rating_changes(target, out)
+
     with open(target, "w") as f:
         f.write("const FF_DATA = ")
         json.dump(data, f, separators=(",", ":"))

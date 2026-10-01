@@ -73,30 +73,72 @@ function scoreRowsHTML(scores) {
 
 /* Bear / Base / Bull target-price range bar ----------------------------- */
 function rangeBarHTML(bear, base, bull, price) {
-  const vals = [bear, base, bull, price];
-  const min = Math.min(...vals), max = Math.max(...vals), pad = (max - min) * 0.08 || Math.abs(min) * 0.1 || 1;
-  const lo = min - pad, hi = max + pad;
-  const pos = v => ((v - lo) / (hi - lo) * 100).toFixed(2);
-  const pts = [
-    { v: bear, lbl: 'Bear', cls: '' },
-    { v: base, lbl: 'Base', cls: '' },
-    { v: bull, lbl: 'Bull', cls: '' },
-    { v: price, lbl: 'Current', cls: 'price' }
-  ].sort((a, b) => a.v - b.v);
-  const fillL = pos(Math.min(bear, base, bull)), fillR = pos(Math.max(bear, base, bull));
-  const markers = pts.map(p => `
-    <div class="range-pt ${p.cls}" style="left:${pos(p.v)}%">
-      <div class="dot" style="background:${p.cls === 'price' ? 'var(--gold)' : 'var(--lilac)'}"></div>
-      <div class="lbl">${p.lbl}</div>
-      <div class="val">${p.cls === 'price' ? FMT.usd(p.v, 0) : fvStr(p.v)}</div>
-    </div>`).join('');
+  /* Scenario range as SVG rather than absolutely-positioned labels.
+
+     The previous version placed four labels at percentage offsets, which
+     collided badly whenever two values landed close together — with bull at
+     $196.00 and the price at $194.83 the text overlapped into nonsense. It
+     also repeated the numbers shown in the table directly beneath it.
+
+     This draws the span from bear to bull, marks the base case, and shows
+     where the market currently sits. The figures live in the table below,
+     so the chart only has to answer one question: is the price inside the
+     range, or outside it? */
+  const w = 300, h = 92;
+  const padX = 34, axisY = 48;
+  const lo = Math.min(bear, price), hi = Math.max(bull, price);
+  const span = (hi - lo) || 1;
+  const pad = span * 0.12;
+  const min = lo - pad, max = hi + pad;
+  const X = v => padX + ((v - min) / (max - min)) * (w - padX * 2);
+
+  // Hide an end label when the price marker would sit on top of it. The
+  // table beneath repeats every figure, so losing a tick label costs nothing
+  // while two labels printed over each other costs legibility.
+  const CLEAR = 34;
+  const showBear = Math.abs(X(price) - X(bear)) > CLEAR;
+  const showBull = Math.abs(X(price) - X(bull)) > CLEAR;
+
+  const inside = price >= bear && price <= bull;
+  const verdict = inside
+    ? 'The market price sits inside the range this model produces.'
+    : price > bull
+      ? 'The market price sits above even the bull case.'
+      : 'The market price sits below even the bear case.';
+
   return `
-    <div class="range-wrap">
-      <div class="range-track">
-        <div class="range-fill" style="left:${fillL}%;right:${100 - fillR}%"></div>
-        ${markers}
-      </div>
-    </div>`;
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block"
+         role="img" aria-label="Scenario range from ${fvStr(bear)} to ${fvStr(bull)}, base case ${fvStr(base)}, current price ${FMT.usd(price, 0)}. ${verdict}">
+      <defs>
+        <linearGradient id="rng" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#6d3fc0" stop-opacity=".22"/>
+          <stop offset="50%" stop-color="#b9a3f5" stop-opacity=".40"/>
+          <stop offset="100%" stop-color="#6d3fc0" stop-opacity=".22"/>
+        </linearGradient>
+      </defs>
+
+      <rect x="${X(bear)}" y="${axisY - 9}" width="${Math.max(2, X(bull) - X(bear))}"
+            height="18" rx="9" fill="url(#rng)"/>
+      <line x1="${X(bear)}" y1="${axisY - 13}" x2="${X(bear)}" y2="${axisY + 13}"
+            stroke="#9483c4" stroke-width="1.5"/>
+      <line x1="${X(bull)}" y1="${axisY - 13}" x2="${X(bull)}" y2="${axisY + 13}"
+            stroke="#9483c4" stroke-width="1.5"/>
+
+      ${showBear ? `<text x="${Math.max(16, X(bear))}" y="${axisY + 30}" fill="#736c8c"
+            font-size="12" font-family="var(--font-mono)" text-anchor="middle">bear</text>` : ''}
+      ${showBull ? `<text x="${Math.min(w - 16, X(bull))}" y="${axisY + 30}" fill="#736c8c"
+            font-size="12" font-family="var(--font-mono)" text-anchor="middle">bull</text>` : ''}
+
+      <circle cx="${X(base)}" cy="${axisY}" r="6" fill="#c9a227"/>
+      <text x="${Math.min(w - 30, Math.max(30, X(base)))}" y="${axisY - 20}" fill="#e4c97a" font-size="12"
+            font-family="var(--font-mono)" text-anchor="middle">fair value</text>
+
+      <line x1="${X(price)}" y1="${axisY - 22}" x2="${X(price)}" y2="${axisY + 16}"
+            stroke="#f1eef8" stroke-width="2" stroke-dasharray="3 3"/>
+      <text x="${Math.min(w - 22, Math.max(22, X(price)))}" y="${axisY + 30}" fill="#f1eef8" font-size="12.5" font-weight="600"
+            font-family="var(--font-mono)" text-anchor="middle">${FMT.usd(price, 0)}</text>
+    </svg>
+    <p style="font-size:11.5px;color:var(--text-dim);margin:10px 0 16px;">${verdict}</p>`;
 }
 
 /* Revenue + FCF sparkline (10-yr model) --------------------------------- */
@@ -257,78 +299,348 @@ function historyThinNote(n) {
     the chart fills out as the daily update keeps running.</p>`;
 }
 
-/* Main company chart: 12 months of closes with the fair value overlaid. */
-function priceChartSVG(key, fv, price, h = 240) {
-  if (!hasHistory(key)) return historyEmptyState(key);
-  const s = FF_HISTORY[key];
-  const closes = s.c;
-  const w = 720, padL = 4, padR = 58, padT = 16, padB = 26;
+/* Main company chart ---------------------------------------------------
+   A year of daily closes, today's fair value as a gold reference line, and
+   one deliberate flourish: a bracket at the right edge joining the latest
+   price to the fair value, green for upside and red for downside. The gap
+   between what the market pays and what the model says is the whole point
+   of this site, so the chart draws it rather than leaving it to arithmetic.
 
-  // Include fv in the y-range only when it's close enough to be readable —
-  // a target 5x away from the price would flatten the price line into a
-  // straight edge and tell you nothing.
+   The gap is NOT shaded across the past year. Only today's fair value
+   exists; shading March against it would invent a history the model never
+   produced.
+
+   Built in two steps. priceChartSVG() returns the frame as HTML (the router
+   renders pages as strings). mountPriceCharts() then draws the SVG at the
+   element's real pixel width -- the old chart stretched one fixed-size
+   drawing to fit, which squashed or smeared its text on every screen that
+   wasn't exactly 720px wide -- and wires up scrubbing, ranges and keys. */
+
+const PC_RANGES = [['1M', 1], ['3M', 3], ['6M', 6], ['YTD', 'ytd'], ['1Y', 12]];
+const PC_LINE = '#b9a3f5', PC_FV = '#c9a227', PC_UP = '#4fb787', PC_DOWN = '#dd6b7f';
+
+function pcParseISO(s) {
+  if (typeof s !== 'string' || s.length < 10) return null;
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(Date.UTC(y, m - 1, d));
+}
+function pcFmtDate(d, withYear = true) {
+  return d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric',
+    ...(withYear ? { year: 'numeric' } : {}) });
+}
+
+/* {dates, closes} for a ticker, oldest first. Files written before per-point
+   dates existed get their dates rebuilt from the last date, one weekday at a
+   time -- off by a day or two around holidays, never more. */
+function pcSeries(key) {
+  if (!hasHistory(key)) return null;
+  const s = FF_HISTORY[key];
+  const n = s.c.length;
+  let dates = null;
+  const start = pcParseISO(s.from);
+  if (start && Array.isArray(s.d) && s.d.length === n) {
+    dates = s.d.map(o => new Date(start.getTime() + o * 86400000));
+  } else {
+    let d = pcParseISO(s.to) || new Date();
+    dates = [];
+    for (let i = 0; i < n; i++) {
+      dates.push(d);
+      do { d = new Date(d.getTime() - 86400000); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+    }
+    dates.reverse();
+  }
+  const out = { dates: [], closes: [] };
+  for (let i = 0; i < n; i++) {
+    const v = s.c[i];
+    if (typeof v === 'number' && isFinite(v) && v > 0 && dates[i] && !isNaN(dates[i])) {
+      out.dates.push(dates[i]); out.closes.push(v);
+    }
+  }
+  return out.closes.length ? out : null;
+}
+
+function pcSlice(series, range) {
+  const { dates, closes } = series;
+  const last = dates[dates.length - 1];
+  let from;
+  if (range === 'ytd') from = new Date(Date.UTC(last.getUTCFullYear(), 0, 1));
+  else { from = new Date(last); from.setUTCMonth(from.getUTCMonth() - range); }
+  let i = dates.findIndex(d => d >= from);
+  if (i < 0) i = 0;
+  if (dates.length - i < 2) i = Math.max(0, dates.length - 2);
+  return { dates: dates.slice(i), closes: closes.slice(i) };
+}
+
+function pcNiceTicks(lo, hi, count) {
+  const raw = (hi - lo) / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= raw) || 10 * mag;
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(10));
+  return ticks;
+}
+
+function pcMoney(v) { return FMT.usd(v, v >= 10000 ? 0 : 2); }
+function pcTick(v) {
+  return '$' + v.toLocaleString('en-US', { maximumFractionDigits: Number.isInteger(v) ? 0 : 2 });
+}
+
+function priceChartSVG(key, fv, price) {
+  const series = pcSeries(key);
+  if (!series) return historyEmptyState(key);
+  const last = series.closes[series.closes.length - 1];
+  const lastDate = series.dates[series.dates.length - 1];
+  const ranges = PC_RANGES.map(([label, r]) =>
+    `<button type="button" class="pc-range${label === '1Y' ? ' on' : ''}" data-r="${r}"
+       aria-pressed="${label === '1Y'}">${label}</button>`).join('');
+  return `
+  <figure class="pchart" data-key="${escapeHtml(key)}" data-fv="${fv > 0 ? fv : ''}">
+    <div class="pc-head">
+      <div class="pc-readout" aria-live="polite">
+        <div class="pc-price">${pcMoney(last)}</div>
+        <div class="pc-meta"><span class="pc-chg"></span><span class="pc-when"></span></div>
+      </div>
+      <div class="pc-ranges" role="group" aria-label="Chart time range">${ranges}</div>
+    </div>
+    <div class="pc-plot" tabindex="0" role="img"
+         aria-label="Share price chart for ${escapeHtml(key)}. Latest close ${FMT.usd(last)} on ${pcFmtDate(lastDate)}${fv > 0 ? `, against a fair value of ${FMT.usd(fv)}` : ''}. Use the left and right arrow keys to step through daily closes."></div>
+    <figcaption class="pc-key">
+      <span><i class="k-line"></i>Daily close</span>
+      ${fv > 0 ? `<span><i class="k-fv"></i>Today's fair value</span>` : ''}
+      <span class="pc-note"></span>
+    </figcaption>
+    ${series.closes.length < 8 ? historyThinNote(series.closes.length) : ''}
+  </figure>`;
+}
+
+/* Draw (or redraw) one chart at its current width. */
+function pcRender(fig) {
+  const plot = fig.querySelector('.pc-plot');
+  const W = Math.round(plot.clientWidth);
+  if (W < 40) return;                                   // hidden tab: wait for resize
+  const st = fig._pc;
+  const { dates, closes } = pcSlice(st.series, st.range);
+  const n = closes.length;
+  const H = W < 560 ? 230 : 290;
+  const fv = st.fv;
+
   const pLo = Math.min(...closes), pHi = Math.max(...closes);
+  // Only plot the fair value when it is close enough to read; a target five
+  // times the price would crush the price line flat.
   const showFV = fv > 0 && fv > pLo * 0.45 && fv < pHi * 2.2;
-  let lo = showFV ? Math.min(pLo, fv) : pLo;
-  let hi = showFV ? Math.max(pHi, fv) : pHi;
-  const pad = (hi - lo) * 0.12 || hi * 0.1 || 1;
+  let lo = showFV ? Math.min(pLo, fv) : pLo, hi = showFV ? Math.max(pHi, fv) : pHi;
+  const pad = (hi - lo) * 0.1 || hi * 0.05 || 1;
   lo -= pad; hi += pad;
 
-  const span = closes.length - 1;
-  const X = i => span === 0
-    ? (w - padR)                                        // single point: pin to "now"
-    : padL + (i / span) * (w - padL - padR);
-  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB);
+  const padT = 26, padB = 28, padR = showFV ? 84 : 14;
+  const padL = Math.max(40, 12 + 7 * Math.max(...pcNiceTicks(lo, hi, 4).map(t => pcTick(t).length)));
+  const plotR = W - padR;
+  const X = i => n === 1 ? plotR : padL + (i / (n - 1)) * (plotR - padL);
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  st.geo = { n, X, Y, padL, plotR, padT, H, padB, dates, closes, showFV };
 
-  const line = closes.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
-  const area = span === 0 ? '' : line + ` L${X(span).toFixed(1)},${h - padB} L${padL},${h - padB} Z`;
-  // With only a handful of points, mark each one so it reads as recorded data
-  // rather than a suspiciously straight line.
-  const dots = closes.length <= 8
-    ? closes.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.6" fill="#b9a3f5" opacity=".85"/>`).join('')
+  // gridlines + axis labels (left, sitting just above each line)
+  const ticks = pcNiceTicks(lo, hi, W < 560 ? 3 : 4);
+  const grid = ticks.filter(t => Y(t) > padT - 4 && Y(t) < H - padB).map(t => `
+    <line x1="${padL}" x2="${plotR}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}" class="pc-grid"/>
+    <text x="${padL - 10}" y="${(Y(t) + 3.5).toFixed(1)}" class="pc-axis" text-anchor="end">${pcTick(t)}</text>`).join('');
+
+  // Month (or, on 1M, week) labels. Thinned at a uniform step -- every
+  // month, or every 2nd/3rd on a phone -- so the gaps are always even. Skipping
+  // whichever label happened to fall too close made short months vanish.
+  const weekly = st.range === 1;
+  const bounds = [];
+  for (let i = 1; i < n; i++) {
+    const d = dates[i], prev = dates[i - 1];
+    if (weekly ? d.getUTCDay() < prev.getUTCDay() : d.getUTCMonth() !== prev.getUTCMonth())
+      bounds.push(i);
+  }
+  const avg = bounds.length > 1 ? (X(bounds[bounds.length - 1]) - X(bounds[0])) / (bounds.length - 1) : 1e9;
+  const step = Math.max(1, Math.ceil((weekly ? 58 : 44) / avg));
+  const xl = bounds.filter((i, k) => {
+    const d = dates[i];
+    const slot = weekly ? k : d.getUTCFullYear() * 12 + d.getUTCMonth();
+    return slot % step === 0 && X(i) > padL + 16 && X(i) < plotR - 16;
+  }).map(i => {
+    const d = dates[i];
+    const label = weekly ? pcFmtDate(d, false)
+      : d.getUTCMonth() === 0 ? String(d.getUTCFullYear())
+      : d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short' });
+    return `<text x="${X(i).toFixed(1)}" y="${H - 8}" class="pc-axis" text-anchor="middle">${label}</text>`;
+  });
+
+  const line = closes.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join('');
+  const area = n > 1 ? `${line}L${X(n - 1).toFixed(1)},${H - padB}L${X(0).toFixed(1)},${H - padB}Z` : '';
+  const lastV = closes[n - 1], lx = X(n - 1), ly = Y(lastV);
+  const uid = 'pc' + st.uid;
+
+  let fvLayer = '';
+  if (showFV) {
+    const fy = Y(fv);
+    const up = fv >= lastV;
+    const gap = fv / lastV - 1;
+    const bx = plotR + 18;
+    const midY = (fy + ly) / 2;
+    const labelAbove = fy > padT + 22;
+    fvLayer = `
+      <line x1="${padL}" x2="${plotR}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-fvline"/>
+      <text x="${(plotR - 6).toFixed(1)}" y="${(labelAbove ? fy - 8 : fy + 16).toFixed(1)}"
+            class="pc-fvlabel" text-anchor="end">Fair value ${FMT.usd(fv)}</text>
+      <g class="pc-gap">
+        <line x1="${lx.toFixed(1)}" x2="${bx}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" class="pc-gap-lead"/>
+        <line x1="${plotR}" x2="${bx}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-gap-lead"/>
+        <line x1="${bx}" x2="${bx}" y1="${ly.toFixed(1)}" y2="${fy.toFixed(1)}"
+              stroke="${up ? PC_UP : PC_DOWN}" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="${bx + 9}" y="${(midY - 1).toFixed(1)}" class="pc-gap-pct">${FMT.pct(gap, 0)}</text>
+        <text x="${bx + 9}" y="${(midY + 12).toFixed(1)}" class="pc-gap-sub">${up ? 'upside' : 'downside'}</text>
+      </g>`;
+  }
+
+  const firstDraw = !st.drawn;
+  plot.innerHTML = `
+  <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="pc-svg${firstDraw ? ' pc-intro' : ''}">
+    <defs>
+      <linearGradient id="${uid}a" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${PC_LINE}" stop-opacity=".20"/>
+        <stop offset="100%" stop-color="${PC_LINE}" stop-opacity="0"/>
+      </linearGradient>
+      <clipPath id="${uid}l"><rect class="pc-clip-l" x="0" y="0" width="${W}" height="${H}"/></clipPath>
+      <clipPath id="${uid}r"><rect class="pc-clip-r" x="${W}" y="0" width="0" height="${H}"/></clipPath>
+    </defs>
+    ${grid}
+    ${xl.join('')}
+    ${area ? `<path d="${area}" fill="url(#${uid}a)" class="pc-area" clip-path="url(#${uid}l)"/>` : ''}
+    ${fvLayer}
+    ${n > 1 ? `<path d="${line}" class="pc-line" clip-path="url(#${uid}l)" pathLength="1"/>
+               <path d="${line}" class="pc-line pc-line-dim" clip-path="url(#${uid}r)"/>` : ''}
+    ${n <= 8 ? closes.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3" fill="${PC_LINE}"/>`).join('') : ''}
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4.5" class="pc-end"/>
+    <g class="pc-hover" style="display:none">
+      <line class="pc-cross" x1="0" x2="0" y1="${padT - 8}" y2="${H - padB}"/>
+      <text class="pc-cross-date" y="${padT - 12}" text-anchor="middle"></text>
+      <circle class="pc-dot" r="5"/>
+    </g>
+  </svg>`;
+  st.drawn = true;
+
+  const note = fig.querySelector('.pc-note');
+  if (note) note.textContent = (fv > 0 && !showFV)
+    ? `Fair value is ${FMT.pct(fv / lastV - 1, 0)} from the price — too far to draw on the same scale. The gap is the finding; see the DCF tab.`
     : '';
+  pcReadout(fig, null);
+}
 
-  const first = closes[0], last = closes[closes.length - 1];
-  const chg = (last / first - 1);
-  const chgColor = chg >= 0 ? 'var(--green)' : 'var(--red)';
+/* Header text: the latest close, or the hovered day while scrubbing. */
+function pcReadout(fig, i) {
+  const st = fig._pc, g = st.geo;
+  if (!g) return;
+  const idx = i == null ? g.n - 1 : i;
+  const v = g.closes[idx], d = g.dates[idx], first = g.closes[0];
+  const chg = v / first - 1;
+  const rangeName = { 1: 'past month', 3: 'past 3 months', 6: 'past 6 months', ytd: 'year to date', 12: 'past year' }[st.range];
+  fig.querySelector('.pc-price').textContent = pcMoney(v);
+  const c = fig.querySelector('.pc-chg');
+  c.textContent = `${chg >= 0 ? '▲' : '▼'} ${FMT.pct(chg)}`;
+  c.className = 'pc-chg ' + (chg >= 0 ? 'up' : 'down');
+  let when = i == null
+    ? `${rangeName} · close ${pcFmtDate(d)}`
+    : `since ${pcFmtDate(g.dates[0])}`;
+  if (i != null && st.fv > 0) {
+    const gap = st.fv / v - 1;
+    when += ` · fair value ${Math.abs(gap * 100).toFixed(0)}% ${gap >= 0 ? 'above' : 'below'}`;
+  }
+  fig.querySelector('.pc-when').textContent = when;
+}
 
-  const fvY = showFV ? Y(fv) : null;
-  const uid = 'g' + key.replace(/[^a-z0-9]/gi, '');
+function pcHover(fig, i) {
+  const st = fig._pc, g = st.geo;
+  const svg = fig.querySelector('.pc-svg');
+  if (!g || !svg) return;
+  const hov = svg.querySelector('.pc-hover');
+  const clipL = svg.querySelector('.pc-clip-l'), clipR = svg.querySelector('.pc-clip-r');
+  const W = +svg.getAttribute('width');
+  if (i == null) {
+    hov.style.display = 'none';
+    clipL.setAttribute('width', W); clipR.setAttribute('x', W); clipR.setAttribute('width', 0);
+    svg.classList.remove('scrubbing');
+    st.hover = null;
+    pcReadout(fig, null);
+    return;
+  }
+  i = Math.max(0, Math.min(g.n - 1, i));
+  st.hover = i;
+  const x = g.X(i), y = g.Y(g.closes[i]);
+  hov.style.display = '';
+  hov.querySelector('.pc-cross').setAttribute('x1', x);
+  hov.querySelector('.pc-cross').setAttribute('x2', x);
+  const dot = hov.querySelector('.pc-dot');
+  dot.setAttribute('cx', x); dot.setAttribute('cy', y);
+  const lab = hov.querySelector('.pc-cross-date');
+  lab.textContent = pcFmtDate(g.dates[i]);
+  lab.setAttribute('x', Math.max(g.padL + 40, Math.min(g.plotR - 40, x)));
+  clipL.setAttribute('width', x); clipR.setAttribute('x', x); clipR.setAttribute('width', W - x);
+  svg.classList.add('scrubbing');
+  pcReadout(fig, i);
+}
 
-  return `
-  <div style="position:relative">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim)">
-        Share price · ${s.from} to ${s.to}
-      </div>
-      <div class="mono" style="font-size:12.5px;color:${span === 0 ? 'var(--text-dim)' : chgColor}">
-        ${span === 0 ? 'first close recorded' : FMT.pct(chg) + ' over period'}
-      </div>
-    </div>
-    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Share price from ${s.from} to ${s.to}. Latest close ${FMT.usd(last,0)}${showFV ? `, against a fair value of ${FMT.usd(fv,0)}` : ''}. Change over the period ${FMT.pct(chg)}." style="width:100%;height:${h}px;display:block">
-      <defs>
-        <linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#6d3fc0" stop-opacity=".38"/>
-          <stop offset="100%" stop-color="#6d3fc0" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${area ? `<path d="${area}" fill="url(#${uid})"/>` : ''}
-      ${span === 0 ? '' : `<path d="${line}" fill="none" stroke="#b9a3f5" stroke-width="1.8" vector-effect="non-scaling-stroke"/>`}
-      ${dots}
-      ${showFV ? `
-        <line x1="${padL}" y1="${fvY.toFixed(1)}" x2="${(w - padR).toFixed(1)}" y2="${fvY.toFixed(1)}"
-              stroke="#c9a227" stroke-width="1.3" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
-        <text x="${w - padR + 6}" y="${(fvY + 3.5).toFixed(1)}" fill="#e4c97a"
-              font-family="IBM Plex Mono, monospace" font-size="11">FV ${FMT.usd(fv, 0)}</text>` : ''}
-      <circle cx="${X(span).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3.5" fill="#b9a3f5"/>
-      <text x="${w - padR + 6}" y="${(Y(last) + 3.5).toFixed(1)}" fill="#f1eef8"
-            font-family="IBM Plex Mono, monospace" font-size="11">${FMT.usd(last, 0)}</text>
-    </svg>
-    ${showFV ? '' : `<p style="font-size:11px;color:var(--text-dim);margin-top:8px">
-      Fair value of ${fvStr(fv)} sits too far outside the traded range to plot on the same axis —
-      the gap itself is the finding. See the DCF tab.</p>`}
-    ${closes.length < 8 ? historyThinNote(closes.length) : ''}
-  </div>`;
+let pcUid = 0;
+function mountPriceCharts(root) {
+  (root || document).querySelectorAll('.pchart').forEach(fig => {
+    if (fig._pc) return;
+    const series = pcSeries(fig.dataset.key);
+    if (!series) return;
+    fig._pc = { series, range: 12, fv: parseFloat(fig.dataset.fv) || 0, uid: ++pcUid, drawn: false };
+    const plot = fig.querySelector('.pc-plot');
+
+    // Redraw at the new width whenever the box changes size -- including the
+    // moment a hidden tab becomes visible.
+    if ('ResizeObserver' in window) {
+      let lastW = 0;
+      new ResizeObserver(() => {
+        const w = Math.round(plot.clientWidth);
+        if (w && w !== lastW) { lastW = w; pcRender(fig); }
+      }).observe(plot);
+    } else {
+      window.addEventListener('resize', () => pcRender(fig));
+    }
+    pcRender(fig);
+
+    fig.querySelector('.pc-ranges').addEventListener('click', e => {
+      const b = e.target.closest('.pc-range');
+      if (!b) return;
+      fig.querySelectorAll('.pc-range').forEach(x => {
+        x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b);
+      });
+      const r = b.dataset.r;
+      fig._pc.range = r === 'ytd' ? 'ytd' : +r;
+      pcRender(fig);
+    });
+
+    const idxAt = ev => {
+      const g = fig._pc.geo;
+      if (!g) return null;
+      const rect = plot.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      return Math.round(((x - g.padL) / (g.plotR - g.padL)) * (g.n - 1));
+    };
+    plot.addEventListener('pointermove', ev => pcHover(fig, idxAt(ev)));
+    plot.addEventListener('pointerdown', ev => pcHover(fig, idxAt(ev)));
+    plot.addEventListener('pointerleave', () => pcHover(fig, null));
+    plot.addEventListener('pointercancel', () => pcHover(fig, null));
+    plot.addEventListener('pointerup', ev => { if (ev.pointerType !== 'mouse') pcHover(fig, null); });
+
+    plot.addEventListener('keydown', ev => {
+      const g = fig._pc.geo;
+      if (!g) return;
+      const cur = fig._pc.hover == null ? g.n - 1 : fig._pc.hover;
+      const step = ev.shiftKey ? 5 : 1;
+      const k = { ArrowLeft: cur - step, ArrowRight: cur + step, Home: 0, End: g.n - 1 }[ev.key];
+      if (k != null) { ev.preventDefault(); pcHover(fig, k); }
+      else if (ev.key === 'Escape') pcHover(fig, null);
+    });
+    plot.addEventListener('blur', () => pcHover(fig, null));
+  });
 }
 
 /* Compact sparkline used in the homepage market strip. */

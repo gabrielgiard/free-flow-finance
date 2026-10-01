@@ -1,28 +1,42 @@
 """Build price history for the charts, and write docs/history.js.
 
-Tries several sources in order, because every single-source attempt so far has
-failed from inside GitHub Actions:
+Every run re-downloads a full year of daily closes for every series. That is
+the fix for the staleness that kept coming back: the previous version only
+re-downloaded a chart once it was more than four days old, so on a normal day
+it fetched nothing, the chart froze, and -- because the site's price is the
+chart's last point -- the price froze with it. It caught up every few days
+and then froze again. Now there is no skip: ~240 calls a day, about three
+minutes, and every chart ends at the latest close.
 
-    Stooq          returns "no data" for every symbol -- endpoint retired
-    FRED           times out; appears to refuse datacentre traffic
-    Finnhub        quotes are free, historical candles are paid-only
+Sources, tried in order per symbol:
 
-So this no longer bets on one provider. It tries each in turn and takes the
-first that answers:
-
-    1. Yahoo Finance v8 chart   no key, a full year in one call, fast
+    1. Yahoo Finance v8 chart   no key, a full year in one call
     2. Twelve Data              needs TWELVEDATA_API_KEY, 800 credits/day
-    3. Daily accumulator        always works; one point per run, no API at all
 
-If sources 1 and 2 both fail, charts still fill -- just a day at a time. The
-accumulator is the floor, not the plan.
+If both fail for a symbol, its existing series is kept, and then topped up
+with that day's quote from prices.json (see top_up_from_quotes). So a chart
+can never fall behind the price shown next to it.
 
-    python fetch_history.py               # backfill what's missing, then top up
-    python fetch_history.py --test        # try both sources on 3 symbols, exit
-    python fetch_history.py --limit 20    # backfill at most 20 series
-    python fetch_history.py --no-backfill # today's close only, no API calls
+    python fetch_history.py               # refresh every series, then top up
+    python fetch_history.py --test        # try both sources on a few symbols
+    python fetch_history.py --limit 20    # refresh at most 20 series
+    python fetch_history.py --no-backfill # quotes top-up only, no API calls
+
+FILE FORMAT (docs/history.js)
+
+    var FF_HISTORY = {
+      "NVDA": {"from": "2025-10-01", "to": "2026-09-30",
+               "c": [181.2, 183.9, ...],       daily closes, USD
+               "d": [0, 1, 2, 5, ...]},        days after "from", one per close
+      ...
+      "_meta": {"updated": "...", "series": 239}
+    };
+
+"d" gives every point its real date, so the chart's axis and tooltip show
+true trading dates rather than an evenly spaced guess.
 """
 
+import datetime as dt
 import json
 import os
 import sys
@@ -34,7 +48,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from build import load_companies  # noqa: E402
+import market_calendar as cal  # noqa: E402
 
 YAHOO_HOSTS = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]
 YAHOO_PATH = "/v8/finance/chart/{}?range=1y&interval=1d"
@@ -48,29 +62,18 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 MAX_POINTS = 260          # about one trading year
 YAHOO_PAUSE = 0.6         # unofficial endpoint; stay gentle
 TWELVE_PAUSE = 8.0        # free tier allows 8 calls/minute
-# Refresh rule. The first version skipped anything with 200+ points, which
-# meant history FROZE after the initial backfill and only grew via the daily
-# accumulator. If that chain broke, history went quietly stale -- and since
-# build.py now reads the last close as a price fallback, stale history means
-# wrong prices. So the test is recency, not depth.
-STALE_AFTER_DAYS = 4
 HISTORY_PATH = os.path.join(HERE, "docs", "history.js")
+PRICES_PATH = os.path.join(HERE, "prices.json")
 
 # Homepage sparklines, plus ^TNX -- the 10-year Treasury yield. That last one
 # is not decorative: it is the risk-free rate every WACC in the library is
 # built from, so fetching it lets the model recalibrate itself when rates move.
-# Yahoo quotes ^TNX as the yield times ten (43.0 means 4.30%).
 MARKET = ["SPY", "QQQ", "GLD", "BNO", "^TNX"]
 
 # Foreign primaries Finnhub's free tier does not cover. Yahoo does, using
-# exchange suffixes -- .PA Paris, .SW Zurich, .DE Frankfurt, .KS Korea,
-# .NS India. Mapping them here means these eight finally get real prices
-# and real charts, instead of sitting on hardcoded estimates forever.
-# Each entry is (Yahoo symbol, rough FX rate to USD). The rate matters: Yahoo
-# quotes each listing in its LOCAL currency, so Samsung comes back in won at
-# ~76,500. Fed in as dollars that produces a $451 trillion market cap. These
-# rates are approximate and drift, which is exactly why the ADR route below is
-# better where one exists.
+# exchange suffixes. Each entry is (Yahoo symbol, rough FX rate to USD):
+# Yahoo quotes each listing in its LOCAL currency, so Samsung comes back in
+# won at ~76,500, which fed in as dollars is a $451 trillion market cap.
 FOREIGN = {
     "MC":       ("MC.PA",       1.08),    # LVMH     — Paris, EUR
     "OR":       ("OR.PA",       1.08),    # L'Oreal  — Paris, EUR
@@ -82,9 +85,8 @@ FOREIGN = {
     "BYDDY":    ("BYDDY",       1.0),     # BYD ADR     — already USD
 }
 
-# Nothing is skipped outright any more: everything has a route to real data.
-SKIP = set()
 
+# ---------------------------------------------------------------- sources --
 
 def _get(url, headers=None, timeout=25):
     req = urllib.request.Request(url, headers=headers or {})
@@ -99,20 +101,38 @@ def _get(url, headers=None, timeout=25):
         return None, type(e).__name__
 
 
+def _clean(dates, vals):
+    """Pair up dates and closes, drop junk, de-duplicate dates (last wins),
+    sort oldest-first, keep the last MAX_POINTS."""
+    by_date = {}
+    for d, v in zip(dates, vals):
+        if cal.parse_iso(d) is None:
+            continue
+        if isinstance(v, bool):
+            continue
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            continue
+        if not (v > 0 and v != float("inf")):
+            continue
+        by_date[d[:10]] = round(v, 2)
+    keys = sorted(by_date)[-MAX_POINTS:]
+    return keys, [by_date[k] for k in keys]
+
+
 def from_yahoo(symbol):
     """(dates, closes) oldest-first from Yahoo's chart endpoint, or (None, why)."""
-    # ^TNX and other index symbols start with a caret, which is not valid in a
-    # URL path unencoded — the request silently fails, which is why the
-    # Treasury yield never arrived and WACC never recalibrated.
+    # ^TNX and other index symbols start with a caret, which must be
+    # URL-encoded or the request silently fails.
     quoted = urllib.parse.quote(symbol, safe="")
 
-    # Try each Yahoo host in turn — query1 is the one that gets rate-limited
-    # or blocked from shared datacentre IPs (like GitHub Actions runners)
-    # first; query2 often still answers when query1 doesn't.
+    # query1 is the host that gets rate-limited from shared datacentre IPs
+    # (like GitHub's runners) first; query2 often still answers.
     data, err = None, "no hosts tried"
     for host in YAHOO_HOSTS:
-        url = f"https://{host}{YAHOO_PATH.format(quoted)}"
-        data, err = _get(url, headers={"User-Agent": UA})
+        data, err = _get(f"https://{host}{YAHOO_PATH.format(quoted)}",
+                         headers={"User-Agent": UA})
         if not err:
             break
     if err:
@@ -122,75 +142,76 @@ def from_yahoo(symbol):
         res = data["chart"]["result"][0]
         stamps = res["timestamp"]
         closes = res["indicators"]["quote"][0]["close"]
+        offset = int(res.get("meta", {}).get("gmtoffset") or 0)
     except (KeyError, IndexError, TypeError):
         return None, "unexpected shape"
 
-    dates, vals = [], []
-    for ts, c in zip(stamps, closes):
-        if c is None:                       # Yahoo nulls out holidays
-            continue
-        try:
-            v = float(c)
-        except (TypeError, ValueError):
-            continue
-        if v <= 0:
-            continue
-        dates.append(time.strftime("%Y-%m-%d", time.gmtime(ts)))
-        vals.append(round(v, 2))
-
+    # Yahoo stamps each daily bar at the session open in UTC. Shifting by the
+    # exchange's own offset gives the local trading date -- without it, Seoul
+    # and Mumbai bars land on the previous calendar day.
+    dates = [time.strftime("%Y-%m-%d", time.gmtime(ts + offset)) for ts in stamps]
+    dates, vals = _clean(dates, closes)
     if len(vals) < 5:
         return None, f"only {len(vals)} usable points"
-    return (dates[-MAX_POINTS:], vals[-MAX_POINTS:]), None
+    return (dates, vals), None
 
 
 def from_twelve(symbol, key):
     """Same contract, via Twelve Data."""
     if not key:
         return None, "no API key"
-    data, err = _get(TWELVE.format(symbol, MAX_POINTS, key))
+    data, err = _get(TWELVE.format(urllib.parse.quote(symbol, safe=""),
+                                   MAX_POINTS, key))
     if err:
         return None, err
-    if isinstance(data, dict) and data.get("status") == "error":
+    if not isinstance(data, dict):
+        return None, "unexpected shape"
+    if data.get("status") == "error":
         return None, str(data.get("message", "error"))[:60]
-
     values = data.get("values")
     if not isinstance(values, list) or not values:
         return None, "no values"
-
-    dates, vals = [], []
-    for row in reversed(values):            # API returns newest first
-        d, c = row.get("datetime"), row.get("close")
-        if not d or c in (None, ""):
-            continue
-        try:
-            v = float(c)
-        except (TypeError, ValueError):
-            continue
-        if v <= 0:
-            continue
-        dates.append(d[:10])
-        vals.append(round(v, 2))
-
+    dates = [str(r.get("datetime", ""))[:10] for r in values if isinstance(r, dict)]
+    closes = [r.get("close") for r in values if isinstance(r, dict)]
+    dates, vals = _clean(dates, closes)
     if len(vals) < 5:
         return None, f"only {len(vals)} usable points"
     return (dates, vals), None
 
 
-def days_since(date_str):
-    """Whole days between an ISO date and today. Returns a huge number if the
-    date is missing or malformed, so anything suspect gets refreshed rather
-    than trusted."""
-    if not isinstance(date_str, str) or len(date_str) < 10:
-        return 9999
-    try:
-        y, m, d = (int(x) for x in date_str[:10].split("-"))
-    except ValueError:
-        return 9999
-    try:
-        then = time.mktime((y, m, d, 12, 0, 0, 0, 0, -1))
-    except (ValueError, OverflowError):
-        return 9999
-    return int((time.time() - then) / 86400)
+# ----------------------------------------------------------- file format --
+
+def encode(dates, vals):
+    """(dates, closes) -> stored series with day offsets."""
+    start = cal.parse_iso(dates[0])
+    return {
+        "from": dates[0],
+        "to": dates[-1],
+        "c": vals,
+        "d": [(cal.parse_iso(d) - start).days for d in dates],
+    }
+
+
+def decode(entry):
+    """Stored series -> (dates, closes). Series written by older versions of
+    this script have no "d"; their dates are rebuilt by counting trading days
+    back from "to", which is exact except across market holidays."""
+    closes = entry.get("c") if isinstance(entry, dict) else None
+    if not isinstance(closes, list) or not closes:
+        return [], []
+    start = cal.parse_iso(entry.get("from"))
+    offs = entry.get("d")
+    if (start and isinstance(offs, list) and len(offs) == len(closes)
+            and all(isinstance(o, int) and not isinstance(o, bool) for o in offs)):
+        dates = [(start + dt.timedelta(days=o)).isoformat() for o in offs]
+    else:
+        end = cal.parse_iso(entry.get("to")) or cal.last_close_date()
+        dates, d = [], end
+        for _ in closes:
+            dates.append(d.isoformat())
+            d = cal.prev_trading_day(d)
+        dates.reverse()
+    return _clean(dates, closes)
 
 
 def load_history():
@@ -202,83 +223,99 @@ def load_history():
     if not text.startswith(prefix):
         return {}
     try:
-        return json.loads(text[len(prefix):].rstrip().rstrip(";"))
+        data = json.loads(text[len(prefix):].rstrip().rstrip(";"))
     except json.JSONDecodeError:
         return {}
+    return data if isinstance(data, dict) else {}
 
 
-def save_history(hist):
+def save_history(hist, previous=None):
+    """Write docs/history.js. Skipped when no series changed, so a backup run
+    that finds everything current does not create an empty commit."""
+    series = {k: v for k, v in hist.items() if not k.startswith("_")}
+    if previous is not None:
+        old = {k: v for k, v in previous.items() if not k.startswith("_")}
+        if json.dumps(old, sort_keys=True) == json.dumps(series, sort_keys=True):
+            return False
+    out = dict(sorted(series.items()))
+    out["_meta"] = {"updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "series": len(series)}
     os.makedirs(os.path.dirname(HISTORY_PATH), exist_ok=True)
-    with open(HISTORY_PATH, "w") as f:
+    tmp = HISTORY_PATH + ".tmp"
+    with open(tmp, "w") as f:
         f.write("var FF_HISTORY = ")
-        json.dump(hist, f, separators=(",", ":"))
+        json.dump(out, f, separators=(",", ":"))
         f.write(";\n")
+    os.replace(tmp, HISTORY_PATH)          # never leave a half-written file
+    return True
 
 
-def accumulate(hist):
-    """Append today's close from prices.json — but ONLY where Yahoo gave us
-    nothing.
+# ------------------------------------------------------- quotes top-up --
 
-    This used to append to every series unconditionally, which quietly
-    corrupted things: a company with a clean year of Yahoo data would get one
-    Finnhub point stapled on the end. Since build.py reads the last point as
-    the price, that one bad value became the displayed price AND the final
-    point of the chart — so the chart and the price disagreed with each other
-    and both were wrong.
+def top_up_from_quotes(hist):
+    """Add the day's quote to any chart that does not have that day yet.
 
-    Yahoo's series is internally consistent. Do not contaminate it. The
-    accumulator now only fills genuine gaps.
+    The quote in prices.json and the chart's last close must describe the
+    same day, or the page shows a price that disagrees with its own chart.
+    If Yahoo answered, the chart already ends at the latest close and nothing
+    happens here. If Yahoo failed for a symbol, this appends the quote as a
+    properly dated point, so the chart stays current anyway.
+
+    The old accumulator did something similar without dates, and stapled
+    quotes onto series that already had that day -- which is exactly how the
+    price and the chart drifted apart before. The date check prevents it.
     """
     try:
-        prices = json.load(open(os.path.join(HERE, "prices.json")))
+        prices = json.load(open(PRICES_PATH))
     except (FileNotFoundError, json.JSONDecodeError):
         return 0
+    if not isinstance(prices, dict):
+        return 0
+    fetched = cal.parse_utc(prices.get("_fetched_at", ""))
+    if fetched is None:
+        return 0
+    qday = cal.quote_date(fetched)
+    # A quote older than the latest close is no use to anyone.
+    if cal.trading_days_between(qday, cal.last_close_date()) > 0:
+        return 0
+    qiso = qday.isoformat()
 
-    stamp = prices.get("_fetched_at", "")[:10] or time.strftime("%Y-%m-%d")
-    n = skipped = 0
+    added = 0
     for tick, px in prices.items():
-        if tick.startswith("_") or not isinstance(px, (int, float)) or px <= 0:
+        if tick.startswith("_") or isinstance(px, bool):
             continue
-        e = hist.get(tick)
-
-        # Series already has a real, current run of data from Yahoo. Leave it
-        # completely alone.
-        if e and len(e.get("c", [])) >= 20 and days_since(e.get("to")) <= STALE_AFTER_DAYS:
-            skipped += 1
+        if not isinstance(px, (int, float)) or not px > 0:
             continue
+        dates, vals = decode(hist.get(tick, {}))
+        if dates and dates[-1] >= qiso:
+            continue                         # chart already has this day
+        dates, vals = _clean(dates + [qiso], vals + [px])
+        hist[tick] = encode(dates, vals)
+        added += 1
+    return added
 
-        e = hist.setdefault(tick, {"from": stamp, "to": stamp, "c": []})
-        if e.get("to") == stamp and e["c"]:
-            continue
-        e["c"] = (e["c"] + [round(float(px), 2)])[-MAX_POINTS:]
-        e["to"] = stamp
-        e.setdefault("from", stamp)
-        n += 1
 
-    if skipped:
-        print(f"Left {skipped} Yahoo series untouched (already current).")
-    return n
-
+# ------------------------------------------------------------------ main --
 
 def main():
     args = sys.argv[1:]
     key = os.environ.get("TWELVEDATA_API_KEY")
-    hist = load_history()
 
     if "--test" in args:
-        print("Testing both sources on three symbols.\n")
-        for sym in ["AAPL", "NVDA", "SPY", "MC.PA", "NESN.SW"]:
+        print("Testing both sources.\n")
+        for sym in ["AAPL", "NVDA", "SPY", "^TNX", "MC.PA", "005930.KS"]:
             r, e = from_yahoo(sym)
-            print(f"  Yahoo      {sym:5s} " +
-                  (f"OK   {len(r[1])} points, {r[0][0]} to {r[0][-1]}" if r else f"FAIL {e}"))
+            print(f"  Yahoo      {sym:10s} " +
+                  (f"OK   {len(r[1])} points, {r[0][0]} to {r[0][-1]}, last {r[1][-1]}"
+                   if r else f"FAIL {e}"))
             time.sleep(YAHOO_PAUSE)
         print()
         for sym in ["AAPL", "NVDA", "SPY"]:
             r, e = from_twelve(sym, key)
-            print(f"  TwelveData {sym:5s} " +
+            print(f"  TwelveData {sym:10s} " +
                   (f"OK   {len(r[1])} points, {r[0][0]} to {r[0][-1]}" if r else f"FAIL {e}"))
             time.sleep(TWELVE_PAUSE if key else 0)
-        print("\nIf either source shows OK, charts will fill on the next run.")
+        print(f"\nLatest close the site should show: {cal.last_close_date()}")
         return 0
 
     limit = None
@@ -288,92 +325,94 @@ def main():
         except (IndexError, ValueError):
             pass
 
-    if "--no-backfill" not in args:
-        def needs_refresh(sym):
-            e = hist.get(sym)
-            if not e or not e.get("c"):
-                return True                    # nothing stored at all
-            if len(e["c"]) < 20:
-                return True                    # too thin to be a real chart
-            return days_since(e.get("to")) > STALE_AFTER_DAYS
+    previous = load_history()
+    hist = {k: v for k, v in previous.items() if not k.startswith("_")}
+    target_day = cal.last_close_date().isoformat()
+    print(f"Latest close the site should show: {target_day}")
 
-        targets = [c["t"] for c in load_companies() if needs_refresh(c["t"])]
-        targets += [s for s in MARKET if needs_refresh(s)]
+    failures, targets = [], []
+    if "--no-backfill" not in args:
+        from build import load_companies
+        targets = [c["t"] for c in load_companies()] + MARKET
+        targets = list(dict.fromkeys(targets))          # de-duplicate, keep order
         if limit:
             targets = targets[:limit]
 
-        if not targets:
-            print(f"Every series is current (newest point within "
-                  f"{STALE_AFTER_DAYS} days) — nothing to fetch.")
-        else:
-            print(f"Backfilling {len(targets)} series.")
-            print("Trying Yahoo Finance first, falling back to Twelve Data.\n")
-            by_source = {"yahoo": 0, "twelve": 0}
-            failures = []
-            yahoo_dead = False        # after enough consecutive failures, stop trying
+        print(f"Refreshing {len(targets)} series (Yahoo first, Twelve Data as backup).\n")
+        by_source = {"yahoo": 0, "twelve": 0}
+        yahoo_dead = False
 
-            for i, sym in enumerate(targets, 1):
-                res = err = None
-
-                ysym, fx = FOREIGN.get(sym, (sym, 1.0))
-                if not yahoo_dead:
-                    res, err = from_yahoo(ysym)
-                    if res and fx != 1.0:
-                        # convert the whole series to USD so it is comparable
-                        # with every other company in the library
-                        d, c = res
-                        res = (d, [round(v * fx, 2) for v in c])
-                    if res:
-                        by_source["yahoo"] += 1
-                    time.sleep(YAHOO_PAUSE)
-                    # If Yahoo fails the first 8 in a row it is blocked, not flaky.
-                    if not res and i >= 8 and by_source["yahoo"] == 0:
-                        yahoo_dead = True
-                        print("  Yahoo failed on the first 8 symbols — treating it as\n"
-                              "  blocked and switching to Twelve Data for the rest.\n")
-
-                if not res:
-                    res, err2 = from_twelve(sym, key)
-                    if res:
-                        by_source["twelve"] += 1
-                    else:
-                        err = f"yahoo: {err}; twelve: {err2}"
-                    time.sleep(TWELVE_PAUSE if key else 0)
-
+        for i, sym in enumerate(targets, 1):
+            res = err = None
+            ysym, fx = FOREIGN.get(sym, (sym, 1.0))
+            if not yahoo_dead:
+                res, err = from_yahoo(ysym)
+                time.sleep(YAHOO_PAUSE)
                 if res:
-                    d, c = res
-                    hist[sym] = {"from": d[0], "to": d[-1], "c": c}
+                    by_source["yahoo"] += 1
+                elif i >= 8 and by_source["yahoo"] == 0:
+                    yahoo_dead = True
+                    print("  Yahoo failed on the first 8 symbols — treating it as "
+                          "blocked and using Twelve Data for the rest.\n")
+
+            if not res and sym not in FOREIGN:
+                res, err2 = from_twelve(sym, key)
+                if res:
+                    by_source["twelve"] += 1
                 else:
-                    failures.append(f"{sym}: {err}")
+                    err = f"yahoo: {err}; twelve: {err2}"
+                if key:
+                    time.sleep(TWELVE_PAUSE)
 
-                if i % 10 == 0 or i == len(targets):
-                    done = by_source["yahoo"] + by_source["twelve"]
-                    print(f"  {i:3d}/{len(targets)}  {done} ok "
-                          f"(yahoo {by_source['yahoo']}, twelve {by_source['twelve']}), "
-                          f"{len(failures)} failed")
-                    save_history(hist)     # checkpoint: a timeout loses nothing
+            if res:
+                dates, vals = res
+                if fx != 1.0:
+                    vals = [round(v * fx, 2) for v in vals]
+                hist[sym] = encode(dates, vals)
+            else:
+                failures.append(f"{sym}: {err}")
 
-            print(f"\nBackfill complete — Yahoo {by_source['yahoo']}, "
-                  f"Twelve Data {by_source['twelve']}, failed {len(failures)}.")
-            if failures:
-                print("Failed (these accumulate one point per day instead):")
-                for f_ in failures[:10]:
-                    print("  - " + f_)
-                if len(failures) > 10:
-                    print(f"  ... and {len(failures) - 10} more")
+            if i % 25 == 0 or i == len(targets):
+                done = by_source["yahoo"] + by_source["twelve"]
+                print(f"  {i:3d}/{len(targets)}  {done} ok "
+                      f"(yahoo {by_source['yahoo']}, twelve {by_source['twelve']}), "
+                      f"{len(failures)} failed")
 
-    n = accumulate(hist)
+        print(f"\nRefresh complete — Yahoo {by_source['yahoo']}, "
+              f"Twelve Data {by_source['twelve']}, failed {len(failures)}.")
+        if failures:
+            print("Failed (kept their existing chart, topped up from quotes below):")
+            for f_ in failures[:10]:
+                print("  - " + f_)
+            if len(failures) > 10:
+                print(f"  ... and {len(failures) - 10} more")
+
+    n = top_up_from_quotes(hist)
     if n:
-        print(f"Appended today's close for {n} tickers.")
+        print(f"Added today's quote to {n} chart(s) that were missing it.")
 
-    series = [k for k in hist if not k.startswith("_")]
-    deep = [k for k in series if len(hist[k].get("c", [])) >= 20]
-    hist["_meta"] = {"updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                     "series": len(series)}
-    save_history(hist)
-    print(f"\nWrote {HISTORY_PATH} "
-          f"({os.path.getsize(HISTORY_PATH)/1024:.0f} KB)")
-    print(f"{len(series)} series stored, {len(deep)} with 20+ points.")
+    # Report what the site will actually show.
+    company_ends = sorted(e.get("to", "") for k, e in hist.items()
+                          if k not in MARKET and isinstance(e, dict))
+    behind = [k for k, e in hist.items()
+              if k not in MARKET and isinstance(e, dict) and e.get("to", "") < target_day]
+    if company_ends:
+        print(f"Newest close: {company_ends[-1]}. "
+              f"{len(company_ends) - len(behind)} of {len(company_ends)} "
+              f"charts end on {target_day}.")
+    if behind:
+        print(f"  Behind: {' '.join(sorted(behind)[:20])}"
+              + (" ..." if len(behind) > 20 else ""))
+
+    wrote = save_history(hist, previous)
+    print(f"{'Wrote' if wrote else 'No change to'} {HISTORY_PATH}"
+          + (f" ({os.path.getsize(HISTORY_PATH) / 1024:.0f} KB)" if wrote else ""))
+
+    # Exit non-zero only if nothing at all could be refreshed. The workflow
+    # treats this step as non-fatal; the freshness check at the end decides
+    # whether the run as a whole succeeded.
+    if targets and len(failures) == len(targets):
+        return 1
     return 0
 
 

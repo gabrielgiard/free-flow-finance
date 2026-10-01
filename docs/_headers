@@ -1,0 +1,28 @@
+# Cloudflare Pages response headers.
+#
+# The data files change every weekday evening. "no-cache" does not mean
+# "never cache" -- it means "check with the server before reusing your copy",
+# which costs one tiny request and guarantees nobody is shown yesterday's
+# prices from their browser cache. Instagram's and LinkedIn's in-app browsers
+# hold on to files especially long without this.
+
+/data.js
+  Cache-Control: no-cache
+
+/history.js
+  Cache-Control: no-cache
+
+/track-record.js
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/company/*
+  Cache-Control: no-cache
+
+/sector/*
+  Cache-Control: no-cache

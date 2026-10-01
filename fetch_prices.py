@@ -35,8 +35,8 @@ sys.path.insert(0, HERE)
 
 FINNHUB = "https://finnhub.io/api/v1/quote?symbol={}&token={}"
 TWELVE = "https://api.twelvedata.com/price?symbol={}&apikey={}"
-YAHOO = ("https://query1.finance.yahoo.com/v8/finance/chart/{}"
-         "?range=1d&interval=1d")
+YAHOO_HOSTS = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]
+YAHOO_PATH = "/v8/finance/chart/{}?range=1d&interval=1d"
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
@@ -124,8 +124,13 @@ def from_twelve(sym, key):
 
 
 def from_yahoo(sym):
-    data, err = _get(YAHOO.format(urllib.parse.quote(sym, safe="")),
-                     headers={"User-Agent": UA})
+    quoted = urllib.parse.quote(sym, safe="")
+    data, err = None, "no hosts tried"
+    for host in YAHOO_HOSTS:            # query2 often answers when query1 won't
+        data, err = _get(f"https://{host}{YAHOO_PATH.format(quoted)}",
+                         headers={"User-Agent": UA})
+        if not err:
+            break
     if err:
         return None, err
     try:
