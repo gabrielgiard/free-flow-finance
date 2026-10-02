@@ -13,6 +13,15 @@ function sectorMeta(k) { return FF_DATA.sectors.find(s => s.k === k); }
 function inSector(k) { return FF_DATA.companies.filter(c => c.sec === k); }
 function fmtSector(k) { const s = sectorMeta(k); return s ? s.n : k; }
 
+/* "close · Sep 30" next to a price, so a visit at 9am reads as yesterday's
+   close rather than as a broken live quote. A company with no market price
+   at all is labelled as an estimate. */
+function priceDateLabel(c) {
+  if (!c.pd) return 'estimate';
+  const d = pcParseISO(c.pd);
+  return d ? 'close · ' + pcFmtDate(d, false) : 'close';
+}
+
 function crumbs(...parts) {
   return `<div class="co-crumb">` + parts.map((p, i) =>
     i === parts.length - 1
@@ -97,20 +106,19 @@ function viewHome() {
     <div class="wrap">
       <div class="hero-inner">
         <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
-        <h1>One model. <em>${cov.n}</em> companies. Every fair value built the same way.</h1>
+        <h1>One model. ${cov.n} companies. Every fair value built the same way.</h1>
         <p class="lede">A discounted cash flow, comparable-company set, investment thesis and target price for ${cov.n} of the world's largest and most-talked-about public companies — built with a single consistent methodology so you can actually compare them, not just read about them.</p>
         <div class="hero-cta">
           <button class="btn btn-violet" data-route="sector" data-key="semis">${ICN.arrow.replace('currentColor','#fff')} Explore the coverage</button>
           <button class="btn btn-ghost" data-route="methodology">How the model works</button>
         </div>
       </div>
-      ${(m.price_age_days ?? 0) > 3 ? `
+      ${(m.price_lag ?? ((m.price_age_days ?? 0) > 3 ? 2 : 0)) >= 2 ? `
       <div class="comp-note" style="border-left-color:var(--red);margin-bottom:18px">
-        <b>Prices are ${m.price_age_days} days old.</b> The automatic update
-        pipeline hasn't refreshed since ${m.asof} &mdash; every valuation
-        below is still using the last successfully fetched prices rather than
-        today's. Nothing is broken on the page itself; the daily data job
-        needs a look.
+        <b>Prices are from the ${m.asof} close.</b> The daily update has missed
+        ${m.price_lag ?? 'several'} market sessions since then &mdash; every
+        valuation below uses those closing prices rather than the latest ones.
+        The page itself works; the update job needs a look.
       </div>` : ''}
       <div class="snapshot-strip">
         <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${cov.n}</div></div>
@@ -137,7 +145,7 @@ function viewHome() {
     <div class="wrap">
       <div class="section-head">
         <div><h2>Where the model sees the most upside</h2><p class="sub">Ranked by upside to our discounted cash flow fair value versus the current share price.</p></div>
-        <span class="section-link" data-route="screener">Screen all ${cov.n} companies ${ICN.arrow}</span>
+        <span class="section-link" data-route="screener">Screen all ${cov.n} companies</span>
       </div>
       <div class="two-col" style="grid-template-columns: 1fr 1fr;">
         <div class="table-wrap">
@@ -266,12 +274,15 @@ const TABS = [
   ['dcf', 'DCF & Valuation'],
   ['comps', 'Comparables'],
   ['thesis', 'Thesis & Ratings'],
+  ['case', 'Your Case'],
 ];
 
 function viewCompany(ticker) {
   const c = byT(ticker);
   if (!c) return view404();
   if (!STATE.activeTab[ticker]) STATE.activeTab[ticker] = 'overview';
+  // A shared "Your case" link opens on the tab that shows the sender's numbers.
+  if (caseDecode(caseQuery())) STATE.activeTab[ticker] = 'case';
   const active = STATE.activeTab[ticker];
 
   const tabsHTML = TABS.map(([id, label]) =>
@@ -285,6 +296,7 @@ function viewCompany(ticker) {
     dcf: panelDCF(c),
     comps: panelComps(c),
     thesis: panelThesis(c),
+    case: panelCase(c),
   };
   const panelsHTML = TABS.map(([id]) =>
     `<div class="co-panel ${active === id ? 'active' : ''}" data-panel="${id}">${panels[id]}</div>`
@@ -300,12 +312,12 @@ function viewCompany(ticker) {
           <div>
             <h1 class="co-name">${c.n}</h1>
             <div class="co-sub">
-              <span class="mono">${c.exch}</span><span>·</span><span>${c.hq}</span><span>·</span><span>Founded ${c.founded}</span>
+              <span>Listed on <span class="mono">${c.exch}</span>. Based in ${c.hq}, founded ${c.founded}.</span>
             </div>
           </div>
         </div>
         <div class="co-price-block">
-          <div class="co-price">${FMT.usd(c.price)}<span class="cur"> current</span></div>
+          <div class="co-price">${FMT.usd(c.price)}<span class="cur"> ${priceDateLabel(c)}</span></div>
           <div class="co-fv-row">
             <span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span>
             <span class="co-fv">FV ${fvStr(c.fv)}</span>
@@ -319,6 +331,15 @@ function viewCompany(ticker) {
   <section style="padding-top:34px;">
     <div class="wrap">${panelsHTML}</div>
   </section>`;
+}
+
+/* Your Case: the visitor's own DCF. The tab carries its own copy of the
+   price chart so the fair-value line and gap bracket can follow the
+   sliders, while the Overview chart keeps showing the model's view. */
+function panelCase(c) {
+  return `
+  <div style="margin-bottom:18px">${priceChartSVG(c.t, c.fv, c.price)}</div>
+  ${caseHTML(c)}`;
 }
 
 function panelOverview(c) {
@@ -367,7 +388,7 @@ function panelModel(c) {
   return `
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:12px;">Revenue &amp; Free Cash Flow Projection</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:12px;">Revenue &amp; Free Cash Flow Projection</h4>
       ${sparklineSVG(c.model, 'rev', 'var(--lilac)')}
       <div class="table-wrap" style="margin-top:18px;">
         <table class="ff-table model-table">
@@ -379,7 +400,7 @@ function panelModel(c) {
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Model Assumptions</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Model Assumptions</div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">Discount rate (WACC)</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pctPlain(c.wacc)}</span></div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">Terminal growth rate</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pctPlain(c.tg)}</span></div>
         <div class="score-row" style="grid-template-columns:1fr auto;"><span class="label">5-yr revenue CAGR</span><span class="n" style="font-size:14px;color:var(--text)">${FMT.pct(c.cagr5)}</span></div>
@@ -396,19 +417,19 @@ function panelDCF(c) {
   return `
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Discounted Cash Flow Build-Up</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Discounted Cash Flow Build-Up</h4>
       <div class="card">${dcfWaterfallHTML(c.dcf, c.shares)}</div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin:28px 0 14px;">Sensitivity: Fair Value by WACC &amp; Terminal Growth</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin:28px 0 14px;">Sensitivity: Fair Value by WACC &amp; Terminal Growth</h4>
       <div class="table-wrap" style="padding:18px;">${sensitivityGridHTML(c.grid, c.price)}</div>
       <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Green cells sit above the current share price of ${FMT.usd(c.price)}; red cells sit below it. Small changes to either input move the fair value a lot — that sensitivity is the honest reason no DCF should be read as a precise number.</p>
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;">Target Price</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">Target Price</div>
         <div style="font-family:var(--font-mono);font-size:38px;color:var(--gold-soft);line-height:1;">${fvStr(c.fv)}</div>
         <div style="margin-top:10px;"><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span> <span class="mono ${upClass(c.upside)}" style="margin-left:10px;font-size:13px;">${FMT.pct(c.upside)} vs current price</span></div>
       </div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:14px;">Bear / Base / Bull Range</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:14px;">Bear / Base / Bull Range</h4>
       <div class="card">
         ${(c.fv_bear <= 0 && c.fv <= 0 && c.fv_bull <= 0)
           ? `<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Every scenario here — bear, base, and even bull — comes out at or below zero, so a visual range bar against the ${FMT.usd(c.price)} current price would just be three overlapping points miles from the mark. That's the finding: on a conventional cash-flow basis, we can't construct a scenario where the operating business justifies the current price.</p>`
@@ -464,11 +485,11 @@ function panelThesis(c) {
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;">FreeFlow Score</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">FreeFlow Score</div>
         ${scoreRowsHTML(c.scores)}
       </div>
       <div class="card">
-        <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;">Rating &amp; Target</div>
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:12px;">Rating &amp; Target</div>
         <span class="rating-pill ${ratingClass(c.rating)}" style="font-size:14px;padding:8px 16px;">${c.rating}</span>
         <div style="margin-top:14px;font-family:var(--font-mono);font-size:26px;color:var(--gold-soft)">${fvStr(c.fv)}</div>
         <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">12-month DCF fair value · ${FMT.pct(c.upside)} vs. ${FMT.usd(c.price)} current</div>
@@ -530,6 +551,58 @@ function viewAbout() {
 }
 
 /* ============================== METHODOLOGY ============================ */
+function viewTrackRecord() {
+  const log = (typeof FF_TRACK_RECORD !== 'undefined' && Array.isArray(FF_TRACK_RECORD))
+    ? FF_TRACK_RECORD : [];
+  const rows = [...log].reverse();
+
+  const body = rows.length ? rows.map(r => {
+    const actual = r.fv > 0 ? (r.price_now / r.fv - 1) : null;
+    return `
+      <tr>
+        <td class="mono">${r.date}</td>
+        <td class="tk" data-route="company" data-ticker="${r.ticker}" style="cursor:pointer">${r.ticker}</td>
+        <td>${r.name}</td>
+        <td class="num">${r.from}</td>
+        <td class="num">${r.to}</td>
+        <td class="num">${FMT.usd(r.price_then)} &rarr; ${FMT.usd(r.price_now)}</td>
+        <td class="num ${actual!==null && actual>=0 ? 'up':'down'}">${actual!==null ? FMT.pct(actual) : '—'}</td>
+      </tr>`;
+  }).join('') : '';
+
+  return `
+  <section class="co-hero">
+    <div class="wrap">
+      ${crumbs({ href: '#/', label: 'Home' }, { label: 'Track Record' })}
+      <div class="eyebrow">Every rating change, dated</div>
+      <h1 style="font-size:32px;max-width:700px;">What the model has changed its mind about, and when.</h1>
+      <p style="max-width:640px;font-size:14.5px;">Ratings move when the recalibration engine updates on real data — a
+        price move, a margin change, a rate shift. Every change is logged here automatically, with the price at the
+        time. There is no backfilled history: this only records what happens from the day it was switched on.</p>
+    </div>
+  </section>
+  <section style="padding-top:8px;">
+    <div class="wrap">
+      ${rows.length ? `
+        <div class="table-wrap">
+          <table class="ff-table">
+            <thead><tr>
+              <th>Date</th><th>Ticker</th><th>Company</th><th class="num">From</th>
+              <th class="num">To</th><th class="num">Price then &rarr; now</th>
+              <th class="num">vs. fair value now</th>
+            </tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>` : `
+        <div class="empty-state">
+          <h3 style="color:var(--text);font-size:18px;">No changes logged yet</h3>
+          <p>This page updates automatically the next time a rating changes on real data — nothing to do,
+             and nothing here is backfilled. Check back after the model's next recalibration.</p>
+        </div>`}
+    </div>
+  </section>`;
+}
+
 function viewMethodology() {
   const steps = [
     ['1', 'Project revenue and free cash flow, five years out', 'For each company we set a five-year revenue growth path and a free cash flow margin that glides from where it is today toward a realistic year-5 target. Free cash flow is the cash a business generates after paying for operations and reinvesting in itself — the number that actually belongs to shareholders.'],
@@ -581,7 +654,7 @@ function viewMethodology() {
         <div>${stepsHTML}</div>
         <div>
           <div class="card" style="margin-bottom:20px;">
-            <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Rating Scale</div>
+            <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Rating Scale</div>
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
               <tbody>${ratingRows}</tbody>
             </table>
@@ -595,7 +668,7 @@ function viewMethodology() {
         <h2 style="font-size:22px;margin-bottom:14px;">How the model stays current</h2>
         <p style="max-width:720px;font-size:14px;margin-bottom:22px;">A valuation library that never revises its inputs goes stale. Some of that updating can be done mechanically, and some cannot. This is the line between them.</p>
         <div class="card" style="margin-bottom:26px;">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Updated automatically</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Updated automatically</div>
           <ul class="bullets cat">
             <li><strong style="color:var(--text)">Share prices</strong> — every weekday, from market data.</li>
             <li><strong style="color:var(--text)">Revenue, share count and net debt</strong> — refreshed from reported figures, so the starting point of every model tracks what companies actually report rather than what was assumed when it was written.</li>
@@ -607,7 +680,7 @@ function viewMethodology() {
           <p style="font-size:12px;color:var(--text-dim);margin:16px 0 0;">Every automatic change runs through guard rails. A figure that moves more than 15 percentage points, or produces a discount rate below the terminal growth rate, is reported and ignored rather than applied — those are almost always data problems, not real changes.</p>
         </div>
         <div class="card" style="margin-bottom:26px;">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">Not updated automatically, on purpose</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">Not updated automatically, on purpose</div>
           <ul class="bullets risk">
             <li>The terminal growth rate — the assumption about the very long run, where no recent data point is informative.</li>
             <li>Every word of the thesis, risks, catalysts and street view.</li>
@@ -622,7 +695,7 @@ function viewMethodology() {
         <h2 style="font-size:22px;margin-bottom:14px;">Market context</h2>
         <p style="max-width:720px;font-size:14px;margin-bottom:22px;">Valuations do not sit in a vacuum. This is the environment these models were built in, updated as it changes.</p>
         <div class="card">
-          <div class="label" style="font-size:10.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;">As of late July 2026</div>
+          <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:14px;">As of late July 2026</div>
           <ul class="bullets cat">
             <li><strong style="color:var(--text)">Rates are not falling.</strong> The Federal Reserve, now chaired by Kevin Warsh, has held its target range at 3.50&ndash;3.75%, and markets have been pricing in the possibility of a <em style="color:var(--gold-soft);font-style:normal">hike</em> rather than cuts. Every discount rate in this library assumes a cost of capital consistent with that, not with the era of near-zero rates.</li>
             <li><strong style="color:var(--text)">The AI capital cycle is being questioned for the first time.</strong> Hyperscalers are on course to spend somewhere between $600bn and $700bn on AI infrastructure in 2026, up sharply on last year. In July, semiconductor stocks fell hard &mdash; more than a trillion dollars of sector value &mdash; not because demand disappointed, but because investors began asking what return that spending will earn. Alphabet fell around 7% in a week after <em style="color:var(--gold-soft);font-style:normal">raising</em> its capex guidance.</li>
@@ -769,12 +842,22 @@ function viewScreener() {
 
 /* ============================== PORTFOLIO ==============================
    Positions live in the visitor's own browser (localStorage). Nothing is
-   sent anywhere — there is no server to send it to. The distinctive bit is
-   the second table: the portfolio valued against our own DCF fair values
-   rather than just against cost. */
+   sent anywhere — there is no server to send it to.
 
-const PF = { positions: [], loaded: false };
-const PF_KEY = 'freeflow.portfolio.v1';
+   The page answers three questions, in this order: what is it worth, am I
+   up, and does our model think I'm paying too much? The third is the one
+   only this site can answer, so it gets the visual: the same "gap to fair
+   value" idea as the company chart, applied to the whole portfolio. */
+
+const PF = { positions: [], loaded: false, example: false, editing: null };
+const PF_KEY = 'freeflow.portfolio.v1';           // unchanged: old saves still load
+const PF_EXAMPLE_KEY = 'freeflow.portfolio.example';
+const PF_EXAMPLE = [
+  { t: 'AAPL', sh: 15, cost: 190 },
+  { t: 'NVDA', sh: 20, cost: 120 },
+  { t: 'KO',   sh: 40, cost: 62 },
+  { t: 'JPM',  sh: 10, cost: 210 },
+];
 
 function pfLoad() {
   if (PF.loaded) return;
@@ -790,6 +873,7 @@ function pfLoad() {
           typeof p.cost === 'number' && p.cost >= 0);
       }
     }
+    PF.example = localStorage.getItem(PF_EXAMPLE_KEY) === '1' && PF.positions.length > 0;
   } catch (e) {
     // Private browsing, disabled storage, or corrupted JSON. The portfolio
     // still works for this session; it just won't persist.
@@ -800,6 +884,8 @@ function pfLoad() {
 function pfSave() {
   try {
     localStorage.setItem(PF_KEY, JSON.stringify(PF.positions));
+    if (PF.example) localStorage.setItem(PF_EXAMPLE_KEY, '1');
+    else localStorage.removeItem(PF_EXAMPLE_KEY);
     return true;
   } catch (e) {
     return false;
@@ -811,7 +897,7 @@ function pfAdd(ticker, shares, cost) {
   if (!c || !(shares > 0) || !(cost >= 0)) return false;
   const existing = PF.positions.find(p => p.t === ticker);
   if (existing) {
-    // average the cost basis across the combined position
+    // buying more: average the cost across the combined position
     const totalSh = existing.sh + shares;
     existing.cost = (existing.cost * existing.sh + cost * shares) / totalSh;
     existing.sh = totalSh;
@@ -822,13 +908,22 @@ function pfAdd(ticker, shares, cost) {
   return true;
 }
 
+function pfUpdate(ticker, shares, cost) {
+  const p = PF.positions.find(x => x.t === ticker);
+  if (!p || !(shares > 0) || !(cost >= 0)) return false;
+  p.sh = shares; p.cost = cost;
+  pfSave();
+  return true;
+}
+
 function pfRemove(ticker) {
   PF.positions = PF.positions.filter(p => p.t !== ticker);
+  if (!PF.positions.length) PF.example = false;
   pfSave();
 }
 
 function pfStats() {
-  let value = 0, cost = 0, fvValue = 0;
+  let value = 0, cost = 0, fvValue = 0, nm = 0;
   const bySector = {};
   for (const p of PF.positions) {
     const c = byT(p.t);
@@ -836,130 +931,306 @@ function pfStats() {
     const v = c.price * p.sh;
     value += v;
     cost += p.cost * p.sh;
-    fvValue += (c.fv > 0 ? c.fv : c.price) * p.sh;
+    if (c.fv > 0) fvValue += c.fv * p.sh;
+    else { fvValue += v; nm += 1; }      // no meaningful fair value: count at market
     bySector[c.sec] = (bySector[c.sec] || 0) + v;
   }
-  return { value, cost, fvValue, bySector };
+  return { value, cost, fvValue, nm, bySector };
+}
+
+const pfMoney = v => FMT.usd(v, Math.abs(v) >= 100 ? 0 : 2);
+const pfSigned = v => (v >= 0 ? '+' : '−') + pfMoney(Math.abs(v));
+
+/* The summary card's signature: market value and model value on one scale,
+   with the gap between them coloured. Same idea as the bracket on every
+   company chart, so the reader already knows how to read it. */
+function pfMeterHTML(st) {
+  const hi = Math.max(st.value, st.fvValue) * 1.08 || 1;
+  const pm = st.value / hi * 100, pf = st.fvValue / hi * 100;
+  const lo = Math.min(pm, pf), span = Math.abs(pf - pm);
+  const up = st.fvValue >= st.value;
+  const near = Math.abs(pf - pm) < 14;   // labels would collide: stack them
+  return `
+  <div class="pf-meter" role="img" aria-label="Market value ${FMT.usd(st.value, 0)}, our model's value ${FMT.usd(st.fvValue, 0)}">
+    <div class="pf-meter-track">
+      <div class="pf-meter-gap ${up ? 'up' : 'down'}" style="left:${lo.toFixed(2)}%;width:${span.toFixed(2)}%"></div>
+      <div class="pf-meter-mark mkt" style="left:${pm.toFixed(2)}%"></div>
+      <div class="pf-meter-mark fv" style="left:${pf.toFixed(2)}%"></div>
+    </div>
+    <div class="pf-meter-labels${near ? ' near' : ''}">
+      <span class="mkt${pm > 55 ? ' r' : ''}" style="left:${pm.toFixed(2)}%"><i></i>Market ${FMT.usd(st.value, 0)}</span>
+      <span class="fv${pf > 55 ? ' r' : ''}" style="left:${pf.toFixed(2)}%"><i></i>Our model ${FMT.usd(st.fvValue, 0)}</span>
+    </div>
+  </div>`;
+}
+
+function pfVerdict(st) {
+  const gap = st.value > 0 ? st.fvValue / st.value - 1 : 0;
+  const pts = Math.abs(gap * 100).toFixed(0);
+  if (gap > 0.10) return `Our model values your holdings <b>${pts}% above</b> what they trade for today.`;
+  if (gap < -0.10) return `Our model values your holdings <b>${pts}% below</b> what they trade for today.`;
+  return `Your holdings trade <b>close to</b> what our model thinks they're worth.`;
+}
+
+function pfRowHTML(p, total) {
+  const c = byT(p.t);
+  const v = c.price * p.sh;
+  const g = v - p.cost * p.sh;
+  const gp = p.cost > 0 ? c.price / p.cost - 1 : 0;
+  const w = total > 0 ? v / total : 0;
+  const editing = PF.editing === p.t;
+  const id = 'pf-' + c.t.replace(/[^a-z0-9]/gi, '');
+  const second = editing ? `
+      <div class="pf-edit">
+        <label>Shares <input id="${id}-sh" type="number" min="0" step="any" value="${+p.sh.toFixed(6)}"></label>
+        <label>Avg. price paid <input id="${id}-cost" type="number" min="0" step="any" value="${+p.cost.toFixed(4)}"></label>
+        <button type="button" class="pf-btn primary" data-pf-save="${c.t}">Save</button>
+        <button type="button" class="pf-btn" data-pf-cancel>Cancel</button>
+      </div>` : `
+      <div class="pf-sub">${FMT.num(p.sh, 4)} share${p.sh === 1 ? '' : 's'} · avg. ${FMT.usd(p.cost)} · now ${FMT.usd(c.price)}</div>`;
+  return `
+  <li class="pf-row${editing ? ' editing' : ''}" style="--w:${(w * 100).toFixed(2)}%">
+    <a class="pf-id" href="#/company/${encodeURIComponent(c.t)}">
+      <span class="pf-tk">${c.t}</span><span class="pf-nm">${c.n}</span>
+    </a>
+    <div class="pf-val"><b>${pfMoney(v)}</b><span>${(w * 100).toFixed(0)}% of portfolio</span></div>
+    <div class="pf-gain ${g >= 0 ? 'up' : 'down'}"><b>${pfSigned(g)}</b><span>${FMT.pct(gp)}</span></div>
+    <a class="pf-model" href="#/company/${encodeURIComponent(c.t)}" title="Our fair value ${fvStr(c.fv)}">
+      <span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span>
+      <span class="pf-fv">FV ${fvStr(c.fv)}</span>
+    </a>
+    <div class="pf-actions">
+      ${editing ? '' : `<button type="button" class="pf-icon" data-pf-edit="${c.t}" aria-label="Edit ${c.t}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>`}
+      <button type="button" class="pf-icon" data-pf-remove="${c.t}" aria-label="Remove ${c.t}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    ${second}
+    <div class="pf-weight" aria-hidden="true"></div>
+  </li>`;
+}
+
+function pfAddFormHTML() {
+  return `
+  <form class="pf-addform" id="pf-addform" autocomplete="off">
+    <div class="pf-field pf-search">
+      <label for="pf-q">Company</label>
+      <input id="pf-q" type="text" placeholder="Search a ticker or name, e.g. NVDA" aria-autocomplete="list" aria-controls="pf-suggest">
+      <ul class="pf-suggest" id="pf-suggest" role="listbox" hidden></ul>
+    </div>
+    <div class="pf-field">
+      <label for="pf-sh">Shares</label>
+      <input id="pf-sh" type="number" min="0" step="any" placeholder="10">
+    </div>
+    <div class="pf-field">
+      <label for="pf-cost">Price paid <small>optional</small></label>
+      <input id="pf-cost" type="number" min="0" step="any" placeholder="today's price">
+    </div>
+    <button type="submit" class="btn btn-violet pf-addbtn">Add</button>
+    <p class="pf-msg" id="pf-msg" role="status"></p>
+  </form>`;
 }
 
 function viewPortfolio() {
   pfLoad();
   const st = pfStats();
+  const empty = PF.positions.length === 0;
   const gain = st.value - st.cost;
   const gainPct = st.cost > 0 ? gain / st.cost : 0;
-  const modelUpside = st.value > 0 ? st.fvValue / st.value - 1 : 0;
 
-  const rows = PF.positions.map(p => {
-    const c = byT(p.t);
-    const v = c.price * p.sh;
-    const cst = p.cost * p.sh;
-    const g = v - cst;
-    const gp = cst > 0 ? g / cst : 0;
-    const w = st.value > 0 ? v / st.value : 0;
-    return `
-      <tr>
-        <td class="tk" data-route="company" data-ticker="${c.t}" style="cursor:pointer">${c.t}</td>
-        <td data-route="company" data-ticker="${c.t}" style="cursor:pointer">${c.n}
-          <div class="row-name">${fmtSector(c.sec)}</div></td>
-        <td class="num">${FMT.num(p.sh, 4)}</td>
-        <td class="num">${FMT.usd(p.cost)}</td>
-        <td class="num">${FMT.usd(c.price)}</td>
-        <td class="num">${FMT.usd(v, 0)}</td>
-        <td class="num ${upClass(g)}">${FMT.usd(g, 0)}<div style="font-size:11px;opacity:.8">${FMT.pct(gp)}</div></td>
-        <td class="num">${FMT.pctPlain(w)}</td>
-        <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-        <td class="num ${upClass(c.upside)}">${FMT.pct(c.upside)}</td>
-        <td><span class="pf-remove" data-pf-remove="${c.t}" title="Remove position">×</span></td>
-      </tr>`;
-  }).join('');
-
-  const alloc = Object.entries(st.bySector)
-    .sort((a, b) => b[1] - a[1])
-    .map(([k, v], i) => {
-      const pct = st.value > 0 ? v / st.value * 100 : 0;
-      return { name: fmtSector(k), pct, color: SEG_COLORS[i % SEG_COLORS.length] };
-    });
-  const allocBar = alloc.map(a =>
-    `<div style="width:${a.pct.toFixed(1)}%;background:${a.color}">${a.pct > 8 ? a.pct.toFixed(0) + '%' : ''}</div>`).join('');
-  const allocLegend = alloc.map(a =>
-    `<div class="li"><span class="sw" style="background:${a.color}"></span>${a.name} — ${a.pct.toFixed(1)}%</div>`).join('');
-
-  const options = FF_DATA.companies
-    .slice().sort((a, b) => a.t.localeCompare(b.t))
-    .map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('');
-
-  const empty = PF.positions.length === 0;
-
-  return `
-  <section class="co-hero">
+  const head = `
+  <section class="co-hero pf-hero">
     <div class="wrap">
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Portfolio' })}
-      <div class="eyebrow">Portfolio Tracker</div>
-      <h1 style="font-size:32px;max-width:700px;">Your holdings, measured against your own fair values.</h1>
-      <p style="max-width:620px;font-size:14.5px;">Add what you own and see it two ways: the usual profit-and-loss against what you paid, and — more interestingly — what the DCF model thinks the whole portfolio is worth.</p>
-      <div class="comp-note" style="margin-top:18px;">Positions are saved in your own browser and never leave this device. There's no account and no server. Clearing your browser data will clear them, so treat this as a scratchpad rather than a record.</div>
-    </div>
-  </section>
-  <section style="padding-top:6px;">
-    <div class="wrap">
-      <div class="card" style="margin-bottom:22px;">
-        <div class="scr-label">Add a position</div>
-        <div class="pf-add">
-          <div class="scr-field" style="flex:2;min-width:220px;">
-            <label for="pf-ticker">Company</label>
-            <select id="pf-ticker" class="scr-input">${options}</select>
-          </div>
-          <div class="scr-field">
-            <label for="pf-shares">Shares</label>
-            <input id="pf-shares" type="number" class="scr-input" placeholder="e.g. 10" min="0" step="any">
-          </div>
-          <div class="scr-field">
-            <label for="pf-cost">Cost per share ($)</label>
-            <input id="pf-cost" type="number" class="scr-input" placeholder="e.g. 180.50" min="0" step="any">
-          </div>
-          <button class="btn btn-violet" id="pf-add-btn" style="align-self:flex-end;">Add holding</button>
-        </div>
-        <div id="pf-msg" style="font-size:12.5px;margin-top:10px;min-height:18px;"></div>
-      </div>
-
-      ${empty ? `
-        <div class="empty-state">
-          <h3 style="color:var(--text);font-size:18px;">No positions yet</h3>
-          <p>Add a holding above and this fills with your live profit-and-loss,<br>sector weights, and the portfolio's upside to our fair values.</p>
-        </div>` : `
-        <div class="stat-grid" style="margin-bottom:22px;">
-          <div class="stat-cell"><div class="label">Market Value</div><div class="value">${FMT.usd(st.value, 0)}</div></div>
-          <div class="stat-cell"><div class="label">Total Cost</div><div class="value">${FMT.usd(st.cost, 0)}</div></div>
-          <div class="stat-cell"><div class="label">Unrealised P&amp;L</div>
-            <div class="value ${gain >= 0 ? '' : ''}" style="color:${gain >= 0 ? 'var(--green)' : 'var(--red)'}">${FMT.usd(gain, 0)}</div>
-            <div class="sub" style="color:${gain >= 0 ? 'var(--green)' : 'var(--red)'}">${FMT.pct(gainPct)}</div></div>
-          <div class="stat-cell"><div class="label">Positions</div><div class="value">${PF.positions.length}</div></div>
-          <div class="stat-cell"><div class="label">Model Value</div>
-            <div class="value gold">${FMT.usd(st.fvValue, 0)}</div>
-            <div class="sub">at our fair values</div></div>
-          <div class="stat-cell"><div class="label">Upside to Fair Value</div>
-            <div class="value" style="color:${modelUpside >= 0 ? 'var(--green)' : 'var(--red)'}">${FMT.pct(modelUpside)}</div>
-            <div class="sub">portfolio-weighted</div></div>
-        </div>
-
-        <div class="table-wrap" style="margin-bottom:26px;">
-          <table class="ff-table">
-            <thead><tr>
-              <th>Ticker</th><th>Company</th><th class="num">Shares</th><th class="num">Cost</th>
-              <th class="num">Price</th><th class="num">Value</th><th class="num">P&amp;L</th>
-              <th class="num">Weight</th><th class="num">Fair Value</th><th class="num">Upside</th><th></th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-
-        <div class="card">
-          <div class="scr-label" style="margin-bottom:14px;">Sector allocation</div>
-          <div class="seg-bar">${allocBar}</div>
-          <div class="seg-legend">${allocLegend}</div>
-        </div>`}
+      <h1 class="pf-title">Your portfolio</h1>
+      <p class="pf-lede">Add what you own and see it against our fair values. Saved on this device only: no account, nothing sent anywhere.</p>
     </div>
   </section>`;
+
+  if (empty) {
+    return head + `
+    <section style="padding-top:6px"><div class="wrap" id="pf-root">
+      <div class="pf-empty">
+        <h2>Start with one stock</h2>
+        <p>Type a ticker or company name. You'll see what your holdings are worth, how much you're up, and whether our model thinks they're cheap or expensive.</p>
+        ${pfAddFormHTML()}
+        <button type="button" class="pf-link" data-pf-example>Or look at an example portfolio first</button>
+      </div>
+    </div></section>`;
+  }
+
+  const rows = PF.positions.slice()
+    .sort((a, b) => byT(b.t).price * b.sh - byT(a.t).price * a.sh)
+    .map(p => pfRowHTML(p, st.value)).join('');
+
+  const alloc = Object.entries(st.bySector).sort((a, b) => b[1] - a[1]);
+  const allocBar = alloc.map(([k, v], i) =>
+    `<div style="flex:${v.toFixed(2)};background:${SEG_COLORS[i % SEG_COLORS.length]}" title="${fmtSector(k)} ${(v / st.value * 100).toFixed(0)}%"></div>`).join('');
+  const allocKey = alloc.map(([k, v], i) =>
+    `<span><i style="background:${SEG_COLORS[i % SEG_COLORS.length]}"></i>${fmtSector(k)} <b>${(v / st.value * 100).toFixed(0)}%</b></span>`).join('');
+
+  return head + `
+  <section style="padding-top:6px"><div class="wrap" id="pf-root">
+    ${PF.example ? `
+    <div class="pf-example">This is an example portfolio, so you can see how it works.
+      <button type="button" class="pf-link" data-pf-clear>Clear it and add your own</button></div>` : ''}
+
+    <div class="pf-summary">
+      <div class="pf-figs">
+        <div><div class="pf-big">${FMT.usd(st.value, 0)}</div><div class="pf-cap">Worth today</div></div>
+        <div class="pf-gainbig ${gain >= 0 ? 'up' : 'down'}">
+          <div class="pf-big2">${pfSigned(gain)} <span>${FMT.pct(gainPct)}</span></div>
+          <div class="pf-cap">Since you bought</div></div>
+      </div>
+      ${pfMeterHTML(st)}
+      <p class="pf-verdict">${pfVerdict(st)}${st.nm ? ` <span>${st.nm} holding${st.nm > 1 ? 's have' : ' has'} no meaningful fair value and ${st.nm > 1 ? 'are' : 'is'} counted at market price.</span>` : ''}</p>
+    </div>
+
+    <div class="pf-addcard">
+      <div class="pf-h3">Add a stock</div>
+      ${pfAddFormHTML()}
+    </div>
+
+    <div class="pf-listhead"><span>Holding</span><span>Value</span><span>Gain</span><span>Our view</span><span></span></div>
+    <ul class="pf-list">${rows}</ul>
+
+    <div class="pf-alloc">
+      <div class="pf-h3">Where your money is</div>
+      <div class="pf-allocbar">${allocBar}</div>
+      <div class="pf-allockey">${allocKey}</div>
+    </div>
+    <p class="pf-foot">Fair values come from our DCF model and update every market day. Not investment advice.</p>
+  </div></section>`;
+}
+
+/* ------------------------------------------------------------ behaviour --- */
+
+function pfRefresh(focusSearch) {
+  // Re-render the page in place, without the router's jump to the top.
+  const y = window.scrollY;
+  APP.innerHTML = viewPortfolio();
+  mountPortfolio(APP);
+  window.scrollTo(0, y);
+  if (focusSearch) document.getElementById('pf-q')?.focus({ preventScroll: true });
+}
+
+function pfMsg(text, ok) {
+  const el = document.getElementById('pf-msg');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'pf-msg ' + (ok ? 'ok' : 'err');
+  if (ok) setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 2600);
+}
+
+function pfMatches(q) {
+  q = q.trim().toLowerCase();
+  if (!q) return [];
+  const scored = [];
+  for (const c of FF_DATA.companies) {
+    const t = c.t.toLowerCase(), n = c.n.toLowerCase();
+    let s = -1;
+    if (t === q) s = 0;
+    else if (t.startsWith(q)) s = 1;
+    else if (n.startsWith(q)) s = 2;
+    else if (n.includes(' ' + q)) s = 3;
+    else if (n.includes(q)) s = 4;
+    if (s >= 0) scored.push([s, c]);
+  }
+  return scored.sort((a, b) => a[0] - b[0] || a[1].t.localeCompare(b[1].t)).slice(0, 6).map(x => x[1]);
+}
+
+function mountPortfolio(root) {
+  const el = (root || document).querySelector('#pf-root');
+  if (!el || el.dataset.mounted) return;
+  el.dataset.mounted = '1';
+
+  const form = el.querySelector('#pf-addform');
+  const q = el.querySelector('#pf-q'), list = el.querySelector('#pf-suggest');
+  const shIn = el.querySelector('#pf-sh'), costIn = el.querySelector('#pf-cost');
+  let picked = null, hits = [], active = -1;
+
+  const pick = c => {
+    picked = c;
+    q.value = `${c.t} · ${c.n}`;
+    costIn.placeholder = `today ${FMT.usd(c.price)}`;
+    list.hidden = true;
+    shIn.focus();
+  };
+  const draw = () => {
+    list.innerHTML = hits.map((c, i) => `
+      <li role="option" data-i="${i}" class="${i === active ? 'on' : ''}" aria-selected="${i === active}">
+        <b>${c.t}</b><span>${c.n}</span><em>${FMT.usd(c.price)}</em></li>`).join('');
+    list.hidden = !hits.length;
+  };
+
+  q.addEventListener('input', () => {
+    picked = null;
+    costIn.placeholder = "today's price";
+    hits = pfMatches(q.value); active = hits.length ? 0 : -1; draw();
+  });
+  q.addEventListener('keydown', e => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(hits.length - 1, active + 1); draw(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); draw(); }
+    else if (e.key === 'Enter' && hits[active]) { e.preventDefault(); pick(hits[active]); }
+    else if (e.key === 'Escape') { list.hidden = true; }
+  });
+  q.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+  list.addEventListener('mousedown', e => {
+    const li = e.target.closest('li');
+    if (li) { e.preventDefault(); pick(hits[+li.dataset.i]); }
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const c = picked || (hits.length === 1 ? hits[0] : byT(q.value.trim().toUpperCase()));
+    const sh = parseFloat(shIn.value);
+    const costRaw = costIn.value.trim();
+    const cost = costRaw === '' ? (c ? c.price : NaN) : parseFloat(costRaw);
+    if (!c) { pfMsg('Pick a company from the list.', false); q.focus(); return; }
+    if (!(sh > 0)) { pfMsg('Enter how many shares you own.', false); shIn.focus(); return; }
+    if (!(cost >= 0)) { pfMsg('Enter the price you paid per share, or leave it blank.', false); costIn.focus(); return; }
+    if (sh > 1e9 || cost > 1e7) { pfMsg('That looks like a typo. Check the numbers.', false); return; }
+    if (PF.example) { PF.positions = []; PF.example = false; }
+    const had = PF.positions.some(p => p.t === c.t);
+    pfAdd(c.t, sh, cost);
+    pfRefresh(true);
+    pfMsg(had ? `Added to your ${c.t} position. Average price updated.` : `${c.t} added.`, true);
+  });
+
+  el.addEventListener('click', e => {
+    const t = e.target.closest('[data-pf-edit],[data-pf-remove],[data-pf-save],[data-pf-cancel],[data-pf-example],[data-pf-clear]');
+    if (!t) return;
+    if (t.dataset.pfEdit) { PF.editing = t.dataset.pfEdit; pfRefresh(); document.querySelector('.pf-edit input')?.focus(); }
+    else if (t.dataset.pfRemove) { if (PF.editing === t.dataset.pfRemove) PF.editing = null; pfRemove(t.dataset.pfRemove); pfRefresh(); }
+    else if (t.dataset.pfSave) {
+      const id = 'pf-' + t.dataset.pfSave.replace(/[^a-z0-9]/gi, '');
+      const sh = parseFloat(document.getElementById(id + '-sh').value);
+      const cost = parseFloat(document.getElementById(id + '-cost').value);
+      if (!(sh > 0) || !(cost >= 0)) { alertRow(t); return; }
+      pfUpdate(t.dataset.pfSave, sh, cost); PF.editing = null; pfRefresh();
+    }
+    else if ('pfCancel' in t.dataset) { PF.editing = null; pfRefresh(); }
+    else if ('pfExample' in t.dataset) {
+      PF.positions = PF_EXAMPLE.filter(p => byT(p.t)).map(p => ({ ...p }));
+      PF.example = true; pfSave(); pfRefresh();
+    }
+    else if ('pfClear' in t.dataset) { PF.positions = []; PF.example = false; pfSave(); pfRefresh(true); }
+  });
+
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.closest('.pf-edit')) {
+      e.preventDefault();
+      e.target.closest('.pf-row').querySelector('[data-pf-save]')?.click();
+    } else if (e.key === 'Escape' && e.target.closest('.pf-edit')) {
+      PF.editing = null; pfRefresh();
+    }
+  });
+
+  function alertRow(btn) {
+    const box = btn.closest('.pf-edit');
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+  }
 }
 
 /* ======================= FINANCIAL ANALYSIS TAB =======================
@@ -1020,7 +1291,7 @@ function panelFinancials(c) {
 
   <div class="two-col">
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Earnings Quality &amp; Margins</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Earnings Quality &amp; Margins</h4>
       <div class="card" style="margin-bottom:20px;">
         ${pctlBar('Free cash flow margin', FMT.pctPlain(c.m0), c.pctl.m0,
           'share of revenue that becomes free cash')}
@@ -1036,7 +1307,7 @@ function panelFinancials(c) {
         </p>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Revenue Composition</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Revenue Composition</h4>
       <div class="table-wrap" style="margin-bottom:20px;">
         <table class="ff-table" style="font-size:13px;">
           <thead><tr><th>Segment</th><th class="num">Revenue</th><th class="num">Share</th><th></th></tr></thead>
@@ -1049,7 +1320,7 @@ function panelFinancials(c) {
         </table>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Valuation vs Sector</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Valuation vs Sector</h4>
       <div class="card">
         ${pctlBar('EV / Sales', FMT.x(c.ev_sales), c.pctl.ev_sales,
           `sector median ${s.med_ev_sales}x`)}
@@ -1067,7 +1338,7 @@ function panelFinancials(c) {
     </div>
 
     <div>
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Balance Sheet</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Balance Sheet</h4>
       <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
         <div class="stat-cell"><div class="label">Net ${c.netdebt >= 0 ? 'Debt' : 'Cash'}</div>
           <div class="value" style="color:${c.netdebt >= 0 ? 'var(--text)' : 'var(--green)'}">${FMT.usdB(Math.abs(c.netdebt))}</div></div>
@@ -1077,7 +1348,7 @@ function panelFinancials(c) {
       </div>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:26px;">${leverageNote}</p>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Cash Flow Bridge</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Cash Flow Bridge</h4>
       <div class="card" style="margin-bottom:20px;">
         <div class="fin-row"><span>Trailing revenue</span><span class="mono">${FMT.usdB(c.rev)}</span></div>
         <div class="fin-row"><span>× Free cash flow margin</span><span class="mono">${FMT.pctPlain(c.m0)}</span></div>
@@ -1090,7 +1361,7 @@ function panelFinancials(c) {
           <span class="mono">${FMT.pct(c.ttm_fcf > 0 ? y5.fcf / c.ttm_fcf - 1 : 0)}</span></div>
       </div>
 
-      <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--lilac);margin-bottom:16px;">Where the Value Sits</h4>
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:16px;">Where the Value Sits</h4>
       <div class="card">
         <div class="fin-row"><span>Next 10 years of cash flow</span><span class="mono">${(100 - c.tv_pct).toFixed(0)}%</span></div>
         <div class="fin-row"><span>Everything after year 10</span><span class="mono">${c.tv_pct.toFixed(0)}%</span></div>

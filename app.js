@@ -10,7 +10,9 @@ const APP = document.getElementById('app');
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 function renderRoute() {
-  const hash = location.hash.replace(/^#\/?/, '');
+  // Anything after "?" is options for the page (a shared "Your case" link
+  // carries ?case=...), not part of which page to show.
+  const hash = location.hash.replace(/^#\/?/, '').split('?')[0];
   const [route, arg] = hash.split('/');
   let html, navKey = 'home';
 
@@ -21,6 +23,7 @@ function renderRoute() {
   else if (route === 'portfolio') { html = viewPortfolio(); navKey = 'portfolio'; }
   else if (route === 'about') { html = viewAbout(); navKey = 'about'; }
   else if (route === 'methodology') { html = viewMethodology(); navKey = 'methodology'; }
+  else if (route === 'track-record') { html = viewTrackRecord(); navKey = 'track-record'; }
   else { html = view404(); }
 
   APP.innerHTML = html;
@@ -30,6 +33,9 @@ function renderRoute() {
   updateNavActive(navKey, arg);
   updateSidebarActive(navKey, arg ? decodeURIComponent(arg) : null);
   markDecorativeSvgs();
+  mountPriceCharts(APP);
+  mountCasePanels(APP);
+  mountPortfolio(APP);
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -50,7 +56,7 @@ function go(hash) { location.hash = hash; }
 function currentSectorKey() {
   // strip a leading "#" or "#/" the same way renderRoute does, so this always
   // agrees with which sector view is actually on screen
-  return location.hash.replace(/^#\/?/, '').split('/')[1];
+  return location.hash.replace(/^#\/?/, '').split('?')[0].split('/')[1];
 }
 
 /* ---------------------------------- sidebar ------------------------------
@@ -100,6 +106,10 @@ function buildSidebar() {
       <div class="sb-link" data-route="methodology" data-navlink="methodology">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
         Methodology
+      </div>
+      <div class="sb-link" data-route="track-record" data-navlink="track-record">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 9 4-18 3 9h4"/></svg>
+        Track Record
       </div>
       <div class="sb-head">Tools</div>
       <div class="sb-link" data-route="screener" data-navlink="screener">
@@ -299,11 +309,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // ---- portfolio ------------------------------------------------------
-  if (e.target.closest('#pf-add-btn')) { pfAddFromForm(); return; }
-  const pfRm = e.target.closest('[data-pf-remove]');
-  if (pfRm) { pfRemove(pfRm.dataset.pfRemove); renderRoute(); return; }
-
   // expand/collapse a sector group in the sidebar
   const grpEl = e.target.closest('[data-toggle-group]');
   if (grpEl) {
@@ -396,42 +401,5 @@ document.addEventListener('input', e => {
   screenTimer = setTimeout(refreshScreener, 220);
 });
 
-/* ---------------------------------- portfolio helpers ------------------- */
-function pfMsg(text, ok) {
-  const el = document.getElementById('pf-msg');
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = ok ? 'var(--green)' : 'var(--red)';
-  if (ok) setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 2600);
-}
+/* Portfolio behaviour lives with the view, in views.js (mountPortfolio). */
 
-function pfAddFromForm() {
-  const t = document.getElementById('pf-ticker')?.value;
-  const shRaw = document.getElementById('pf-shares')?.value;
-  const costRaw = document.getElementById('pf-cost')?.value;
-  const sh = parseFloat(shRaw), cost = parseFloat(costRaw);
-
-  if (!t) { pfMsg('Pick a company first.', false); return; }
-  if (!shRaw || isNaN(sh) || sh <= 0) { pfMsg('Enter how many shares you hold — a number above zero.', false); return; }
-  if (!costRaw || isNaN(cost) || cost < 0) { pfMsg('Enter what you paid per share.', false); return; }
-  if (sh > 1e9 || cost > 1e7) { pfMsg('That looks like a typo — check the numbers.', false); return; }
-
-  const existing = PF.positions.find(p => p.t === t);
-  pfAdd(t, sh, cost);
-  const saved = pfSave();
-  renderRoute();
-  pfMsg(
-    (existing ? `Added to your ${t} position — cost basis averaged.` : `${t} added.`) +
-    (saved ? '' : ' (Could not save to this browser, so it will not persist.)'),
-    true
-  );
-}
-
-// Enter key submits the add-position form
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  if (e.target.closest('#pf-shares, #pf-cost, #pf-ticker')) {
-    e.preventDefault();
-    pfAddFromForm();
-  }
-});
