@@ -1091,6 +1091,14 @@ def main():
     # Static, indexable pages. The app routes on the URL fragment, which search
     # engines treat as a single page — so without these, all 234 write-ups are
     # invisible to anyone searching for a company by name.
+    # Preview cards first: the static pages point at them. Pillow missing or a
+    # drawing error only costs the pictures on shared links, never the build.
+    try:
+        import og_cards
+        og_cards.generate(data)
+    except Exception as e:
+        print(f"Preview cards skipped ({type(e).__name__}: {e}) — "
+              f"shared links will show text only")
     try:
         import seo_pages
         seo_pages.generate(data)

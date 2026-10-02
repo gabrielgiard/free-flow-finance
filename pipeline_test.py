@@ -43,7 +43,7 @@ section("0. Every script the workflow runs can start")
 # swallowed the error. Importing each script here catches that class of bug.
 import importlib  # noqa: E402
 for mod in ("market_calendar", "fetch_prices", "fetch_history", "fetch_fundamentals",
-            "build", "check_freshness", "seo_pages", "engine"):
+            "build", "check_freshness", "seo_pages", "engine", "og_cards"):
     try:
         importlib.import_module(mod)
         check(f"{mod}.py imports", True)
@@ -285,6 +285,69 @@ write_data({"price_date": lastiso})
 env = dict(os.environ, GITHUB_OUTPUT=gh_out)
 subprocess.run([sys.executable, "check_freshness.py", "--github-output"], env=env, capture_output=True)
 check("writes fresh=true for the workflow", "fresh=true" in open(gh_out).read())
+
+
+# ------------------------------------------------------------------------
+section("Preview cards for shared links")
+import copy  # noqa: E402
+import og_cards  # noqa: E402
+import seo_pages as sp  # noqa: E402
+from PIL import Image  # noqa: E402
+
+raw = open(os.path.join(SRC, "docs", "data.js")).read()
+full = json.loads(raw[raw.index("{"):].rstrip().rstrip(";"))
+pick = {c["t"]: c for c in full["companies"] if c["t"] in ("NVDA", "IBM", "MSTR")}
+mini = {"meta": {"price_date": "2026-10-01", "n_companies": 3},
+        "companies": [copy.deepcopy(pick[t]) for t in ("NVDA", "IBM", "MSTR")],
+        "sectors": full["sectors"]}
+shutil.rmtree(og_cards.OUT_DIR, ignore_errors=True)
+jpg = lambda t: os.path.join(og_cards.OUT_DIR, f"{t}.jpg")
+man = og_cards.generate(mini)
+check("a card per company plus the homepage card",
+      all(os.path.exists(jpg(t)) for t in ("NVDA", "IBM", "MSTR", "site")))
+im = Image.open(jpg("NVDA"))
+check("cards are 1200x630, the size sharing apps expect", im.size == (1200, 630), im.size)
+check("cards are small (<120 KB)", os.path.getsize(jpg("NVDA")) < 120_000, os.path.getsize(jpg("NVDA")))
+check("negative-value company still gets a card", os.path.exists(jpg("MSTR")))
+
+stamp = lambda t: os.path.getmtime(jpg(t))
+before = {t: stamp(t) for t in ("NVDA", "IBM", "MSTR")}
+mini["meta"]["price_date"] = "2026-10-02"
+nv = mini["companies"][0]
+nv["price"] *= 1.008; nv["upside"] -= 0.01
+og_cards.generate(mini)
+check("small daily moves do not redraw (keeps the repo small)",
+      all(stamp(t) == before[t] for t in before))
+check("...and keep the old version stamp",
+      og_cards.load_manifest()["cards"]["NVDA"]["v"] == "2026-10-01")
+nv["upside"] -= 0.03
+og_cards.generate(mini)
+m2 = og_cards.load_manifest()["cards"]
+check("a 3-point upside move redraws the card", stamp("NVDA") != before["NVDA"] and m2["NVDA"]["v"] == "2026-10-02")
+check("other cards untouched", stamp("IBM") == before["IBM"])
+mini["companies"][1]["rating"] = "Strong Buy" if pick["IBM"]["rating"] != "Strong Buy" else "Sell"
+og_cards.generate(mini)
+check("a rating change redraws the card", og_cards.load_manifest()["cards"]["IBM"]["rating"] == mini["companies"][1]["rating"])
+mini["companies"][1]["fv"] *= 1.03
+mini["companies"][1]["upside"] += 0.005
+v_before = os.path.getmtime(jpg("IBM"))
+og_cards.generate(mini)
+check("a 3% fair-value move redraws the card", os.path.getmtime(jpg("IBM")) != v_before)
+mini["companies"] = mini["companies"][:2]
+og_cards.generate(mini)
+check("a dropped company's card is deleted", not os.path.exists(jpg("MSTR"))
+      and "MSTR" not in og_cards.load_manifest()["cards"])
+
+cards = sp.load_cards()
+page = sp.company_page(mini["companies"][0], mini["sectors"], {c["t"]: c for c in mini["companies"]}, cards)
+check("company page names its card, with a version so apps refetch",
+      'og:image" content="https://free-flow-finance.pages.dev/og/NVDA.jpg?v=2026-10-02"' in page)
+check("company page has the twitter image too", 'twitter:image' in page)
+check("shared case links are forwarded into the app", "location.replace('../../#/company/NVDA'" in page)
+page_none = sp.company_page(pick["MSTR"], mini["sectors"], {}, cards)
+check("no card -> no broken image tag", "og:image" not in page_none)
+check("seo_pages never needs Pillow", "PIL" not in open("seo_pages.py").read())
+check("homepage names the site card", "og/site.jpg" in open("docs/index.html").read())
 
 
 # ------------------------------------------------------------------------

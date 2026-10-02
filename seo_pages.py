@@ -108,10 +108,56 @@ def structured_data(c, sector_name):
     return json.dumps(data, separators=(",", ":"))
 
 
-def head(title, description, canonical, jsonld=None, depth=2):
+def card_meta(card):
+    """Tags that give a shared link its picture. card is (url, alt) or None."""
+    if not card:
+        return ""
+    url, alt = card
+    return f"""
+<meta property="og:image" content="{esc(url)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{esc(alt)}">
+<meta name="twitter:image" content="{esc(url)}">"""
+
+
+def load_cards():
+    """What og_cards.py drew, if it ran. Read as plain JSON so this file never
+    needs Pillow."""
+    try:
+        with open(os.path.join(DOCS, "og", "cards.json")) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def card_for(t, cards):
+    entry = cards.get("cards", {}).get(t)
+    if not entry or not os.path.exists(os.path.join(DOCS, "og", f"{t}.jpg")):
+        return None
+    return f"{SITE_URL}/og/{t}.jpg?v={entry['v']}"
+
+
+def site_card(cards):
+    entry = cards.get("site")
+    if not entry or not os.path.exists(os.path.join(DOCS, "og", "site.jpg")):
+        return None
+    return (f"{SITE_URL}/og/site.jpg?v={entry['v']}",
+            "FreeFlow Finance: free DCF valuations, one consistent model")
+
+
+def head(title, description, canonical, jsonld=None, depth=2, card=None, app_route=None):
     """Shared <head>. depth is how many directories deep the file sits, so the
-    relative links to CSS and JS resolve."""
+    relative links to CSS and JS resolve.
+
+    app_route: a "Share my case" link points at this page (so it gets the
+    preview card) with ?case=... on the end. Those visitors are sent straight
+    on to the case in the app. Plain visits, and search engines, stay here."""
     up = "../" * depth
+    forward = ""
+    if app_route:
+        forward = ("\n<script>if(/[?&]case=/.test(location.search))"
+                   f"location.replace('{up}#{app_route}'+location.search);</script>")
     ld = f'\n<script type="application/ld+json">{jsonld}</script>' if jsonld else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -128,8 +174,8 @@ def head(title, description, canonical, jsonld=None, depth=2):
 <meta property="og:site_name" content="FreeFlow Finance">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(title)}">
-<meta name="twitter:description" content="{esc(description)}">
-<link rel="stylesheet" href="{up}styles.css">{ld}
+<meta name="twitter:description" content="{esc(description)}">{card_meta(card)}
+<link rel="stylesheet" href="{up}styles.css">{ld}{forward}
 </head>"""
 
 
@@ -179,7 +225,7 @@ def chrome_footer(depth=2):
 </footer>"""
 
 
-def company_page(c, sectors, by_ticker):
+def company_page(c, sectors, by_ticker, cards=None):
     sector = next((s for s in sectors if s["k"] == c["sec"]), None)
     sector_name = sector["n"] if sector else c["sec"]
     canonical = f"{SITE_URL}/company/{c['t']}/"
@@ -208,7 +254,11 @@ def company_page(c, sectors, by_ticker):
         f"<td class='num'>${y['fcf']:,.1f}B</td></tr>"
         for i, y in enumerate(c.get("model", [])[:5]))
 
-    return f"""{head(title, desc, canonical, structured_data(c, sector_name))}
+    img = card_for(c["t"], cards or {})
+    card = (img, f"{c['n']} ({c['t']}): rated {c['rating']}, fair value "
+                 f"{money(c['fv'])} against a {money(c['price'])} share price") if img else None
+    return f"""{head(title, desc, canonical, structured_data(c, sector_name), card=card,
+                 app_route=f"/company/{c['t']}")}
 <body>
 {chrome_header()}
 <main class="wrap" style="padding:40px 0 60px">
@@ -285,7 +335,7 @@ def company_page(c, sectors, by_ticker):
 </body></html>"""
 
 
-def sector_page(s, companies):
+def sector_page(s, companies, cards=None):
     canonical = f"{SITE_URL}/sector/{s['k']}/"
     title = f"{s['n']} — DCF Valuations for {s['count']} Companies | FreeFlow Finance"
     desc = (f"Discounted cash flow valuations and fair value estimates for "
@@ -299,7 +349,7 @@ def sector_page(s, companies):
         f"<td class='num'>{pct(c['upside'])}</td>"
         f"<td>{esc(c['rating'])}</td></tr>"
         for c in sorted(companies, key=lambda x: -x["mcap"]))
-    return f"""{head(title, desc, canonical)}
+    return f"""{head(title, desc, canonical, card=site_card(cards or {}))}
 <body>
 {chrome_header()}
 <main class="wrap" style="padding:40px 0 60px">
@@ -326,6 +376,7 @@ def generate(data):
     companies = data["companies"]
     sectors = data["sectors"]
     by_ticker = {c["t"]: c for c in companies}
+    cards = load_cards()
     written = 0
 
     for c in companies:
@@ -336,7 +387,7 @@ def generate(data):
         d = os.path.join(DOCS, "company", c["t"])
         os.makedirs(d, exist_ok=True)
         with open(os.path.join(d, "index.html"), "w") as f:
-            f.write(company_page(c, sectors, by_ticker))
+            f.write(company_page(c, sectors, by_ticker, cards))
         written += 1
 
     for s in sectors:
@@ -344,7 +395,7 @@ def generate(data):
         os.makedirs(d, exist_ok=True)
         members = [c for c in companies if c["sec"] == s["k"]]
         with open(os.path.join(d, "index.html"), "w") as f:
-            f.write(sector_page(s, members))
+            f.write(sector_page(s, members, cards))
         written += 1
 
     # ---- sitemap ------------------------------------------------------

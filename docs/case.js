@@ -156,7 +156,7 @@ function caseHTML(c) {
     <div class="case-head">
       <div>
         <h3 class="case-title" id="${id}-title">Your case</h3>
-        <p class="case-sub">Disagree with the model? Move its assumptions and watch the fair value and the chart above change.</p>
+        <p class="case-sub">Have a different view? Adjust the assumptions and watch the fair value and the chart above change.</p>
       </div>
       <div class="case-presets" role="group" aria-label="Preset scenarios">
         <button type="button" data-preset="bear">Bear</button>
@@ -395,14 +395,14 @@ function caseQuery() {
 
 function caseShareText(st) {
   const { c, s, result } = st;
-  const link = `${CASE_SITE}#/company/${encodeURIComponent(c.t)}?case=${caseEncode(s)}`;
+  const link = `${CASE_SITE}company/${encodeURIComponent(c.t)}/?case=${caseEncode(s)}`;
   const g = casePts(caseAvg(c.growth) + s.dg, 0);
   const fvTxt = result.meaningful ? FMT.usd(result.fv) : 'N/M';
   const upTxt = result.meaningful ? ` (${FMT.pct(result.up, 0)} vs ${FMT.usd(c.price)})` : '';
   return {
     link,
     text: `My ${c.t} case: ${g}% growth, ${casePts(s.m1, 0)}% margin, ${casePts(s.wacc)}% WACC → ${fvTxt} fair value${upTxt}. ` +
-          `FreeFlow Finance's model says ${fvStr(c.fv)}. Who's right?\n${link}`,
+          `FreeFlow Finance's model says ${fvStr(c.fv)}. What's your take?\n${link}`,
   };
 }
 

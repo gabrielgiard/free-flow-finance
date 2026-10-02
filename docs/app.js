@@ -35,6 +35,7 @@ function renderRoute() {
   markDecorativeSvgs();
   mountPriceCharts(APP);
   mountCasePanels(APP);
+  mountPortfolio(APP);
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -308,11 +309,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // ---- portfolio ------------------------------------------------------
-  if (e.target.closest('#pf-add-btn')) { pfAddFromForm(); return; }
-  const pfRm = e.target.closest('[data-pf-remove]');
-  if (pfRm) { pfRemove(pfRm.dataset.pfRemove); renderRoute(); return; }
-
   // expand/collapse a sector group in the sidebar
   const grpEl = e.target.closest('[data-toggle-group]');
   if (grpEl) {
@@ -405,42 +401,39 @@ document.addEventListener('input', e => {
   screenTimer = setTimeout(refreshScreener, 220);
 });
 
-/* ---------------------------------- portfolio helpers ------------------- */
-function pfMsg(text, ok) {
-  const el = document.getElementById('pf-msg');
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = ok ? 'var(--green)' : 'var(--red)';
-  if (ok) setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 2600);
-}
+/* Portfolio behaviour lives with the view, in views.js (mountPortfolio). */
 
-function pfAddFromForm() {
-  const t = document.getElementById('pf-ticker')?.value;
-  const shRaw = document.getElementById('pf-shares')?.value;
-  const costRaw = document.getElementById('pf-cost')?.value;
-  const sh = parseFloat(shRaw), cost = parseFloat(costRaw);
 
-  if (!t) { pfMsg('Pick a company first.', false); return; }
-  if (!shRaw || isNaN(sh) || sh <= 0) { pfMsg('Enter how many shares you hold — a number above zero.', false); return; }
-  if (!costRaw || isNaN(cost) || cost < 0) { pfMsg('Enter what you paid per share.', false); return; }
-  if (sh > 1e9 || cost > 1e7) { pfMsg('That looks like a typo — check the numbers.', false); return; }
 
-  const existing = PF.positions.find(p => p.t === t);
-  pfAdd(t, sh, cost);
-  const saved = pfSave();
-  renderRoute();
-  pfMsg(
-    (existing ? `Added to your ${t} position — cost basis averaged.` : `${t} added.`) +
-    (saved ? '' : ' (Could not save to this browser, so it will not persist.)'),
-    true
-  );
-}
-
-// Enter key submits the add-position form
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  if (e.target.closest('#pf-shares, #pf-cost, #pf-ticker')) {
-    e.preventDefault();
-    pfAddFromForm();
+/* Share a company. The link is the company's own page (/company/NVDA/), not
+   the #/ address: apps can't see anything after a #, so only the real page
+   gives the link its preview card. People who tap it land on that page, which
+   links straight into the full model. */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-share]');
+  if (!btn) return;
+  const c = byT(btn.dataset.share);
+  if (!c) return;
+  const url = `${CASE_SITE}company/${encodeURIComponent(c.t)}/`;
+  const label = btn.querySelector('span');
+  const say = (txt) => {
+    label.textContent = txt;
+    clearTimeout(btn._t);
+    btn._t = setTimeout(() => { label.textContent = 'Share'; }, 2200);
+  };
+  // Phones: the system share sheet (Messages, WhatsApp, Instagram DMs...).
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try {
+      await navigator.share({ title: `${c.n} (${c.t}) | FreeFlow Finance`, url });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;   // they closed the sheet
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    say('Link copied');
+  } catch (err) {
+    window.prompt('Copy this link:', url);
   }
 });

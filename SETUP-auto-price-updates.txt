@@ -88,6 +88,14 @@ jobs:
             echo "Not Monday — skipping fundamentals refresh."
           fi
 
+      # Pillow draws the preview cards shown when someone shares a company
+      # link. If the install ever fails, the build still runs; the cards just
+      # keep their last version.
+      - name: Install the image library for preview cards
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: pip install --quiet pillow
+
       - name: Rebuild the site
         if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
         run: python build.py
@@ -104,7 +112,7 @@ jobs:
           # from the day they were first uploaded.
           for f in prices.json fundamentals.json \
                    docs/data.js docs/history.js docs/track-record.js \
-                   docs/company docs/sector docs/sitemap.xml docs/robots.txt; do
+                   docs/company docs/sector docs/og docs/sitemap.xml docs/robots.txt; do
             if [ -e "$f" ]; then git add -A -- "$f"; fi
           done
 
