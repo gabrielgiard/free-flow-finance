@@ -474,6 +474,31 @@ function panelComps(c) {
   </div>`;
 }
 
+/* Dated, sourced headlines from the latest news review. The summary is our
+   own wording; the link goes to the source so anyone can check it. */
+function newsHTML(c) {
+  const items = Array.isArray(c.news) ? c.news : [];
+  if (!items.length) return '';
+  const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return 'source'; } };
+  const day = d => {
+    const [y, m, dd] = d.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, dd)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  };
+  const rows = items.map(n => {
+    const safe = /^https?:\/\//.test(n.u) ? n.u : '#';
+    return `<li>
+      <time datetime="${escapeHtml(n.d)}">${escapeHtml(day(n.d))}</time>
+      <div><p>${escapeHtml(n.h)}</p>
+      <a href="${escapeHtml(safe)}" target="_blank" rel="noopener nofollow">${escapeHtml(host(n.u))} ↗</a></div>
+    </li>`;
+  }).join('');
+  return `
+      <div class="card news-card">
+        <div class="label">Recent developments</div>
+        <ul class="news-list">${rows}</ul>
+      </div>`;
+}
+
 function panelThesis(c) {
   return `
   <div class="two-col">
@@ -485,9 +510,10 @@ function panelThesis(c) {
       <h4>Street View</h4>
       <p>${c.street}</p>
       <h4>Catalysts to Watch</h4>
-      <ul class="bullets cat">${c.cat.split(/,\s*/).map(x => `<li>${x.replace(/\.$/,'')}</li>`).join('')}</ul>
+      <ul class="bullets cat">${c.cat.split(/,\s+/).map(x => `<li>${x.replace(/\.$/,'')}</li>`).join('')}</ul>
     </div>
     <div>
+      ${newsHTML(c)}
       <div class="card" style="margin-bottom:16px;">
         <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">FreeFlow Score</div>
         ${scoreRowsHTML(c.scores)}

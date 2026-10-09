@@ -225,6 +225,21 @@ def chrome_footer(depth=2):
 </footer>"""
 
 
+def news_section(c):
+    items = c.get("news") or []
+    if not items:
+        return ""
+    rows = "".join(
+        f'<li style="margin-bottom:10px"><span style="font-family:var(--font-mono);'
+        f'font-size:12px;color:var(--text-dim)">{esc(n["d"])}</span> · {esc(n["h"])} '
+        f'<a href="{esc(n["u"])}" rel="noopener nofollow" style="color:var(--lilac)">source</a></li>'
+        for n in items)
+    return f"""
+  <h2 style="font-size:19px;margin-bottom:12px">Recent developments</h2>
+  <ul style="line-height:1.6;color:var(--text-muted);padding-left:20px;margin-bottom:30px">{rows}</ul>
+"""
+
+
 def company_page(c, sectors, by_ticker, cards=None):
     sector = next((s for s in sectors if s["k"] == c["sec"]), None)
     sector_name = sector["n"] if sector else c["sec"]
@@ -310,6 +325,7 @@ def company_page(c, sectors, by_ticker, cards=None):
     </div>
   </div>
 
+{news_section(c)}
   <h2 style="font-size:19px;margin-bottom:12px">Revenue by segment</h2>
   <table class="ff-table" style="margin-bottom:30px"><tbody>{segs}</tbody></table>
 
@@ -371,6 +387,33 @@ def sector_page(s, companies, cards=None):
 </body></html>"""
 
 
+MAX_PRUNE = 10
+
+
+def prune_company_pages(live):
+    """Remove pages of companies that left coverage (acquired, delisted,
+    ticker changed), so no page keeps showing an old valuation.
+
+    Only folders this script made (a lone index.html) are touched, and if more
+    than MAX_PRUNE would go at once something upstream is wrong (a company
+    list failed to load), so nothing is deleted."""
+    base = os.path.join(DOCS, "company")
+    if not os.path.isdir(base):
+        return []
+    gone = [n for n in os.listdir(base)
+            if n not in live and os.path.isdir(os.path.join(base, n))
+            and os.listdir(os.path.join(base, n)) == ["index.html"]]
+    if len(gone) > MAX_PRUNE:
+        print(f"SEO: {len(gone)} company pages look orphaned — too many to be "
+              f"real, so none were removed. Check the company lists.")
+        return []
+    for n in gone:
+        os.remove(os.path.join(base, n, "index.html"))
+        os.rmdir(os.path.join(base, n))
+        print(f"SEO: removed page for {n} (no longer covered)")
+    return gone
+
+
 def generate(data):
     """Write every static page, the sitemap and robots.txt."""
     companies = data["companies"]
@@ -389,6 +432,8 @@ def generate(data):
         with open(os.path.join(d, "index.html"), "w") as f:
             f.write(company_page(c, sectors, by_ticker, cards))
         written += 1
+
+    prune_company_pages({c["t"] for c in companies})
 
     for s in sectors:
         d = os.path.join(DOCS, "sector", s["k"])

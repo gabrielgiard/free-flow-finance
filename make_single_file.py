@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DOCS = os.path.join(HERE, "docs")
 OUT = os.path.join(HERE, "FreeFlow-Finance.html")
 
-SCRIPTS = ["data.js", "history.js", "track-record.js", "charts.js", "case.js",
+SCRIPTS = ["data.js", "history.js", "fv-history.js", "track-record.js", "charts.js", "case.js",
            "views.js", "app.js"]
 
 # Optional data files and what to put in their place when missing. Without
@@ -30,6 +30,7 @@ OPTIONAL = {
                    "docs/history.js not found — charts will show their empty state. "
                    "Run fetch_history.py first to include them."),
     "track-record.js": ("var FF_TRACK_RECORD = [];", None),
+    "fv-history.js": ("var FF_FV_HISTORY = null;", None),
 }
 
 

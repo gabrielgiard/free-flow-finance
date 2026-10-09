@@ -135,8 +135,16 @@ def load_companies():
     from companies.expansion import EXPANSION
     from companies.expansion2 import EXPANSION2
     from companies.expansion3 import EXPANSION3
-    return (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
-            + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3)
+    companies = (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
+                 + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3)
+    # Recent developments (dated, sourced headlines) for the Thesis tab.
+    try:
+        from companies.news import NEWS
+    except ImportError:
+        NEWS = {}
+    for c in companies:
+        c["news"] = NEWS.get(c["t"], [])
+    return companies
 
 
 # A close older than this is not used as a price. Covers a long weekend plus
@@ -1091,6 +1099,14 @@ def main():
     # Static, indexable pages. The app routes on the URL fragment, which search
     # engines treat as a single page — so without these, all 234 write-ups are
     # invisible to anyone searching for a company by name.
+    # Fair value over time, for the step line on the price charts.
+    try:
+        import fv_history
+        print(fv_history.record(data["companies"], data.get("meta", {})))
+    except Exception as e:
+        print(f"Fair value history skipped ({type(e).__name__}: {e}) — "
+              f"charts show today's fair value only")
+
     # Preview cards first: the static pages point at them. Pillow missing or a
     # drawing error only costs the pictures on shared links, never the build.
     try:

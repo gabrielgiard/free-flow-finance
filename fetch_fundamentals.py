@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from build import load_companies                    # noqa: E402
-from fetch_prices import FOREIGN                    # noqa: E402
+from fetch_prices import FOREIGN, QUOTE_ALIASES     # noqa: E402
 
 # Local foreign listings (LVMH in Paris, Nestle in Zurich, Samsung in Seoul...)
 # are not on Finnhub's free tier, so asking for them only burns calls. US-
@@ -173,6 +173,8 @@ def main():
     for i, c in enumerate(companies, 1):
         sym = SYMBOL_MAP.get(c["t"], c["t"])
         got, note = fundamentals_for(sym, key)
+        if not got and c["t"] in QUOTE_ALIASES:
+            got, note = fundamentals_for(QUOTE_ALIASES[c["t"]], key)
         if not got:
             failures.append(f"{c['t']}: {note}")
             continue

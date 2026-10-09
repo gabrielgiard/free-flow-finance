@@ -86,6 +86,10 @@ FOREIGN = {
 }
 
 
+# Tickers that changed: try the other symbol if the site's one stops quoting.
+QUOTE_ALIASES = {"MMC": "MRSH"}
+
+
 # ---------------------------------------------------------------- sources --
 
 def _get(url, headers=None, timeout=25):
@@ -354,6 +358,12 @@ def main():
                     yahoo_dead = True
                     print("  Yahoo failed on the first 8 symbols — treating it as "
                           "blocked and using Twelve Data for the rest.\n")
+
+            if not res and sym in QUOTE_ALIASES and not yahoo_dead:
+                res, _ = from_yahoo(QUOTE_ALIASES[sym])
+                time.sleep(YAHOO_PAUSE)
+                if res:
+                    by_source["yahoo"] += 1
 
             if not res and sym not in FOREIGN:
                 res, err2 = from_twelve(sym, key)

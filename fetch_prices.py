@@ -57,6 +57,14 @@ FOREIGN = {
 }
 
 
+# A company that changed its ticker: if the site's ticker stops quoting, try
+# the other one. Marsh McLennan rebranded as Marsh (reported new ticker MRSH,
+# January 2026); keeping both means prices keep flowing whichever is live.
+QUOTE_ALIASES = {
+    "MMC": "MRSH",
+}
+
+
 def usable_price(v):
     """True only for a real, finite, positive number.
 
@@ -165,6 +173,11 @@ def price_for(ticker, fh_key, td_key):
     px, e3 = from_yahoo(ticker)
     if px:
         return round(px, 2), "yahoo", None
+    alias = QUOTE_ALIASES.get(ticker)
+    if alias:
+        px, src, err = price_for(alias, fh_key, td_key)
+        if px:
+            return px, f"{src} ({alias})", None
     return None, None, f"finnhub: {e1}; twelve: {e2}; yahoo: {e3}"
 
 

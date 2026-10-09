@@ -360,6 +360,28 @@ function pcSeries(key) {
   return out.closes.length ? out : null;
 }
 
+/* Fair value over time (docs/fv-history.js): a step series per company plus
+   the dates the model itself was revised. Returns null when there is none. */
+function pcFvHistory(key) {
+  if (typeof FF_FV_HISTORY === 'undefined' || !FF_FV_HISTORY || !FF_FV_HISTORY.s) return null;
+  const s = FF_FV_HISTORY.s[key];
+  if (!s || !Array.isArray(s.p) || !s.p.length) return null;
+  const updates = (FF_FV_HISTORY.updates || [])
+    .map(u => ({ n: u.n, date: pcParseISO(u.d), label: u.label || '' }))
+    .filter(u => u.date).sort((a, b) => a.date - b.date);
+  const verAt = d => updates.filter(u => u.date <= d).length;
+  const pts = s.p.map(([d, v]) => ({ date: pcParseISO(d), v: +v }))
+    .filter(p => p.date && isFinite(p.v));
+  pts.forEach(p => { p.ver = verAt(p.date); });
+  return pts.length ? { pts, updates, latest: updates.length } : null;
+}
+/* Versions are counted the way they read on the chart: the original model is
+   model update 1, the first revision is update 2, and so on. */
+function pcVerNo(k) { return k + 1; }
+function pcVerName(k, latest) {
+  return latest ? `model update ${pcVerNo(k)}` : 'model';
+}
+
 function pcSlice(series, range) {
   const { dates, closes } = series;
   const last = dates[dates.length - 1];
@@ -408,6 +430,7 @@ function priceChartSVG(key, fv, price) {
     <figcaption class="pc-key">
       <span><i class="k-line"></i>Daily close</span>
       <span class="pc-k-fv"${fv > 0 ? '' : ' hidden'}><i class="k-fv"></i><span class="pc-k-fv-text">Today's fair value</span></span>
+      <span class="pc-k-old" hidden><i class="k-old"></i><span class="pc-k-old-text"></span></span>
       <span class="pc-k-model" hidden><i class="k-model"></i>Model's fair value</span>
       <span class="pc-note"></span>
     </figcaption>
@@ -429,8 +452,32 @@ function pcRender(fig) {
   const pLo = Math.min(...closes), pHi = Math.max(...closes);
   // Only plot the fair value when it is close enough to read; a target five
   // times the price would crush the price line flat.
-  const showFV = fv > 0 && fv > pLo * 0.45 && fv < pHi * 2.2;
-  let lo = showFV ? Math.min(pLo, fv) : pLo, hi = showFV ? Math.max(pHi, fv) : pHi;
+  const readable = v => v > 0 && v > pLo * 0.45 && v < pHi * 2.2;
+  const showFV = readable(fv);
+
+  // Fair value as it stood on each day: steps, split at each model update.
+  // (Not in "Your case" mode -- there the line is the visitor's own value.)
+  const H0 = st.custom ? null : st.fvh;
+  let steps = [];
+  if (H0 && n > 1) {
+    const start = dates[0], end = dates[n - 1];
+    const pts = H0.pts.slice();
+    const lastP = pts[pts.length - 1];
+    if (fv > 0 && Math.abs(lastP.v / fv - 1) > 0.001)      // today's value, if newer
+      pts.push({ date: end, v: fv, ver: H0.latest });
+    for (let k = 0; k < pts.length; k++) {
+      const a = pts[k].date < start ? start : pts[k].date;
+      const b = k + 1 < pts.length ? pts[k + 1].date : end;
+      const bb = b > end ? end : b;
+      if (bb < start || a > end || bb < a) continue;
+      if (!(pts[k].v > 0)) continue;
+      steps.push({ a, b: k + 1 < pts.length ? bb : end, v: pts[k].v, ver: pts[k].ver, last: k + 1 >= pts.length });
+    }
+    if (!steps.some(x => x.last)) steps = [];               // history ends before the window
+  }
+  const histVals = steps.map(x => x.v).filter(readable);
+  let lo = Math.min(pLo, ...(showFV ? [fv] : []), ...histVals);
+  let hi = Math.max(pHi, ...(showFV ? [fv] : []), ...histVals);
   const pad = (hi - lo) * 0.1 || hi * 0.05 || 1;
   lo -= pad; hi += pad;
 
@@ -439,7 +486,23 @@ function pcRender(fig) {
   const plotR = W - padR;
   const X = i => n === 1 ? plotR : padL + (i / (n - 1)) * (plotR - padL);
   const Y = v => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
-  st.geo = { n, X, Y, padL, plotR, padT, H, padB, dates, closes, showFV };
+  // x position of any calendar date, interpolated between trading days
+  const XD = d => {
+    if (d <= dates[0]) return X(0);
+    if (d >= dates[n - 1]) return X(n - 1);
+    let a = 0, b = n - 1;
+    while (b - a > 1) { const m = (a + b) >> 1; if (dates[m] <= d) a = m; else b = m; }
+    const f = (d - dates[a]) / (dates[b] - dates[a] || 1);
+    return X(a + f);
+  };
+  const fvAt = i => {
+    if (!steps.length) return null;
+    const d = dates[i];
+    let hit = null;
+    for (const x of steps) if (x.a <= d) hit = x;
+    return hit && d <= steps[steps.length - 1].b ? hit : null;
+  };
+  st.geo = { n, X, Y, padL, plotR, padT, H, padB, dates, closes, showFV, fvAt };
 
   // gridlines + axis labels (left, sitting just above each line)
   const ticks = pcNiceTicks(lo, hi, W < 560 ? 3 : 4);
@@ -482,6 +545,63 @@ function pcRender(fig) {
   if (ghost) {
     fvLayer += `<line x1="${padL}" x2="${plotR}" y1="${Y(mfv).toFixed(1)}" y2="${Y(mfv).toFixed(1)}" class="pc-fvghost"/>`;
   }
+  let histLayer = '', labelLayer = '', seenVers = [];
+  if (steps.length) {
+    const clipId = 'pc' + st.uid + 'f';
+    const yTop = padT - 2, yBot = H - padB;
+    let d = '', prev = null;
+    const byVer = {};
+    steps.forEach(x => {
+      const x1 = XD(x.a), x2 = x.last ? plotR : XD(x.b), y = Y(x.v);
+      (byVer[x.ver] = byVer[x.ver] || []).push(`M${x1.toFixed(1)},${y.toFixed(1)}H${x2.toFixed(1)}`);
+      if (prev && Math.abs(XD(x.a) - prev.x2) < 1.5) {
+        d += `M${prev.x2.toFixed(1)},${prev.y.toFixed(1)}V${y.toFixed(1)}`;   // the jump
+      }
+      prev = { x2, y };
+    });
+    seenVers = Object.keys(byVer).map(Number).sort((a, b) => a - b);
+    const latest = st.fvh.latest;
+    histLayer += `<clipPath id="${clipId}"><rect x="${padL}" y="${yTop}" width="${plotR - padL}" height="${yBot - yTop}"/></clipPath>
+      <g clip-path="url(#${clipId})">
+        ${d ? `<path d="${d}" class="pc-fvjump"/>` : ''}
+        ${seenVers.map(v => `<path d="${byVer[v].join('')}" class="pc-fvstep ${v === latest ? 'cur' : v === latest - 1 ? 'old' : 'old old2'}"/>`).join('')}
+      </g>`;
+    // Name each earlier version on the chart, ending where it ended:
+    // "Update 1 · $157.20" (its last value). The text may run back over that
+    // version's earlier steps; it is skipped only when the chart has no room.
+    seenVers.filter(v => v !== latest).forEach(v => {
+      const mine = steps.filter(x => x.ver === v);
+      const s = mine[mine.length - 1];
+      const x2 = XD(s.b), y = Y(s.v);
+      const txt = `${W < 560 ? 'Upd' : 'Update'} ${pcVerNo(v)} · ${pcMoney(s.v)}`;
+      const tw = txt.length * 6.3 + 10;
+      if (x2 - padL < tw) return;                              // no room left of the update
+      // above or below the step, whichever the price line crosses less
+      const hits = (yA, yB) => closes.reduce((k, c, i) =>
+        k + (X(i) >= x2 - tw && X(i) <= x2 && Y(c) >= yA && Y(c) <= yB ? 1 : 0), 0);
+      const canAbove = y - 20 > padT, canBelow = y + 20 < H - padB;
+      const above = canAbove && (!canBelow || hits(y - 20, y) <= hits(y, y + 20));
+      labelLayer += `<text x="${(x2 - 5).toFixed(1)}" y="${(above ? y - 7 : y + 15).toFixed(1)}" text-anchor="end" class="pc-fvseg${v === latest - 1 ? '' : ' old2'}">${txt}</text>`;
+    });
+    // model-update markers; labels drop to a second row when two are close
+    let lastEnd = -1e9, row = 0;
+    const word = W < 560 ? 'Upd' : 'Model update';
+    st.fvh.updates.forEach(u => {
+      if (u.date <= dates[0] || u.date > dates[n - 1]) return;
+      const ux = XD(u.date);
+      const wLab = (word.length + 2) * 6.4;
+      const right = ux + 5 + wLab > plotR;
+      const startX = right ? ux - 5 - wLab : ux + 5;
+      row = startX < lastEnd + 6 ? (row + 1) % 2 : 0;
+      lastEnd = startX + wLab;
+      histLayer += `<g class="pc-upd"><line x1="${ux.toFixed(1)}" x2="${ux.toFixed(1)}" y1="${padT - 6}" y2="${H - padB}"/>
+        <text x="${(right ? ux - 5 : ux + 5).toFixed(1)}" y="${padT + 4 + row * 13}" text-anchor="${right ? 'end' : 'start'}">${word} ${pcVerNo(u.n)}</text><title>Model update ${pcVerNo(u.n)}, ${pcFmtDate(u.date)}: ${escapeHtml(u.label)}</title></g>`;
+    });
+  }
+  st.geo.vers = seenVers;
+  fig.classList.toggle('pc-has-hist', steps.length > 0);
+  fvLayer = histLayer + fvLayer;
+
   if (showFV) {
     const fy = Y(fv);
     const up = fv >= lastV;
@@ -490,9 +610,11 @@ function pcRender(fig) {
     const midY = (fy + ly) / 2;
     const labelAbove = fy > padT + 22;
     fvLayer += `
-      <line x1="${padL}" x2="${plotR}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-fvline"/>
+      ${steps.length ? '' : `<line x1="${padL}" x2="${plotR}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-fvline"/>`}
       <text x="${(plotR - 6).toFixed(1)}" y="${(labelAbove ? fy - 8 : fy + 16).toFixed(1)}"
-            class="pc-fvlabel" text-anchor="end">${st.custom ? 'Your fair value' : 'Fair value'} ${FMT.usd(fv)}</text>
+            class="pc-fvlabel" text-anchor="end">${st.custom ? 'Your fair value'
+              : steps.length && st.fvh.latest ? (W < 560 ? `FV · upd ${pcVerNo(st.fvh.latest)}` : `Fair value since update ${pcVerNo(st.fvh.latest)}`)
+              : 'Fair value'} ${FMT.usd(fv)}</text>
       <g class="pc-gap">
         <line x1="${lx.toFixed(1)}" x2="${bx}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" class="pc-gap-lead"/>
         <line x1="${plotR}" x2="${bx}" y1="${fy.toFixed(1)}" y2="${fy.toFixed(1)}" class="pc-gap-lead"/>
@@ -520,6 +642,7 @@ function pcRender(fig) {
     ${fvLayer}
     ${n > 1 ? `<path d="${line}" class="pc-line" clip-path="url(#${uid}l)" pathLength="1"/>
                <path d="${line}" class="pc-line pc-line-dim" clip-path="url(#${uid}r)"/>` : ''}
+    ${labelLayer}
     ${n <= 8 ? closes.map((v, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3" fill="${PC_LINE}"/>`).join('') : ''}
     <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4.5" class="pc-end"/>
     <g class="pc-hover" style="display:none">
@@ -533,7 +656,17 @@ function pcRender(fig) {
   const kfv = fig.querySelector('.pc-k-fv'), kmodel = fig.querySelector('.pc-k-model');
   if (kfv) {
     kfv.hidden = !(fv > 0);
-    kfv.querySelector('.pc-k-fv-text').textContent = st.custom ? 'Your fair value' : "Today's fair value";
+    const latest = st.fvh ? st.fvh.latest : 0;
+    kfv.querySelector('.pc-k-fv-text').textContent = st.custom ? 'Your fair value'
+      : steps.length ? (latest ? `Fair value since model update ${pcVerNo(latest)}` : 'Fair value') : "Today's fair value";
+  }
+  const kold = fig.querySelector('.pc-k-old');
+  if (kold) {
+    const latest = st.fvh ? st.fvh.latest : 0;
+    const olds = (st.geo.vers || []).filter(v => v !== latest);
+    kold.hidden = !olds.length;
+    kold.querySelector('.pc-k-old-text').textContent = olds.length
+      ? 'Fair value under model update ' + olds.map(pcVerNo).join(' and ') : '';
   }
   if (kmodel) kmodel.hidden = !ghost;
   const note = fig.querySelector('.pc-note');
@@ -558,7 +691,12 @@ function pcReadout(fig, i) {
   let when = i == null
     ? `${rangeName} · close ${pcFmtDate(d)}`
     : `since ${pcFmtDate(g.dates[0])}`;
-  if (i != null && st.fv > 0) {
+  const then = i != null && g.fvAt ? g.fvAt(i) : null;
+  if (then) {
+    const gap = then.v / v - 1;
+    const latest = st.fvh ? st.fvh.latest : 0;
+    when += ` · fair value ${pcMoney(then.v)}${latest ? ' (' + pcVerName(then.ver, latest) + ')' : ''}, ${Math.abs(gap * 100).toFixed(0)}% ${gap >= 0 ? 'above' : 'below'}`;
+  } else if (i != null && st.fv > 0) {
     const gap = st.fv / v - 1;
     when += ` · fair value ${Math.abs(gap * 100).toFixed(0)}% ${gap >= 0 ? 'above' : 'below'}`;
   }
@@ -614,7 +752,8 @@ function mountPriceCharts(root) {
     if (fig._pc) return;
     const series = pcSeries(fig.dataset.key);
     if (!series) return;
-    fig._pc = { series, range: 12, fv: parseFloat(fig.dataset.fv) || 0, uid: ++pcUid, drawn: false };
+    fig._pc = { series, range: 12, fv: parseFloat(fig.dataset.fv) || 0, uid: ++pcUid, drawn: false,
+                fvh: pcFvHistory(fig.dataset.key) };
     const plot = fig.querySelector('.pc-plot');
 
     // Redraw at the new width whenever the box changes size -- including the

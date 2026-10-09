@@ -351,6 +351,92 @@ check("homepage names the site card", "og/site.jpg" in open("docs/index.html").r
 
 
 # ------------------------------------------------------------------------
+section("October 2026 news review")
+import re as _re  # noqa: E402
+from build import load_companies as _lc  # noqa: E402
+cos = _lc()
+tk = {c["t"] for c in cos}
+check("acquired / delisted companies removed (EA, WBD, ANSS)", not ({"EA", "WBD", "ANSS"} & tk))
+check("Fiserv is listed under its current ticker", "FISV" in tk and "FI" not in tk)
+check("every company has 3 thesis points and 3 risks",
+      all(len(c["bull"]) == 3 and len(c["risks"]) == 3 for c in cos),
+      [c["t"] for c in cos if len(c["bull"]) != 3 or len(c["risks"]) != 3])
+items = [(c["t"], n) for c in cos for n in c.get("news", [])]
+check("most companies carry recent developments", sum(1 for c in cos if c.get("news")) > 180)
+check("every news item is dated inside the review window",
+      all(_re.match(r"2026-(0[89]|10)-\d\d$", n["d"]) for _, n in items))
+check("every news item links to an https source",
+      all(n["u"].startswith("https://") for _, n in items))
+check("at most four news items a company", all(len(c.get("news", [])) <= 4 for c in cos))
+import fetch_prices as _fp  # noqa: E402
+check("Marsh keeps quoting if its ticker changed", _fp.QUOTE_ALIASES.get("MMC") == "MRSH")
+
+stale = os.path.join("docs", "company", "ZZZZ")
+os.makedirs(stale, exist_ok=True)
+open(os.path.join(stale, "index.html"), "w").write("old")
+keep = os.path.join("docs", "company", "KEEPME")
+os.makedirs(keep, exist_ok=True)
+open(os.path.join(keep, "index.html"), "w").write("x")
+open(os.path.join(keep, "notes.txt"), "w").write("someone's file")
+pages = set(os.listdir(os.path.join("docs", "company")))
+check("a broken company list never wipes the pages", sp.prune_company_pages(set()) == []
+      and os.path.exists(stale))
+gone = sp.prune_company_pages(pages - {"ZZZZ", "KEEPME"})
+check("page of a company no longer covered is removed", gone == ["ZZZZ"] and not os.path.exists(stale))
+check("a folder holding anything else is left alone", os.path.exists(os.path.join(keep, "notes.txt")))
+
+
+# ------------------------------------------------------------------------
+section("Fair value history on the charts")
+import fv_history as fh2  # noqa: E402
+def fake(day, fvs):
+    return {"meta": {"price_date": day},
+            "companies": [{"t": t, "fv": v} for t, v in fvs.items()]}
+def pts(t):
+    return fh2.load()["s"][t]["p"]
+
+# Rebuild the past from git, the way the first run on GitHub will.
+if os.path.exists(fh2.PATH):
+    os.remove(fh2.PATH)
+g = lambda *a: subprocess.run(["git", *a], cwd=work, capture_output=True, text=True)
+g("init", "-q"); g("config", "user.email", "t@t"); g("config", "user.name", "t")
+for day, fvs in (("2026-09-01", {"AAA": 100.0, "BBB": 50.0}),
+                 ("2026-09-02", {"AAA": 100.4, "BBB": 50.0}),      # <1%: no new point
+                 ("2026-09-03", {"AAA": 110.0, "BBB": -5.0})):     # BBB goes N/M
+    open("docs/data.js", "w").write("const FF_DATA = " + json.dumps(fake(day, fvs)) + ";")
+    g("add", "docs/data.js"); g("commit", "-qm", day)
+saved_updates = fh2.MODEL_UPDATES
+fh2.MODEL_UPDATES = ["first revision"]
+msg = fh2.record([{"t": "AAA", "fv": 111.0}, {"t": "BBB", "fv": 52.0}], {"price_date": "2026-09-04"})
+check("first run rebuilds the past from git history", "rebuilt 3 past days" in msg, msg)
+check("small moves don't add points; real moves do",
+      [p[0] for p in pts("AAA")] == ["2026-09-01", "2026-09-03", "2026-09-04"], pts("AAA"))
+check("a fair value that stops being meaningful is recorded as 0", [p[1] for p in pts("BBB")][:2] == [50.0, 0.0], pts("BBB"))
+u = fh2.load()["updates"]
+check("a new model update is stamped with the day it goes live",
+      u == [{"n": 1, "d": "2026-09-04", "label": "first revision"}], u)
+check("every company starts a segment on the update day", pts("AAA")[-1] == ["2026-09-04", 111.0])
+
+fh2.record([{"t": "AAA", "fv": 111.5}], {"price_date": "2026-09-05"})
+check("after the update, small moves again add nothing", pts("AAA")[-1][0] == "2026-09-04")
+check("companies that left coverage are dropped", "BBB" not in fh2.load()["s"])
+fh2.MODEL_UPDATES = ["first revision", "second revision"]
+fh2.record([{"t": "AAA", "fv": 111.5}], {"price_date": "2026-09-08"})
+u = fh2.load()["updates"]
+check("adding a line to MODEL_UPDATES creates update 2", [x["n"] for x in u] == [1, 2] and u[1]["d"] == "2026-09-08")
+check("update 1 keeps its original date", u[0]["d"] == "2026-09-04")
+fh2.record([{"t": "AAA", "fv": 112.0}], {"price_date": "2026-09-08"})
+check("a second build the same day doesn't duplicate points",
+      [p[0] for p in pts("AAA")].count("2026-09-08") == 1)
+raw = open(fh2.PATH).read()
+check("history file is valid for the browser", raw.startswith("var FF_FV_HISTORY = {") and raw.rstrip().endswith(";"))
+fh2.MODEL_UPDATES = saved_updates
+check("the page loads the history file", 'src="fv-history.js"' in open("docs/index.html").read())
+check("the workflow commits the history file",
+      "docs/fv-history.js" in open(".github/workflows/update-prices.yml").read())
+
+
+# ------------------------------------------------------------------------
 shutil.rmtree(work, ignore_errors=True)
 print("\n" + "=" * 68)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

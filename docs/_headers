@@ -15,6 +15,9 @@
 /track-record.js
   Cache-Control: no-cache
 
+/fv-history.js
+  Cache-Control: no-cache
+
 /
   Cache-Control: no-cache
 

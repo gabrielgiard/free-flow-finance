@@ -111,7 +111,7 @@ jobs:
           # before, so Google's copies of every company page kept the prices
           # from the day they were first uploaded.
           for f in prices.json fundamentals.json \
-                   docs/data.js docs/history.js docs/track-record.js \
+                   docs/data.js docs/history.js docs/fv-history.js docs/track-record.js \
                    docs/company docs/sector docs/og docs/sitemap.xml docs/robots.txt; do
             if [ -e "$f" ]; then git add -A -- "$f"; fi
           done
