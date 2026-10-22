@@ -3,170 +3,170 @@
     "fcf": 1.44,
     "growth_long": 0.0541,
     "growth_ttm": 0.086,
-    "mcap": 48.08,
-    "netdebt": 2.19,
-    "rev": 7.36,
-    "shares": 0.2824
+    "mcap": 49.98,
+    "netdebt": 2.1,
+    "rev": 7.34,
+    "shares": 0.2819
   },
   "AAPL": {
-    "fcf": 100.79,
+    "fcf": 100.15,
     "growth_long": 0.0868,
     "growth_ttm": 0.1424,
-    "mcap": 4912.98,
-    "netdebt": 44.8,
-    "rev": 465.96,
-    "shares": 14.6874
+    "mcap": 5040.83,
+    "netdebt": 34.2,
+    "rev": 463.0,
+    "shares": 14.5942
   },
   "ABBV": {
     "fcf": 15.3,
     "growth_long": 0.0595,
     "growth_ttm": 0.1039,
-    "mcap": 488.55,
-    "netdebt": 64.25,
-    "rev": 64.23,
-    "shares": 1.7668
+    "mcap": 498.83,
+    "netdebt": 68.7,
+    "rev": 64.24,
+    "shares": 1.7671
   },
   "ABNB": {
-    "fcf": 4.9,
+    "fcf": 4.87,
     "growth_long": 0.2937,
     "growth_ttm": 0.1364,
-    "mcap": 99.32,
-    "netdebt": -4.35,
-    "rev": 13.08,
-    "shares": 0.5935
+    "mcap": 104.71,
+    "netdebt": -5.05,
+    "rev": 13.0,
+    "shares": 0.5896
   },
   "ABT": {
     "fcf": 8.3,
     "growth_long": 0.0508,
     "growth_ttm": 0.0806,
-    "mcap": 172.35,
-    "netdebt": 27.5,
+    "mcap": 174.09,
+    "netdebt": 22.85,
     "rev": 46.25,
     "shares": 1.7304
   },
   "ACN": {
-    "fcf": 8.9,
+    "fcf": 8.59,
     "growth_long": 0.0798,
     "growth_ttm": 0.0647,
-    "mcap": 127.93,
+    "mcap": 144.7,
     "netdebt": -2.72,
-    "rev": 74.99,
-    "shares": 0.6119
+    "rev": 72.31,
+    "shares": 0.5907
   },
   "ADBE": {
-    "fcf": 5.16,
+    "fcf": 5.05,
     "growth_long": 0.1306,
     "growth_ttm": 0.1203,
-    "mcap": 94.29,
-    "netdebt": 2.0,
-    "rev": 26.13,
-    "shares": 0.3975
+    "mcap": 101.64,
+    "netdebt": -0.37,
+    "rev": 25.59,
+    "shares": 0.3892
   },
   "ADI": {
-    "fcf": 5.32,
+    "fcf": 5.29,
     "growth_long": 0.1449,
     "growth_ttm": 0.3365,
-    "mcap": 196.83,
-    "netdebt": 6.96,
-    "rev": 13.83,
-    "shares": 0.4871
+    "mcap": 190.07,
+    "netdebt": 13.41,
+    "rev": 13.76,
+    "shares": 0.4846
   },
   "ADP": {
-    "fcf": 3.88,
+    "fcf": 3.87,
     "growth_long": 0.079,
     "growth_ttm": 0.0674,
-    "mcap": 107.34,
-    "netdebt": 0.73,
-    "rev": 21.84,
-    "shares": 0.3978
+    "mcap": 118.71,
+    "netdebt": -0.97,
+    "rev": 21.76,
+    "shares": 0.3962
   },
   "ADSK": {
-    "fcf": 1.03,
+    "fcf": 1.02,
     "growth_long": 0.1371,
     "growth_ttm": 0.1794,
-    "mcap": 49.19,
-    "netdebt": -0.62,
-    "rev": 7.79,
-    "shares": 0.211
+    "mcap": 52.13,
+    "netdebt": -1.58,
+    "rev": 7.72,
+    "shares": 0.209
   },
   "AIG": {
-    "fcf": 6.25,
+    "fcf": 6.16,
     "growth_long": -0.0935,
     "growth_ttm": -0.0419,
-    "mcap": 40.28,
+    "mcap": 42.83,
     "netdebt": 7.64,
-    "rev": 26.47,
-    "shares": 0.5302
+    "rev": 26.1,
+    "shares": 0.5229
   },
   "AJG": {
-    "fcf": 2.15,
+    "fcf": 2.12,
     "growth_long": 0.1476,
     "growth_ttm": 0.2633,
-    "mcap": 59.64,
-    "netdebt": 12.22,
-    "rev": 15.81,
-    "shares": 0.2596
+    "mcap": 67.58,
+    "netdebt": 10.76,
+    "rev": 15.61,
+    "shares": 0.2563
   },
   "AMAT": {
     "fcf": 6.92,
     "growth_long": 0.1052,
     "growth_ttm": 0.0777,
-    "mcap": 402.38,
-    "netdebt": -0.49,
-    "rev": 30.61,
-    "shares": 0.794
+    "mcap": 304.3,
+    "netdebt": 19.74,
+    "rev": 30.59,
+    "shares": 0.7936
   },
   "AMD": {
-    "fcf": 4.09,
+    "fcf": 4.1,
     "growth_long": 0.2882,
     "growth_ttm": 0.3954,
-    "mcap": 992.71,
-    "netdebt": -1.86,
-    "rev": 40.6,
-    "shares": 1.6306
+    "mcap": 857.69,
+    "netdebt": 47.07,
+    "rev": 40.65,
+    "shares": 1.6325
   },
   "AMGN": {
-    "fcf": 11.21,
+    "fcf": 11.23,
     "growth_long": 0.0765,
     "growth_ttm": 0.091,
-    "mcap": 224.29,
-    "netdebt": 43.31,
-    "rev": 37.79,
-    "shares": 0.5397
+    "mcap": 239.36,
+    "netdebt": 40.93,
+    "rev": 37.86,
+    "shares": 0.5406
   },
   "AMKR": {
     "fcf": 1.04,
     "growth_long": 0.0584,
     "growth_ttm": 0.1793,
-    "mcap": 12.2,
-    "netdebt": 0.97,
+    "mcap": 10.15,
+    "netdebt": 1.64,
     "rev": 7.41,
     "shares": 0.2484
   },
   "AMZN": {
-    "fcf": 70.44,
+    "fcf": 70.64,
     "growth_long": 0.1318,
     "growth_ttm": 0.1577,
-    "mcap": 2830.65,
-    "netdebt": 77.1,
-    "rev": 765.3,
-    "shares": 10.7571
+    "mcap": 2747.54,
+    "netdebt": 159.56,
+    "rev": 767.38,
+    "shares": 10.7863
   },
   "ANET": {
-    "fcf": 7.86,
+    "fcf": 7.87,
     "growth_long": 0.3119,
     "growth_ttm": 0.3257,
-    "mcap": 273.36,
-    "netdebt": -2.29,
-    "rev": 10.4,
-    "shares": 1.2592
+    "mcap": 224.73,
+    "netdebt": 5.47,
+    "rev": 10.42,
+    "shares": 1.2612
   },
   "AON": {
     "fcf": 3.12,
     "growth_long": 0.092,
     "growth_ttm": 0.0492,
-    "mcap": 58.01,
-    "netdebt": 13.91,
+    "mcap": 63.37,
+    "netdebt": 13.12,
     "rev": 17.43,
     "shares": 0.2121
   },
@@ -174,34 +174,34 @@
     "fcf": 3.69,
     "growth_long": 0.0633,
     "growth_ttm": 0.0451,
-    "mcap": 62.63,
+    "mcap": 67.31,
     "netdebt": 16.69,
     "rev": 12.6,
     "shares": 0.2227
   },
   "APO": {
-    "fcf": 4.57,
+    "fcf": 4.69,
     "growth_long": 0.5206,
     "growth_ttm": 0.4069,
-    "mcap": 70.07,
-    "netdebt": -11.11,
-    "rev": 30.19,
-    "shares": 0.5765
+    "mcap": 66.27,
+    "netdebt": -11.43,
+    "rev": 30.92,
+    "shares": 0.5905
   },
   "APP": {
     "fcf": 0.53,
     "growth_long": 0.3045,
     "growth_ttm": 0.6059,
-    "mcap": 92.71,
-    "netdebt": 0.46,
-    "rev": 6.81,
-    "shares": 0.3359
+    "mcap": 89.07,
+    "netdebt": 1.04,
+    "rev": 6.78,
+    "shares": 0.3347
   },
   "ARM": {
     "growth_long": 0.194,
     "growth_ttm": 0.2512,
-    "mcap": 294.01,
-    "netdebt": -3.04,
+    "mcap": 242.0,
+    "netdebt": -8.94,
     "rev": 5.11,
     "shares": 1.068
   },
@@ -209,26 +209,26 @@
     "fcf": 8.54,
     "growth_long": 0.185,
     "growth_ttm": 0.0984,
-    "mcap": 622.86,
-    "netdebt": -2.95,
+    "mcap": 570.61,
+    "netdebt": -17.62,
     "rev": 35.58,
     "shares": 0.3881
   },
   "AVGO": {
-    "fcf": 201.96,
+    "fcf": 202.64,
     "growth_long": 0.2174,
     "growth_ttm": 0.4869,
-    "mcap": 1725.86,
-    "netdebt": 35.44,
-    "rev": 86.74,
-    "shares": 4.7576
+    "mcap": 1568.21,
+    "netdebt": 83.25,
+    "rev": 87.04,
+    "shares": 4.7736
   },
   "AXP": {
     "fcf": 8.74,
     "growth_long": 0.1596,
     "growth_ttm": 0.0948,
-    "mcap": 208.11,
-    "netdebt": 171.27,
+    "mcap": 218.83,
+    "netdebt": 171.59,
     "rev": 80.78,
     "shares": 0.6753
   },
@@ -236,16 +236,16 @@
     "fcf": 9.03,
     "growth_long": 0.1715,
     "growth_ttm": 0.0861,
-    "mcap": 184.43,
-    "netdebt": 87.0,
-    "rev": 61.01,
-    "shares": 1.551
+    "mcap": 195.63,
+    "netdebt": 93.83,
+    "rev": 61.02,
+    "shares": 1.5511
   },
   "BA": {
     "fcf": -1.31,
     "growth_long": 0.0881,
     "growth_ttm": 0.2478,
-    "mcap": 150.46,
+    "mcap": 152.15,
     "netdebt": 38.66,
     "rev": 93.97,
     "shares": 0.7904
@@ -254,166 +254,166 @@
     "fcf": 175.71,
     "growth_long": 0.0737,
     "growth_ttm": 0.0442,
-    "mcap": 264.41,
-    "netdebt": 1628.84,
+    "mcap": 262.91,
+    "netdebt": 1615.19,
     "shares": 19.0636
   },
   "BAC": {
-    "fcf": 26.75,
+    "fcf": 26.39,
     "growth_long": 0.0474,
     "growth_ttm": 0.9937,
-    "mcap": 379.85,
-    "netdebt": 732.06,
-    "rev": 87.4,
-    "shares": 7.018
+    "mcap": 352.19,
+    "netdebt": 696.51,
+    "rev": 86.21,
+    "shares": 6.9227
   },
   "BHP": {
-    "fcf": 29.5,
+    "fcf": 29.52,
     "growth_long": 0.0064,
     "growth_ttm": 0.1463,
-    "mcap": 311.06,
-    "netdebt": -85.2,
-    "rev": 58.67,
-    "shares": 5.0814
+    "mcap": 297.59,
+    "netdebt": -80.4,
+    "rev": 58.7,
+    "shares": 5.0842
   },
   "BIIB": {
     "fcf": 1.97,
     "growth_long": -0.0596,
     "growth_ttm": 0.0031,
-    "mcap": 33.35,
-    "netdebt": 6.81,
+    "mcap": 35.96,
+    "netdebt": 6.5,
     "rev": 9.96,
     "shares": 0.1477
   },
   "BKNG": {
-    "fcf": 120.06,
+    "fcf": 116.42,
     "growth_long": 0.3169,
     "growth_ttm": 0.1285,
-    "mcap": 120.48,
-    "netdebt": 2.97,
-    "rev": 28.42,
-    "shares": 0.7749
+    "mcap": 121.29,
+    "netdebt": -0.19,
+    "rev": 27.56,
+    "shares": 0.7514
   },
   "BLK": {
-    "fcf": 6.36,
+    "fcf": 6.34,
     "growth_long": 0.0837,
-    "growth_ttm": 0.2654,
-    "mcap": 175.86,
-    "netdebt": 2.25,
-    "rev": 27.0,
-    "shares": 0.1628
+    "growth_ttm": 0.2472,
+    "mcap": 187.11,
+    "netdebt": 1.92,
+    "rev": 28.14,
+    "shares": 0.1622
   },
   "BMY": {
     "fcf": 17.62,
     "growth_long": 0.0254,
     "growth_ttm": 0.0311,
-    "mcap": 120.77,
-    "netdebt": 34.4,
-    "rev": 49.04,
-    "shares": 2.0421
+    "mcap": 125.75,
+    "netdebt": 32.92,
+    "rev": 49.06,
+    "shares": 2.0427
   },
   "BRK.B": {
     "fcf": 86.48,
     "growth_long": 0.0863,
     "growth_ttm": 0.0393,
-    "mcap": 993.42,
-    "netdebt": 87.99,
+    "mcap": 1162.66,
+    "netdebt": 85.85,
     "rev": 375.04,
     "shares": 0.0014
   },
   "BSX": {
-    "fcf": 2.42,
+    "fcf": 2.36,
     "growth_long": 0.1516,
     "growth_ttm": 0.1353,
-    "mcap": 61.93,
-    "netdebt": 12.09,
-    "rev": 21.16,
-    "shares": 1.4864
+    "mcap": 64.89,
+    "netdebt": 11.1,
+    "rev": 20.63,
+    "shares": 1.4492
   },
   "BX": {
     "growth_long": 0.1882,
     "growth_ttm": 0.1719,
-    "mcap": 141.93,
-    "netdebt": 10.42,
-    "rev": 24.1,
-    "shares": 1.1965
+    "mcap": 139.61,
+    "netdebt": 7.03,
+    "rev": 24.06,
+    "shares": 1.1945
   },
   "BYDDY": {
     "growth_long": 0.387,
     "growth_ttm": -0.0823,
-    "mcap": 636.03,
-    "netdebt": 186.72,
+    "mcap": 622.17,
+    "netdebt": 205.43,
     "shares": 9.1172
   },
   "C": {
-    "fcf": 14.87,
+    "fcf": 14.43,
     "growth_long": 0.0386,
     "growth_ttm": 0.9924,
-    "mcap": 217.46,
-    "netdebt": 813.85,
-    "rev": 68.77,
-    "shares": 1.7056
+    "mcap": 206.64,
+    "netdebt": 818.12,
+    "rev": 66.74,
+    "shares": 1.6552
   },
   "CAT": {
-    "fcf": 9.99,
+    "fcf": 9.97,
     "growth_long": 0.1012,
     "growth_ttm": 0.1836,
-    "mcap": 367.96,
-    "netdebt": 38.43,
-    "rev": 74.42,
-    "shares": 0.4606
+    "mcap": 326.74,
+    "netdebt": 52.14,
+    "rev": 74.28,
+    "shares": 0.4597
   },
   "CB": {
-    "fcf": 6.8,
+    "fcf": 6.74,
     "growth_long": 0.1054,
-    "growth_ttm": 0.0802,
-    "mcap": 131.63,
-    "netdebt": -2.75,
-    "rev": 60.93,
-    "shares": 0.3858
+    "growth_ttm": 0.057,
+    "mcap": 137.99,
+    "netdebt": -4.04,
+    "rev": 60.75,
+    "shares": 0.3825
   },
   "CDNS": {
     "fcf": 1.11,
     "growth_long": 0.1457,
     "growth_ttm": 0.147,
-    "mcap": 97.17,
-    "netdebt": 1.04,
+    "mcap": 86.19,
+    "netdebt": 4.65,
     "rev": 5.82,
     "shares": 0.2754
   },
   "CHTR": {
-    "fcf": 10.99,
+    "fcf": 10.55,
     "growth_long": 0.0263,
     "growth_ttm": -0.015,
-    "mcap": 18.21,
-    "netdebt": 96.2,
-    "rev": 53.52,
-    "shares": 0.1193
+    "mcap": 19.05,
+    "netdebt": 95.8,
+    "rev": 51.41,
+    "shares": 0.1146
   },
   "CI": {
-    "fcf": 7.48,
+    "fcf": 7.47,
     "growth_long": 0.114,
     "growth_ttm": 0.0777,
-    "mcap": 74.63,
+    "mcap": 81.06,
     "netdebt": 25.58,
-    "rev": 282.96,
-    "shares": 0.2645
+    "rev": 282.64,
+    "shares": 0.2642
   },
   "CL": {
     "fcf": 2.2,
     "growth_long": 0.0435,
     "growth_ttm": 0.0524,
-    "mcap": 70.37,
-    "netdebt": 6.49,
-    "rev": 21.0,
-    "shares": 0.8002
+    "mcap": 76.1,
+    "netdebt": 4.97,
+    "rev": 20.93,
+    "shares": 0.7972
   },
   "CMCSA": {
     "fcf": 24.53,
     "growth_long": 0.0362,
     "growth_ttm": 0.0058,
-    "mcap": 73.31,
-    "netdebt": 82.72,
+    "mcap": 80.09,
+    "netdebt": 80.11,
     "rev": 124.16,
     "shares": 3.5486
   },
@@ -421,302 +421,302 @@
     "fcf": 3.37,
     "growth_long": 0.1873,
     "growth_ttm": 0.1657,
-    "mcap": 100.88,
-    "netdebt": 1.33,
+    "mcap": 109.4,
+    "netdebt": -1.47,
     "rev": 12.55,
     "shares": 0.3596
   },
   "CMG": {
-    "fcf": 67.47,
+    "fcf": 67.34,
     "growth_long": 0.1479,
     "growth_ttm": 0.0731,
-    "mcap": 39.97,
+    "mcap": 35.77,
     "netdebt": -0.23,
-    "rev": 12.31,
-    "shares": 1.2678
+    "rev": 12.29,
+    "shares": 1.2654
   },
   "CNC": {
     "fcf": 3.42,
     "growth_long": 0.2447,
     "growth_ttm": 0.1702,
-    "mcap": 32.29,
-    "netdebt": -8.05,
+    "mcap": 34.9,
+    "netdebt": -8.36,
     "rev": 197.47,
     "shares": 0.494
   },
   "COF": {
-    "fcf": 13.52,
+    "fcf": 13.26,
     "growth_long": 0.0437,
     "growth_ttm": 0.3819,
-    "mcap": 122.24,
-    "netdebt": 44.82,
-    "rev": 58.09,
-    "shares": 0.6135
+    "mcap": 126.81,
+    "netdebt": 49.71,
+    "rev": 56.95,
+    "shares": 0.6015
   },
   "COIN": {
     "fcf": -0.66,
     "growth_long": 0.4124,
     "growth_ttm": -0.1035,
-    "mcap": 47.33,
-    "netdebt": -2.13,
-    "rev": 6.28,
-    "shares": 0.2635
+    "mcap": 45.33,
+    "netdebt": -0.74,
+    "rev": 6.29,
+    "shares": 0.2638
   },
   "COP": {
-    "fcf": 19.23,
+    "fcf": 18.96,
     "growth_long": 0.257,
     "growth_ttm": 0.096,
-    "mcap": 161.1,
+    "mcap": 176.0,
     "netdebt": 16.72,
-    "rev": 63.57,
-    "shares": 1.2183
+    "rev": 62.68,
+    "shares": 1.2013
   },
   "COST": {
-    "fcf": 8.35,
+    "fcf": 8.34,
     "growth_long": 0.0912,
     "growth_ttm": 0.1014,
-    "mcap": 419.61,
-    "netdebt": -14.04,
-    "rev": 302.58,
-    "shares": 0.4435
+    "mcap": 445.54,
+    "netdebt": -17.2,
+    "rev": 302.31,
+    "shares": 0.4431
   },
   "CRM": {
-    "fcf": 4.71,
+    "fcf": 4.74,
     "growth_long": 0.1434,
     "growth_ttm": 0.1123,
-    "mcap": 188.57,
+    "mcap": 203.53,
     "netdebt": 30.98,
-    "rev": 43.83,
-    "shares": 0.819
+    "rev": 44.05,
+    "shares": 0.823
   },
   "CRWD": {
     "fcf": 0.09,
     "growth_long": 0.4064,
     "growth_ttm": 0.243,
-    "mcap": 281.62,
-    "netdebt": -4.27,
-    "rev": 5.26,
-    "shares": 1.0183
+    "mcap": 251.02,
+    "netdebt": -9.76,
+    "rev": 5.29,
+    "shares": 1.0239
   },
   "CRWV": {
     "growth_ttm": 1.1526,
-    "mcap": 45.27,
-    "netdebt": 29.77,
-    "rev": 7.52,
-    "shares": 0.5456
+    "mcap": 32.83,
+    "netdebt": 31.03,
+    "rev": 7.6,
+    "shares": 0.5515
   },
   "CSCO": {
-    "fcf": 14.7,
+    "fcf": 14.71,
     "growth_long": 0.0492,
     "growth_ttm": 0.1177,
-    "mcap": 466.76,
-    "netdebt": 22.32,
-    "rev": 62.6,
-    "shares": 3.9414
+    "mcap": 418.33,
+    "netdebt": 26.87,
+    "rev": 62.62,
+    "shares": 3.9426
   },
   "CSX": {
     "fcf": 4.93,
     "growth_long": 0.0589,
     "growth_ttm": 0.0252,
-    "mcap": 87.55,
-    "netdebt": 17.86,
+    "mcap": 94.87,
+    "netdebt": 12.64,
     "rev": 14.46,
     "shares": 1.8525
   },
   "CVS": {
-    "fcf": 12.69,
+    "fcf": 12.72,
     "growth_long": 0.0839,
     "growth_ttm": 0.0736,
-    "mcap": 110.2,
+    "mcap": 118.94,
     "netdebt": 50.08,
-    "rev": 411.51,
-    "shares": 1.2759
+    "rev": 412.51,
+    "shares": 1.279
   },
   "CVX": {
-    "fcf": 43.54,
+    "fcf": 43.19,
     "growth_long": 0.1432,
     "growth_ttm": 0.1117,
-    "mcap": 418.82,
-    "netdebt": 28.55,
-    "rev": 210.46,
-    "shares": 1.9916
+    "mcap": 448.78,
+    "netdebt": 27.27,
+    "rev": 208.79,
+    "shares": 1.9758
   },
   "DDOG": {
     "fcf": 0.01,
     "growth_long": 0.4153,
     "growth_ttm": 0.3152,
-    "mcap": 105.3,
-    "netdebt": 0.55,
-    "rev": 3.81,
-    "shares": 0.356
+    "mcap": 97.51,
+    "netdebt": 1.29,
+    "rev": 3.84,
+    "shares": 0.3591
   },
   "DE": {
-    "fcf": 11.17,
+    "fcf": 11.16,
     "growth_long": 0.0515,
     "growth_ttm": 0.0799,
-    "mcap": 167.42,
+    "mcap": 170.15,
     "netdebt": 54.91,
-    "rev": 47.84,
-    "shares": 0.2699
+    "rev": 47.79,
+    "shares": 0.2696
   },
   "DHR": {
     "fcf": 7.69,
     "growth_long": 0.0197,
     "growth_ttm": 0.0456,
-    "mcap": 154.52,
-    "netdebt": 22.21,
+    "mcap": 164.81,
+    "netdebt": 19.38,
     "rev": 24.94,
     "shares": 0.703
   },
   "DIS": {
-    "fcf": 8.35,
+    "fcf": 8.3,
     "growth_long": 0.0763,
     "growth_ttm": 0.0458,
-    "mcap": 186.57,
-    "netdebt": 40.86,
-    "rev": 98.49,
-    "shares": 1.7365
+    "mcap": 193.2,
+    "netdebt": 39.34,
+    "rev": 97.94,
+    "shares": 1.7267
   },
   "DUK": {
     "fcf": 9.86,
     "growth_long": 0.062,
     "growth_ttm": 0.0633,
-    "mcap": 90.95,
-    "netdebt": 90.57,
+    "mcap": 94.88,
+    "netdebt": 90.56,
     "rev": 33.28,
-    "shares": 0.7796
+    "shares": 0.7797
   },
   "DXCM": {
-    "fcf": 0.5,
+    "fcf": 0.48,
     "growth_long": 0.1933,
     "growth_ttm": 0.1554,
-    "mcap": 31.74,
-    "netdebt": 0.19,
-    "rev": 4.92,
-    "shares": 0.3859
+    "mcap": 29.82,
+    "netdebt": 0.66,
+    "rev": 4.81,
+    "shares": 0.3774
   },
   "ELV": {
     "fcf": 7.19,
     "growth_long": 0.1032,
     "growth_ttm": 0.0627,
-    "mcap": 89.5,
+    "mcap": 94.47,
     "netdebt": 20.81,
     "rev": 200.19,
     "shares": 0.2169
   },
   "EMR": {
-    "fcf": 3.08,
+    "fcf": 3.07,
     "growth_long": 0.0143,
     "growth_ttm": 0.0482,
-    "mcap": 90.27,
+    "mcap": 87.17,
     "netdebt": 10.93,
-    "rev": 18.6,
-    "shares": 0.5601
+    "rev": 18.53,
+    "shares": 0.5578
   },
   "ENTG": {
     "fcf": 0.6,
     "growth_long": 0.1145,
     "growth_ttm": 0.0319,
-    "mcap": 25.33,
-    "netdebt": 3.12,
-    "rev": 3.3,
-    "shares": 0.1525
+    "mcap": 20.52,
+    "netdebt": 5.3,
+    "rev": 3.31,
+    "shares": 0.1528
   },
   "EOG": {
-    "fcf": 10.3,
+    "fcf": 10.15,
     "growth_long": 0.1539,
     "growth_ttm": 0.1867,
-    "mcap": 77.71,
-    "netdebt": 3.02,
-    "rev": 27.15,
-    "shares": 0.5326
+    "mcap": 83.4,
+    "netdebt": 2.45,
+    "rev": 26.74,
+    "shares": 0.5245
   },
   "ETN": {
     "fcf": 3.81,
     "growth_long": 0.0898,
     "growth_ttm": 0.1553,
-    "mcap": 166.88,
-    "netdebt": 20.13,
-    "rev": 29.93,
-    "shares": 0.3883
+    "mcap": 144.7,
+    "netdebt": 27.37,
+    "rev": 29.94,
+    "shares": 0.3884
   },
   "EW": {
     "fcf": 1.48,
     "growth_long": 0.067,
     "growth_ttm": 0.1455,
-    "mcap": 49.12,
-    "netdebt": -2.31,
-    "rev": 6.49,
-    "shares": 0.5758
+    "mcap": 51.04,
+    "netdebt": -2.93,
+    "rev": 6.5,
+    "shares": 0.5764
   },
   "F": {
     "fcf": 13.61,
     "growth_long": 0.0805,
     "growth_ttm": 0.0147,
-    "mcap": 48.53,
+    "mcap": 47.53,
     "netdebt": 142.36,
     "rev": 188.0,
     "shares": 3.9876
   },
   "FCX": {
-    "fcf": 5.69,
+    "fcf": 5.68,
     "growth_long": 0.1279,
     "growth_ttm": -0.2423,
-    "mcap": 105.82,
-    "netdebt": 5.31,
-    "rev": 25.77,
-    "shares": 1.4376
+    "mcap": 94.36,
+    "netdebt": 9.31,
+    "rev": 25.74,
+    "shares": 1.436
   },
   "FDX": {
-    "fcf": 7.82,
+    "fcf": 7.83,
     "growth_long": 0.0244,
     "growth_ttm": 0.0773,
-    "mcap": 69.04,
+    "mcap": 70.71,
     "netdebt": 12.4,
-    "rev": 92.61,
-    "shares": 0.2366
+    "rev": 92.65,
+    "shares": 0.2367
   },
   "FISV": {
-    "fcf": 4.45,
+    "fcf": 4.44,
     "growth_long": 0.0737,
     "growth_ttm": -0.0117,
-    "mcap": 24.26,
-    "netdebt": 27.26,
-    "rev": 20.85,
-    "shares": 0.5333
+    "mcap": 25.96,
+    "netdebt": 27.03,
+    "rev": 20.79,
+    "shares": 0.5318
   },
   "FTNT": {
     "fcf": 1.24,
     "growth_long": 0.2125,
     "growth_ttm": 0.1877,
-    "mcap": 142.89,
-    "netdebt": -2.44,
-    "rev": 7.45,
-    "shares": 0.7327
+    "mcap": 129.85,
+    "netdebt": -5.59,
+    "rev": 7.46,
+    "shares": 0.7337
   },
   "GD": {
     "fcf": 4.1,
     "growth_long": 0.0674,
     "growth_ttm": 0.0913,
-    "mcap": 89.63,
+    "mcap": 94.67,
     "netdebt": 3.18,
     "rev": 54.27,
     "shares": 0.2706
   },
   "GE": {
-    "fcf": 11.01,
+    "fcf": 10.96,
     "growth_long": -0.0957,
-    "growth_ttm": 0.217,
-    "mcap": 319.78,
-    "netdebt": 9.81,
-    "rev": 50.18,
-    "shares": 1.0376
+    "growth_ttm": 0.1963,
+    "mcap": 298.87,
+    "netdebt": 10.56,
+    "rev": 52.19,
+    "shares": 1.0333
   },
   "GEV": {
     "growth_long": 0.0868,
     "growth_ttm": 0.1298,
-    "mcap": 267.59,
-    "netdebt": -10.33,
+    "mcap": 231.09,
+    "netdebt": 5.18,
     "rev": 40.8,
     "shares": 0.2663
   },
@@ -724,53 +724,53 @@
     "fcf": 2.81,
     "growth_long": 0.0696,
     "growth_ttm": 0.014,
-    "mcap": 26.47,
-    "netdebt": 0.59,
+    "mcap": 24.94,
+    "netdebt": 1.83,
     "rev": 6.85,
     "shares": 0.5487
   },
   "GILD": {
-    "fcf": 8.29,
+    "fcf": 8.28,
     "growth_long": 0.0358,
     "growth_ttm": 0.0552,
-    "mcap": 187.44,
-    "netdebt": 23.07,
-    "rev": 30.42,
-    "shares": 1.2416
+    "mcap": 191.99,
+    "netdebt": 21.48,
+    "rev": 30.38,
+    "shares": 1.24
   },
   "GM": {
-    "fcf": 13.35,
+    "fcf": 12.83,
     "growth_long": 0.086,
     "growth_ttm": -0.0111,
-    "mcap": 72.59,
-    "netdebt": 107.56,
-    "rev": 178.9,
-    "shares": 0.8775
+    "mcap": 64.88,
+    "netdebt": 106.88,
+    "rev": 171.97,
+    "shares": 0.8435
   },
   "GOOGL": {
     "fcf": 77.69,
     "growth_long": 0.1715,
     "growth_ttm": 0.2005,
-    "mcap": 4300.8,
-    "netdebt": 42.25,
+    "mcap": 4032.96,
+    "netdebt": 101.37,
     "rev": 443.0,
     "shares": 12.23
   },
   "GS": {
-    "fcf": 10.15,
+    "fcf": 10.01,
     "growth_long": 0.1729,
-    "growth_ttm": 0.0667,
-    "mcap": 260.69,
-    "netdebt": 1167.0,
-    "rev": 130.63,
-    "shares": 0.295
+    "growth_ttm": 0.105,
+    "mcap": 262.77,
+    "netdebt": 1230.0,
+    "rev": 135.95,
+    "shares": 0.2912
   },
   "GSK": {
     "fcf": 8.12,
     "growth_long": 0.0605,
     "growth_ttm": 0.0497,
-    "mcap": 74.24,
-    "netdebt": 15.13,
+    "mcap": 74.85,
+    "netdebt": 15.15,
     "rev": 33.07,
     "shares": 4.0454
   },
@@ -778,26 +778,26 @@
     "fcf": 7.66,
     "growth_long": 0.0797,
     "growth_ttm": 0.0731,
-    "mcap": 97.66,
-    "netdebt": 48.71,
+    "mcap": 99.72,
+    "netdebt": 48.82,
     "rev": 75.8,
     "shares": 0.2165
   },
   "HD": {
-    "fcf": 18.54,
+    "fcf": 18.55,
     "growth_long": 0.0451,
     "growth_ttm": 0.025,
-    "mcap": 290.07,
-    "netdebt": 50.81,
-    "rev": 169.36,
-    "shares": 0.9971
+    "mcap": 315.98,
+    "netdebt": 47.87,
+    "rev": 169.46,
+    "shares": 0.9977
   },
   "HON": {
     "fcf": 3.12,
     "growth_long": 0.0279,
     "growth_ttm": -0.0011,
-    "mcap": 65.84,
-    "netdebt": 25.24,
+    "mcap": 65.28,
+    "netdebt": 28.01,
     "rev": 38.82,
     "shares": 0.3169
   },
@@ -805,25 +805,25 @@
     "fcf": -0.67,
     "growth_long": 0.3607,
     "growth_ttm": 0.3827,
-    "mcap": 98.02,
-    "netdebt": 17.34,
-    "rev": 4.87,
-    "shares": 0.9005
+    "mcap": 90.72,
+    "netdebt": 18.27,
+    "rev": 4.86,
+    "shares": 0.8991
   },
   "HSBC": {
     "growth_long": 0.0608,
     "growth_ttm": 1.0908,
-    "mcap": 236.57,
-    "netdebt": 530.7,
-    "rev": 58.92,
-    "shares": 17.1836
+    "mcap": 239.65,
+    "netdebt": 532.45,
+    "rev": 58.75,
+    "shares": 17.135
   },
   "HUM": {
     "fcf": 3.79,
     "growth_long": 0.1094,
     "growth_ttm": 0.1833,
-    "mcap": 51.86,
-    "netdebt": 7.35,
+    "mcap": 51.41,
+    "netdebt": 7.19,
     "rev": 144.43,
     "shares": 0.1201
   },
@@ -831,106 +831,106 @@
     "fcf": 11.54,
     "growth_long": 0.0412,
     "growth_ttm": 0.079,
-    "mcap": 213.99,
-    "netdebt": 54.81,
+    "mcap": 233.32,
+    "netdebt": 51.95,
     "rev": 68.28,
     "shares": 0.9421
   },
   "ICE": {
-    "fcf": 3.61,
+    "fcf": 3.58,
     "growth_long": 0.0892,
     "growth_ttm": 0.0695,
-    "mcap": 87.68,
+    "mcap": 90.27,
     "netdebt": 18.78,
-    "rev": 13.41,
-    "shares": 0.5655
+    "rev": 13.32,
+    "shares": 0.5614
   },
   "IDXX": {
     "fcf": 0.88,
     "growth_long": 0.0972,
     "growth_ttm": 0.1277,
-    "mcap": 40.81,
-    "netdebt": 0.77,
-    "rev": 4.53,
-    "shares": 0.0789
+    "mcap": 44.08,
+    "netdebt": 0.29,
+    "rev": 4.52,
+    "shares": 0.0788
   },
   "INFY": {
-    "fcf": 286.93,
+    "fcf": 286.99,
     "growth_long": 0.122,
     "growth_ttm": 0.1122,
-    "mcap": 4034.54,
+    "mcap": 4737.63,
     "netdebt": -124.6,
-    "shares": 4.0496
+    "shares": 4.0504
   },
   "INTC": {
-    "fcf": 10.55,
+    "fcf": 11.05,
     "growth_long": -0.0746,
     "growth_ttm": 0.0747,
-    "mcap": 553.46,
-    "netdebt": 37.66,
-    "rev": 56.36,
-    "shares": 5.044
+    "mcap": 465.39,
+    "netdebt": 61.15,
+    "rev": 59.06,
+    "shares": 5.2851
   },
   "INTU": {
-    "fcf": 3.08,
+    "fcf": 3.01,
     "growth_long": 0.1736,
     "growth_ttm": 0.139,
-    "mcap": 80.91,
-    "netdebt": 2.96,
-    "rev": 21.57,
-    "shares": 0.2735
+    "mcap": 91.47,
+    "netdebt": 1.18,
+    "rev": 21.07,
+    "shares": 0.2672
   },
   "IONQ": {
-    "fcf": -0.23,
+    "fcf": -0.27,
     "growth_long": 1.269,
     "growth_ttm": 2.8683,
-    "mcap": 16.16,
-    "netdebt": -0.49,
-    "rev": 0.25,
-    "shares": 0.3733
+    "mcap": 13.77,
+    "netdebt": -0.41,
+    "rev": 0.29,
+    "shares": 0.4294
   },
   "IQV": {
     "fcf": 2.0,
     "growth_long": 0.075,
     "growth_ttm": 0.0817,
-    "mcap": 42.78,
-    "netdebt": 14.09,
+    "mcap": 46.2,
+    "netdebt": 13.44,
     "rev": 16.71,
     "shares": 0.1646
   },
   "ISRG": {
     "fcf": 1.96,
     "growth_long": 0.1822,
-    "growth_ttm": 0.2066,
-    "mcap": 149.78,
-    "netdebt": -2.76,
-    "rev": 10.91,
+    "growth_ttm": 0.2045,
+    "mcap": 152.43,
+    "netdebt": -7.98,
+    "rev": 11.63,
     "shares": 0.3533
   },
   "ITW": {
-    "fcf": 3.34,
+    "fcf": 3.3,
     "growth_long": 0.0499,
     "growth_ttm": 0.043,
-    "mcap": 75.22,
-    "netdebt": 8.86,
-    "rev": 16.51,
-    "shares": 0.2877
+    "mcap": 76.35,
+    "netdebt": 11.49,
+    "rev": 16.34,
+    "shares": 0.2848
   },
   "JNJ": {
     "fcf": 18.33,
     "growth_long": 0.0267,
-    "growth_ttm": 0.0806,
-    "mcap": 630.04,
-    "netdebt": 41.05,
-    "rev": 96.72,
+    "growth_ttm": 0.078,
+    "mcap": 630.79,
+    "netdebt": 24.82,
+    "rev": 97.77,
     "shares": 2.4099
   },
   "JPM": {
     "fcf": 50.04,
     "growth_long": 0.0773,
     "growth_ttm": 1.0898,
-    "mcap": 885.15,
-    "netdebt": 1237.87,
+    "mcap": 890.03,
+    "netdebt": 1234.32,
     "rev": 138.6,
     "shares": 2.6582
   },
@@ -938,142 +938,142 @@
     "fcf": 1.35,
     "growth_long": 0.3519,
     "growth_ttm": 0.3047,
-    "mcap": 81.64,
-    "netdebt": 33.01,
+    "mcap": 81.71,
+    "netdebt": 31.97,
     "rev": 21.55,
-    "shares": 0.8979
+    "shares": 0.8976
   },
   "KLAC": {
-    "fcf": 33.1,
+    "fcf": 33.06,
     "growth_long": 0.1444,
     "growth_ttm": 0.1171,
-    "mcap": 255.22,
-    "netdebt": 4.24,
-    "rev": 13.53,
-    "shares": 1.3063
+    "mcap": 199.4,
+    "netdebt": 18.16,
+    "rev": 13.52,
+    "shares": 1.305
   },
   "KO": {
     "fcf": 11.83,
     "growth_long": 0.0775,
     "growth_ttm": 0.0652,
-    "mcap": 378.84,
+    "mcap": 403.75,
     "netdebt": 30.64,
     "rev": 50.01,
     "shares": 4.3026
   },
   "KR": {
-    "fcf": 3.98,
+    "fcf": 3.84,
     "growth_long": 0.0219,
     "growth_ttm": 0.0158,
-    "mcap": 36.4,
-    "netdebt": 15.32,
-    "rev": 150.48,
-    "shares": 0.6127
+    "mcap": 38.38,
+    "netdebt": 14.55,
+    "rev": 145.05,
+    "shares": 0.5906
   },
   "LHX": {
     "fcf": 2.51,
     "growth_long": 0.0374,
     "growth_ttm": 0.0729,
-    "mcap": 44.13,
-    "netdebt": 9.48,
-    "rev": 22.81,
-    "shares": 0.1863
+    "mcap": 47.26,
+    "netdebt": 8.29,
+    "rev": 22.8,
+    "shares": 0.1862
   },
   "LIN": {
-    "fcf": 8.9,
+    "fcf": 8.87,
     "growth_long": 0.0452,
     "growth_ttm": 0.0663,
-    "mcap": 222.99,
-    "netdebt": 23.11,
-    "rev": 35.29,
-    "shares": 0.4624
+    "mcap": 231.38,
+    "netdebt": 22.49,
+    "rev": 35.18,
+    "shares": 0.461
   },
   "LLY": {
     "fcf": 6.79,
     "growth_long": 0.2158,
     "growth_ttm": 0.4958,
-    "mcap": 1110.11,
+    "mcap": 1216.97,
     "netdebt": 45.96,
-    "rev": 83.94,
-    "shares": 0.9417
+    "rev": 83.92,
+    "shares": 0.9414
   },
   "LMT": {
     "fcf": 7.64,
     "growth_long": 0.0279,
     "growth_ttm": 0.072,
-    "mcap": 117.61,
-    "netdebt": 16.75,
+    "mcap": 138.33,
+    "netdebt": 5.22,
     "rev": 76.91,
     "shares": 0.2308
   },
   "LOW": {
-    "fcf": 9.08,
+    "fcf": 9.09,
     "growth_long": -0.0075,
     "growth_ttm": 0.0816,
-    "mcap": 104.36,
-    "netdebt": 34.38,
-    "rev": 90.55,
-    "shares": 0.5607
+    "mcap": 111.46,
+    "netdebt": 33.0,
+    "rev": 90.59,
+    "shares": 0.561
   },
   "LRCX": {
-    "fcf": 40.18,
+    "fcf": 40.19,
     "growth_long": 0.097,
     "growth_ttm": 0.2602,
-    "mcap": 399.0,
-    "netdebt": -1.84,
+    "mcap": 295.26,
+    "netdebt": 29.28,
     "rev": 23.15,
-    "shares": 1.2513
+    "shares": 1.2514
   },
   "MA": {
-    "fcf": 10.86,
+    "fcf": 10.77,
     "growth_long": 0.1647,
     "growth_ttm": 0.1601,
-    "mcap": 516.09,
+    "mcap": 548.86,
     "netdebt": 13.35,
-    "rev": 35.11,
-    "shares": 0.8836
+    "rev": 34.8,
+    "shares": 0.876
   },
   "MAR": {
-    "fcf": 2.72,
+    "fcf": 2.69,
     "growth_long": 0.1989,
     "growth_ttm": 0.0472,
-    "mcap": 95.41,
+    "mcap": 104.64,
     "netdebt": 16.45,
-    "rev": 26.82,
-    "shares": 0.2637
+    "rev": 26.53,
+    "shares": 0.2608
   },
   "MCD": {
-    "fcf": 9.94,
+    "fcf": 9.9,
     "growth_long": 0.0696,
     "growth_ttm": 0.063,
-    "mcap": 166.46,
+    "mcap": 175.42,
     "netdebt": 39.04,
-    "rev": 27.68,
-    "shares": 0.7105
+    "rev": 27.57,
+    "shares": 0.7076
   },
   "MCHP": {
     "fcf": 3.39,
     "growth_long": -0.0282,
     "growth_ttm": 0.2093,
-    "mcap": 41.02,
-    "netdebt": 5.09,
+    "mcap": 40.56,
+    "netdebt": 6.22,
     "rev": 5.05,
     "shares": 0.543
   },
   "MCK": {
-    "fcf": 3.64,
+    "fcf": 3.62,
     "growth_long": 0.1111,
     "growth_ttm": 0.0884,
-    "mcap": 109.46,
-    "netdebt": 4.56,
-    "rev": 403.74,
-    "shares": 0.1171
+    "mcap": 118.43,
+    "netdebt": 4.26,
+    "rev": 402.02,
+    "shares": 0.1166
   },
   "MCO": {
     "fcf": 1.81,
     "growth_long": 0.0752,
     "growth_ttm": 0.1167,
-    "mcap": 80.4,
+    "mcap": 82.81,
     "netdebt": 5.48,
     "rev": 8.1,
     "shares": 0.1732
@@ -1082,7 +1082,7 @@
     "fcf": 4.77,
     "growth_long": 0.0771,
     "growth_ttm": 0.0693,
-    "mcap": 77.1,
+    "mcap": 80.94,
     "netdebt": 19.73,
     "rev": 39.35,
     "shares": 1.2763
@@ -1091,150 +1091,150 @@
     "fcf": 6.1,
     "growth_long": 0.0384,
     "growth_ttm": 0.0977,
-    "mcap": 113.18,
+    "mcap": 119.78,
     "netdebt": 26.46,
-    "rev": 37.39,
-    "shares": 1.28
+    "rev": 37.37,
+    "shares": 1.2792
   },
   "MET": {
     "growth_long": 0.0256,
     "growth_ttm": 0.0843,
-    "mcap": 62.49,
-    "netdebt": 0.55,
-    "rev": 78.86,
-    "shares": 0.6434
+    "mcap": 64.75,
+    "netdebt": 0.7,
+    "rev": 77.89,
+    "shares": 0.6355
   },
   "META": {
-    "fcf": 38.87,
+    "fcf": 39.01,
     "growth_long": 0.1851,
     "growth_ttm": 0.2765,
-    "mcap": 1830.82,
-    "netdebt": 68.2,
-    "rev": 225.79,
-    "shares": 2.5384
+    "mcap": 1659.06,
+    "netdebt": 186.08,
+    "rev": 226.6,
+    "shares": 2.5475
   },
   "MMC": {
     "growth_long": 0.0939,
-    "growth_ttm": 0.0833,
-    "mcap": 83.87,
-    "netdebt": 18.86,
-    "rev": 27.67,
-    "shares": 0.4772
+    "growth_ttm": 0.0758,
+    "mcap": 91.87,
+    "netdebt": 17.91,
+    "rev": 28.25,
+    "shares": 0.4755
   },
   "MMM": {
-    "fcf": -5.11,
+    "fcf": -5.12,
     "growth_long": -0.0497,
-    "growth_ttm": 0.0235,
-    "mcap": 82.49,
-    "netdebt": 9.6,
-    "rev": 24.86,
-    "shares": 0.5157
+    "growth_ttm": 0.017,
+    "mcap": 90.08,
+    "netdebt": 8.63,
+    "rev": 24.96,
+    "shares": 0.5167
   },
   "MNST": {
-    "fcf": 1.51,
+    "fcf": 3.01,
     "growth_long": 0.1252,
     "growth_ttm": 0.2037,
-    "mcap": 85.49,
-    "netdebt": -2.19,
-    "rev": 9.12,
-    "shares": 0.978
+    "mcap": 91.27,
+    "netdebt": -2.11,
+    "rev": 18.24,
+    "shares": 1.956
   },
   "MO": {
     "fcf": 8.44,
     "growth_long": -0.023,
     "growth_ttm": -0.0058,
-    "mcap": 119.69,
-    "netdebt": 22.21,
-    "rev": 23.46,
-    "shares": 1.6699
+    "mcap": 124.85,
+    "netdebt": 20.61,
+    "rev": 23.45,
+    "shares": 1.6697
   },
   "MPC": {
-    "fcf": 10.89,
+    "fcf": 10.48,
     "growth_long": 0.1439,
     "growth_ttm": 0.1576,
-    "mcap": 127.78,
-    "netdebt": 25.05,
-    "rev": 157.03,
-    "shares": 0.2919
+    "mcap": 131.18,
+    "netdebt": 25.29,
+    "rev": 151.06,
+    "shares": 0.2808
   },
   "MPWR": {
     "fcf": 0.49,
     "growth_long": 0.27,
     "growth_ttm": 0.2867,
-    "mcap": 68.13,
+    "mcap": 59.79,
     "netdebt": -1.01,
     "rev": 3.26,
     "shares": 0.0491
   },
   "MRK": {
-    "fcf": 8.24,
+    "fcf": 8.23,
     "growth_long": 0.0938,
     "growth_ttm": 0.0464,
-    "mcap": 359.22,
+    "mcap": 374.22,
     "netdebt": 47.06,
-    "rev": 66.56,
-    "shares": 2.4698
+    "rev": 66.49,
+    "shares": 2.4672
   },
   "MRNA": {
-    "fcf": -2.99,
+    "fcf": -3.01,
     "growth_long": 0.1934,
     "growth_ttm": -0.2762,
-    "mcap": 89.83,
-    "netdebt": -1.1,
-    "rev": 2.22,
-    "shares": 0.3968
+    "mcap": 95.09,
+    "netdebt": 4.31,
+    "rev": 2.23,
+    "shares": 0.3992
   },
   "MRVL": {
     "fcf": 1.06,
     "growth_long": 0.2251,
     "growth_ttm": 0.3062,
-    "mcap": 241.39,
+    "mcap": 203.81,
     "netdebt": 1.03,
-    "rev": 8.98,
-    "shares": 0.8758
+    "rev": 9.0,
+    "shares": 0.8769
   },
   "MS": {
-    "fcf": 12.76,
+    "fcf": 12.71,
     "growth_long": 0.1786,
-    "growth_ttm": 0.1396,
-    "mcap": 298.44,
-    "netdebt": 831.25,
-    "rev": 129.04,
-    "shares": 1.572
+    "growth_ttm": 0.1203,
+    "mcap": 292.09,
+    "netdebt": 826.98,
+    "rev": 130.8,
+    "shares": 1.565
   },
   "MSFT": {
     "fcf": 91.59,
     "growth_long": 0.1457,
     "growth_ttm": 0.1779,
-    "mcap": 3973.19,
+    "mcap": 3932.9,
     "netdebt": 85.95,
     "rev": 331.15,
     "shares": 7.4256
   },
   "MSTR": {
-    "fcf": 2.68,
+    "fcf": 3.16,
     "growth_long": -0.0015,
     "growth_ttm": 0.0779,
-    "mcap": 65.13,
+    "mcap": 62.32,
     "netdebt": 5.0,
-    "rev": 0.51,
-    "shares": 0.363
+    "rev": 0.61,
+    "shares": 0.4283
   },
   "MU": {
     "fcf": 1.99,
     "growth_long": 0.3689,
     "growth_ttm": 2.5633,
-    "mcap": 1162.15,
-    "netdebt": -33.19,
-    "rev": 131.14,
-    "shares": 1.1294
+    "mcap": 1015.68,
+    "netdebt": -15.34,
+    "rev": 131.38,
+    "shares": 1.1314
   },
   "NEE": {
     "fcf": 12.78,
     "growth_long": 0.0921,
     "growth_ttm": 0.1082,
-    "mcap": 161.41,
-    "netdebt": 107.33,
+    "mcap": 166.42,
+    "netdebt": 104.07,
     "rev": 28.6,
     "shares": 2.086
   },
@@ -1242,70 +1242,70 @@
     "fcf": -0.08,
     "growth_long": 0.3813,
     "growth_ttm": 0.3353,
-    "mcap": 128.52,
-    "netdebt": 1.61,
+    "mcap": 113.94,
+    "netdebt": -2.58,
     "rev": 2.52,
-    "shares": 0.3549
+    "shares": 0.3561
   },
   "NFLX": {
     "fcf": 174.41,
     "growth_long": 0.1257,
     "growth_ttm": 0.1602,
-    "mcap": 292.72,
-    "netdebt": 5.21,
+    "mcap": 276.61,
+    "netdebt": 0.23,
     "rev": 47.27,
     "shares": 4.1639
   },
   "NKE": {
-    "fcf": 5.67,
+    "fcf": 5.68,
     "growth_long": 0.0082,
     "growth_ttm": -0.0118,
-    "mcap": 51.56,
-    "netdebt": 0.99,
-    "rev": 45.87,
-    "shares": 1.4835
+    "mcap": 55.39,
+    "netdebt": 1.28,
+    "rev": 45.93,
+    "shares": 1.4853
   },
   "NOC": {
     "fcf": 5.57,
     "growth_long": 0.0266,
-    "growth_ttm": 0.059,
-    "mcap": 68.29,
-    "netdebt": 12.88,
-    "rev": 42.8,
+    "growth_ttm": 0.0651,
+    "mcap": 78.36,
+    "netdebt": 11.45,
+    "rev": 43.5,
     "shares": 0.1421
   },
   "NOW": {
     "fcf": 10.65,
     "growth_long": 0.2405,
     "growth_ttm": 0.2219,
-    "mcap": 145.65,
-    "netdebt": 5.01,
+    "mcap": 162.01,
+    "netdebt": 1.33,
     "rev": 14.73,
     "shares": 1.0339
   },
   "NVDA": {
-    "fcf": 198.61,
+    "fcf": 197.78,
     "growth_long": 0.669,
     "growth_ttm": 0.8338,
-    "mcap": 5525.65,
-    "netdebt": 10.92,
-    "rev": 301.91,
-    "shares": 24.2
+    "mcap": 5247.53,
+    "netdebt": 112.87,
+    "rev": 300.66,
+    "shares": 24.1
   },
   "NVO": {
     "fcf": 62.11,
     "growth_long": 0.1948,
     "growth_ttm": 0.0561,
-    "mcap": 1107.77,
-    "netdebt": 95.65,
+    "mcap": 1160.08,
+    "netdebt": 93.43,
     "shares": 3.3901
   },
   "NVS": {
     "fcf": 13.35,
     "growth_long": 0.0245,
     "growth_ttm": 0.0334,
-    "mcap": 215.49,
-    "netdebt": 85.39,
+    "mcap": 232.26,
+    "netdebt": 89.81,
     "rev": 60.25,
     "shares": 2.0348
   },
@@ -1313,8 +1313,8 @@
     "fcf": 3.86,
     "growth_long": 0.0733,
     "growth_ttm": 0.0877,
-    "mcap": 57.37,
-    "netdebt": 7.75,
+    "mcap": 59.89,
+    "netdebt": 8.98,
     "rev": 13.09,
     "shares": 0.2522
   },
@@ -1322,132 +1322,132 @@
     "fcf": 2.44,
     "growth_long": 0.0267,
     "growth_ttm": -0.0314,
-    "mcap": 30.18,
-    "netdebt": 0.97,
-    "rev": 5.96,
-    "shares": 0.3892
+    "mcap": 28.95,
+    "netdebt": 2.07,
+    "rev": 5.97,
+    "shares": 0.3893
   },
   "ORCL": {
-    "fcf": 16.03,
+    "fcf": 16.87,
     "growth_long": 0.1072,
     "growth_ttm": 0.2162,
-    "mcap": 427.56,
+    "mcap": 382.59,
     "netdebt": 98.15,
-    "rev": 68.92,
-    "shares": 2.8805
+    "rev": 72.53,
+    "shares": 3.0315
   },
   "ORLY": {
-    "fcf": 35.87,
+    "fcf": 35.55,
     "growth_long": 0.0891,
     "growth_ttm": 0.0847,
-    "mcap": 69.93,
-    "netdebt": 6.75,
-    "rev": 18.29,
-    "shares": 0.8162
+    "mcap": 72.56,
+    "netdebt": 6.36,
+    "rev": 18.13,
+    "shares": 0.809
   },
   "OXY": {
-    "fcf": 11.71,
+    "fcf": 11.77,
     "growth_long": 0.0393,
     "growth_ttm": 0.0153,
-    "mcap": 60.09,
-    "netdebt": 9.59,
-    "rev": 21.29,
-    "shares": 0.9946
+    "mcap": 63.01,
+    "netdebt": 9.21,
+    "rev": 21.4,
+    "shares": 0.9996
   },
   "PANW": {
-    "fcf": 2.1,
+    "fcf": 2.11,
     "growth_long": 0.2195,
     "growth_ttm": 0.2449,
-    "mcap": 342.56,
-    "netdebt": -0.74,
-    "rev": 11.45,
-    "shares": 0.815
+    "mcap": 298.39,
+    "netdebt": -15.08,
+    "rev": 11.49,
+    "shares": 0.818
   },
   "PDD": {
     "growth_long": 0.4865,
     "growth_ttm": 0.1005,
-    "mcap": 111.4,
-    "netdebt": 505.22,
+    "mcap": 112.05,
+    "netdebt": 506.77,
     "shares": 5.6936
   },
   "PEP": {
-    "fcf": 11.1,
+    "fcf": 11.08,
     "growth_long": 0.0594,
     "growth_ttm": 0.0636,
-    "mcap": 171.94,
-    "netdebt": 41.21,
-    "rev": 98.09,
-    "shares": 1.3649
+    "mcap": 185.1,
+    "netdebt": 39.2,
+    "rev": 97.93,
+    "shares": 1.3627
   },
   "PFE": {
     "fcf": 16.62,
     "growth_long": 0.0848,
     "growth_ttm": -0.0022,
-    "mcap": 161.19,
-    "netdebt": 62.22,
+    "mcap": 171.35,
+    "netdebt": 60.34,
     "rev": 63.7,
-    "shares": 5.6994
+    "shares": 5.6997
   },
   "PG": {
-    "fcf": 16.74,
+    "fcf": 16.7,
     "growth_long": 0.0272,
     "growth_ttm": 0.0326,
-    "mcap": 351.26,
-    "netdebt": 24.2,
-    "rev": 84.0,
-    "shares": 2.3286
+    "mcap": 385.7,
+    "netdebt": 4.52,
+    "rev": 83.79,
+    "shares": 2.3227
   },
   "PGR": {
-    "fcf": 2.98,
+    "fcf": 2.97,
     "growth_long": 0.155,
     "growth_ttm": 0.1049,
-    "mcap": 126.35,
-    "netdebt": 8.21,
-    "rev": 90.58,
-    "shares": 0.5814
+    "mcap": 129.89,
+    "netdebt": 6.95,
+    "rev": 90.29,
+    "shares": 0.5795
   },
   "PLTR": {
     "fcf": 0.2,
     "growth_long": 0.3258,
     "growth_ttm": 0.7892,
-    "mcap": 502.36,
-    "netdebt": -2.03,
-    "rev": 5.75,
-    "shares": 2.3973
+    "mcap": 484.76,
+    "netdebt": -2.04,
+    "rev": 5.76,
+    "shares": 2.4031
   },
   "PM": {
     "fcf": 10.2,
     "growth_long": 0.0721,
     "growth_ttm": 0.0893,
-    "mcap": 313.58,
-    "netdebt": 43.11,
+    "mcap": 311.18,
+    "netdebt": 38.66,
     "rev": 42.51,
     "shares": 1.5586
   },
   "PNC": {
-    "fcf": 6.07,
+    "fcf": 6.05,
     "growth_long": 0.0737,
     "growth_ttm": 0.7227,
-    "mcap": 87.45,
-    "netdebt": 45.31,
-    "rev": 21.72,
-    "shares": 0.399
+    "mcap": 89.43,
+    "netdebt": 43.25,
+    "rev": 21.62,
+    "shares": 0.3972
   },
   "PSX": {
-    "fcf": 8.63,
+    "fcf": 8.59,
     "growth_long": 0.156,
     "growth_ttm": 0.1444,
-    "mcap": 111.0,
-    "netdebt": 16.47,
-    "rev": 151.52,
-    "shares": 0.4009
+    "mcap": 115.34,
+    "netdebt": 16.87,
+    "rev": 150.8,
+    "shares": 0.399
   },
   "PYPL": {
     "fcf": 3.74,
     "growth_long": 0.0911,
     "growth_ttm": 0.0569,
-    "mcap": 47.5,
-    "netdebt": 5.09,
+    "mcap": 49.01,
+    "netdebt": 5.59,
     "rev": 33.1,
     "shares": 0.8555
   },
@@ -1455,80 +1455,80 @@
     "fcf": 8.54,
     "growth_long": 0.153,
     "growth_ttm": 0.0188,
-    "mcap": 187.41,
-    "netdebt": 10.74,
+    "mcap": 186.68,
+    "netdebt": 13.91,
     "rev": 43.29,
     "shares": 1.05
   },
   "RACE": {
-    "fcf": 1.97,
+    "fcf": 1.8,
     "growth_long": 0.1561,
     "growth_ttm": 0.0568,
-    "mcap": 67.46,
-    "netdebt": 1.68,
-    "rev": 8.08,
-    "shares": 0.1939
+    "mcap": 62.58,
+    "netdebt": 7.65,
+    "rev": 7.39,
+    "shares": 0.1773
   },
   "REGN": {
-    "fcf": 4.07,
+    "fcf": 3.99,
     "growth_long": 0.1104,
     "growth_ttm": 0.0929,
-    "mcap": 76.86,
-    "netdebt": 0.25,
-    "rev": 15.36,
-    "shares": 0.1048
+    "mcap": 83.43,
+    "netdebt": -0.23,
+    "rev": 15.08,
+    "shares": 0.1029
   },
   "RIO": {
     "fcf": 10.81,
     "growth_long": 0.0526,
     "growth_ttm": 0.1501,
-    "mcap": 121.24,
-    "netdebt": 51.25,
-    "rev": 61.29,
-    "shares": 1.6269
+    "mcap": 111.1,
+    "netdebt": 53.2,
+    "rev": 61.3,
+    "shares": 1.627
   },
   "RIVN": {
-    "fcf": -7.36,
+    "fcf": -7.37,
     "growth_long": 0.4811,
     "growth_ttm": 0.1421,
-    "mcap": 20.21,
-    "netdebt": 0.95,
+    "mcap": 17.86,
+    "netdebt": 1.13,
     "rev": 6.43,
-    "shares": 1.4474
+    "shares": 1.4479
   },
   "RKLB": {
     "fcf": -0.18,
     "growth_long": 0.7647,
     "growth_ttm": 0.5253,
-    "mcap": 40.82,
-    "netdebt": -2.1,
+    "mcap": 31.32,
+    "netdebt": -1.3,
     "rev": 0.73,
-    "shares": 0.5982
+    "shares": 0.5985
   },
   "ROP": {
     "fcf": 1.83,
     "growth_long": 0.1446,
     "growth_ttm": 0.1088,
-    "mcap": 36.01,
-    "netdebt": 10.95,
+    "mcap": 41.25,
+    "netdebt": 8.9,
     "rev": 8.14,
     "shares": 0.0989
   },
   "RTX": {
-    "fcf": 6.96,
+    "fcf": 6.97,
     "growth_long": 0.0938,
-    "growth_ttm": 0.1184,
-    "mcap": 250.64,
-    "netdebt": 29.08,
-    "rev": 92.32,
-    "shares": 1.3478
+    "growth_ttm": 0.1163,
+    "mcap": 263.36,
+    "netdebt": 20.65,
+    "rev": 94.67,
+    "shares": 1.3494
   },
   "RY": {
     "fcf": 17.13,
     "growth_long": 0.0867,
     "growth_ttm": 1.3531,
-    "mcap": 375.59,
-    "netdebt": 398.17,
+    "mcap": 393.27,
+    "netdebt": 393.39,
     "rev": 55.57,
     "shares": 1.3866
   },
@@ -1536,8 +1536,8 @@
     "fcf": 4.44,
     "growth_long": 0.0612,
     "growth_ttm": 0.0642,
-    "mcap": 215.55,
-    "netdebt": -0.0,
+    "mcap": 243.61,
+    "netdebt": -8.29,
     "rev": 40.62,
     "shares": 1.2285
   },
@@ -1545,44 +1545,44 @@
     "fcf": 5.52,
     "growth_long": 0.096,
     "growth_ttm": 0.0449,
-    "mcap": 103.45,
-    "netdebt": 9.83,
+    "mcap": 113.21,
+    "netdebt": 8.89,
     "rev": 38.21,
     "shares": 1.14
   },
   "SCHW": {
-    "fcf": 6.27,
+    "fcf": 6.24,
     "growth_long": 0.1798,
-    "growth_ttm": 0.112,
-    "mcap": 167.23,
-    "netdebt": 246.22,
-    "rev": 29.66,
-    "shares": 1.7391
+    "growth_ttm": 0.123,
+    "mcap": 159.1,
+    "netdebt": 245.77,
+    "rev": 30.43,
+    "shares": 1.7293
   },
   "SHEL": {
-    "fcf": 33.74,
+    "fcf": 34.63,
     "growth_long": 0.0813,
     "growth_ttm": 0.0904,
-    "mcap": 215.48,
-    "netdebt": 111.4,
-    "rev": 292.68,
-    "shares": 5.5624
+    "mcap": 222.31,
+    "netdebt": 116.8,
+    "rev": 300.36,
+    "shares": 5.7085
   },
   "SHOP": {
-    "fcf": -1.07,
+    "fcf": -1.06,
     "growth_long": 0.3158,
     "growth_ttm": 0.325,
-    "mcap": 219.82,
-    "netdebt": -1.66,
-    "rev": 13.27,
-    "shares": 1.2977
+    "mcap": 220.3,
+    "netdebt": 5.52,
+    "rev": 13.15,
+    "shares": 1.2866
   },
   "SHW": {
     "fcf": 2.84,
     "growth_long": 0.0512,
     "growth_ttm": 0.0576,
-    "mcap": 77.53,
-    "netdebt": 11.78,
+    "mcap": 81.67,
+    "netdebt": 11.68,
     "rev": 24.09,
     "shares": 0.2428
   },
@@ -1590,60 +1590,60 @@
     "fcf": 6.65,
     "growth_long": 0.0863,
     "growth_ttm": 0.025,
-    "mcap": 72.65,
-    "netdebt": 10.05,
+    "mcap": 74.62,
+    "netdebt": 11.05,
     "rev": 35.84,
     "shares": 1.4841
   },
   "SNOW": {
-    "fcf": -0.83,
+    "fcf": -0.84,
     "growth_long": 0.5123,
     "growth_ttm": 0.3204,
-    "mcap": 130.14,
-    "netdebt": 0.58,
-    "rev": 5.39,
-    "shares": 0.3466
+    "mcap": 113.32,
+    "netdebt": 1.11,
+    "rev": 5.49,
+    "shares": 0.3528
   },
   "SNPS": {
     "fcf": 1.53,
     "growth_long": 0.1387,
     "growth_ttm": 0.4633,
-    "mcap": 97.73,
+    "mcap": 83.74,
     "netdebt": 6.43,
     "rev": 9.38,
-    "shares": 0.1915
+    "shares": 0.1916
   },
   "SNY": {
-    "fcf": 11.09,
+    "fcf": 11.01,
     "growth_long": 0.0457,
     "growth_ttm": 0.1342,
-    "mcap": 85.08,
-    "netdebt": 17.14,
-    "rev": 49.27,
-    "shares": 1.2166
+    "mcap": 88.25,
+    "netdebt": 17.15,
+    "rev": 48.91,
+    "shares": 1.2078
   },
   "SO": {
-    "fcf": 7.82,
+    "fcf": 7.98,
     "growth_long": 0.075,
     "growth_ttm": 0.0685,
-    "mcap": 99.13,
-    "netdebt": 72.6,
-    "rev": 28.57,
-    "shares": 1.1273
+    "mcap": 105.18,
+    "netdebt": 71.63,
+    "rev": 29.16,
+    "shares": 1.1504
   },
   "SPCX": {
     "growth_ttm": 0.9194,
-    "mcap": 2206.25,
-    "netdebt": -54.16,
-    "rev": 31.14,
-    "shares": 13.1592
+    "mcap": 2056.18,
+    "netdebt": 51.67,
+    "rev": 12.88,
+    "shares": 13.5728
   },
   "SPGI": {
     "fcf": 3.55,
     "growth_long": 0.1556,
     "growth_ttm": 0.0967,
-    "mcap": 120.23,
-    "netdebt": 11.03,
+    "mcap": 132.58,
+    "netdebt": 8.79,
     "rev": 16.08,
     "shares": 0.2948
   },
@@ -1651,52 +1651,52 @@
     "fcf": -0.64,
     "growth_long": 0.1688,
     "growth_ttm": 0.0903,
-    "mcap": 108.94,
-    "netdebt": -17.16,
-    "rev": 17.83,
-    "shares": 0.2056
+    "mcap": 118.23,
+    "netdebt": -28.48,
+    "rev": 17.82,
+    "shares": 0.2055
   },
   "STLA": {
-    "fcf": 24.71,
+    "fcf": 24.73,
     "growth_long": 0.1211,
     "growth_ttm": 0.3618,
-    "mcap": 15.06,
-    "netdebt": 18.36,
-    "rev": 198.6,
-    "shares": 2.9037
+    "mcap": 14.36,
+    "netdebt": 18.43,
+    "rev": 198.78,
+    "shares": 2.9062
   },
   "STX": {
     "fcf": -0.32,
     "growth_long": 0.0269,
     "growth_ttm": 0.3406,
-    "mcap": 178.05,
-    "netdebt": 1.86,
-    "rev": 11.93,
-    "shares": 0.227
+    "mcap": 151.76,
+    "netdebt": 8.57,
+    "rev": 12.04,
+    "shares": 0.229
   },
   "SWKS": {
-    "fcf": 1.5,
+    "fcf": 2.34,
     "growth_long": 0.0402,
     "growth_ttm": 0.0006,
-    "mcap": 17.95,
-    "netdebt": -0.29,
-    "rev": 3.99,
-    "shares": 0.1505
+    "mcap": 19.24,
+    "netdebt": -0.33,
+    "rev": 6.24,
+    "shares": 0.2352
   },
   "SYK": {
     "fcf": 3.62,
     "growth_long": 0.1184,
     "growth_ttm": 0.0848,
-    "mcap": 106.38,
-    "netdebt": 11.55,
-    "rev": 25.66,
-    "shares": 0.3834
+    "mcap": 115.47,
+    "netdebt": 9.07,
+    "rev": 25.68,
+    "shares": 0.3836
   },
   "T": {
     "fcf": 7.86,
     "growth_long": -0.0256,
     "growth_ttm": 0.0263,
-    "mcap": 151.99,
+    "mcap": 154.18,
     "netdebt": 126.38,
     "rev": 125.52,
     "shares": 6.8524
@@ -1705,43 +1705,43 @@
     "fcf": 265.29,
     "growth_long": 0.0929,
     "growth_ttm": 0.1197,
-    "mcap": 3706.66,
-    "netdebt": -280.68,
-    "shares": 9.0925
+    "mcap": 3548.1,
+    "netdebt": -263.38,
+    "shares": 9.0926
   },
   "TDG": {
-    "fcf": 1.53,
+    "fcf": 1.52,
     "growth_long": 0.1159,
     "growth_ttm": 0.1665,
-    "mcap": 61.25,
-    "netdebt": 30.71,
-    "rev": 9.75,
-    "shares": 0.0559
+    "mcap": 61.76,
+    "netdebt": 31.85,
+    "rev": 9.64,
+    "shares": 0.0553
   },
   "TEAM": {
     "fcf": -0.46,
     "growth_long": 0.2576,
     "growth_ttm": 0.2602,
-    "mcap": 52.35,
-    "netdebt": -0.25,
-    "rev": 6.58,
-    "shares": 0.2538
+    "mcap": 57.67,
+    "netdebt": -1.12,
+    "rev": 6.53,
+    "shares": 0.2519
   },
   "TER": {
     "fcf": 0.58,
     "growth_long": 0.0044,
     "growth_ttm": 0.5787,
-    "mcap": 62.96,
-    "netdebt": -0.35,
-    "rev": 4.43,
-    "shares": 0.1565
+    "mcap": 49.34,
+    "netdebt": 4.69,
+    "rev": 4.42,
+    "shares": 0.1563
   },
   "TFC": {
     "fcf": 6.07,
     "growth_long": 0.1767,
     "growth_ttm": 0.5819,
-    "mcap": 56.33,
-    "netdebt": 59.71,
+    "mcap": 58.55,
+    "netdebt": 65.48,
     "rev": 21.95,
     "shares": 1.2216
   },
@@ -1749,78 +1749,78 @@
     "fcf": 6.28,
     "growth_long": 0.0229,
     "growth_ttm": 0.0195,
-    "mcap": 69.8,
-    "netdebt": 9.95,
-    "rev": 107.14,
-    "shares": 0.4542
+    "mcap": 69.35,
+    "netdebt": 10.49,
+    "rev": 107.16,
+    "shares": 0.4543
   },
   "TJX": {
-    "fcf": 4.79,
+    "fcf": 4.77,
     "growth_long": 0.1344,
     "growth_ttm": 0.0766,
-    "mcap": 152.63,
-    "netdebt": -3.13,
-    "rev": 61.68,
-    "shares": 1.1047
+    "mcap": 160.82,
+    "netdebt": -2.21,
+    "rev": 61.41,
+    "shares": 1.1
   },
   "TM": {
     "fcf": 5471.67,
     "growth_long": 0.1324,
     "growth_ttm": 0.0723,
-    "mcap": 34365.0,
-    "netdebt": 33610.08,
+    "mcap": 36638.63,
+    "netdebt": 33704.82,
     "shares": 14.595
   },
   "TMO": {
-    "fcf": 9.0,
+    "fcf": 8.96,
     "growth_long": 0.067,
     "growth_ttm": 0.0723,
-    "mcap": 243.3,
-    "netdebt": 38.48,
-    "rev": 46.41,
-    "shares": 0.3716
+    "mcap": 256.82,
+    "netdebt": 40.36,
+    "rev": 46.19,
+    "shares": 0.3698
   },
   "TMUS": {
     "fcf": 18.2,
     "growth_long": 0.0524,
     "growth_ttm": 0.0968,
-    "mcap": 159.38,
-    "netdebt": 87.56,
+    "mcap": 167.88,
+    "netdebt": 83.76,
     "rev": 91.36,
     "shares": 1.0727
   },
   "TSLA": {
-    "fcf": 17.17,
+    "fcf": 17.19,
     "growth_long": 0.2463,
     "growth_ttm": 0.1175,
-    "mcap": 1511.49,
-    "netdebt": -34.18,
-    "rev": 115.61,
-    "shares": 3.9496
+    "mcap": 1501.13,
+    "netdebt": -7.7,
+    "rev": 115.7,
+    "shares": 3.9527
   },
   "TSM": {
     "fcf": 1384.63,
     "growth_long": 0.2325,
-    "growth_ttm": 0.3141,
-    "mcap": 66127.54,
-    "netdebt": -2151.77,
+    "growth_ttm": 0.3617,
+    "mcap": 62756.33,
+    "netdebt": -2638.38,
     "shares": 25.9324
   },
   "TTD": {
     "fcf": 0.21,
     "growth_long": 0.2821,
     "growth_ttm": 0.1161,
-    "mcap": 5.71,
-    "netdebt": -1.12,
-    "rev": 2.99,
-    "shares": 0.4701
+    "mcap": 6.06,
+    "netdebt": -1.24,
+    "rev": 3.01,
+    "shares": 0.4728
   },
   "TTE": {
     "fcf": 27.38,
     "growth_long": 0.0878,
     "growth_ttm": 0.0495,
-    "mcap": 173.17,
-    "netdebt": 55.84,
+    "mcap": 180.58,
+    "netdebt": 54.9,
     "rev": 203.18,
     "shares": 2.2817
   },
@@ -1828,53 +1828,53 @@
     "fcf": 8.24,
     "growth_long": 0.041,
     "growth_ttm": 0.1666,
-    "mcap": 259.12,
+    "mcap": 257.42,
     "netdebt": 10.39,
     "rev": 19.31,
     "shares": 0.9133
   },
   "UBER": {
-    "fcf": 1.8,
+    "fcf": 1.81,
     "growth_long": 0.361,
     "growth_ttm": 0.1668,
-    "mcap": 146.06,
-    "netdebt": 7.85,
-    "rev": 54.83,
-    "shares": 2.0356
+    "mcap": 138.97,
+    "netdebt": 6.82,
+    "rev": 55.02,
+    "shares": 2.0426
   },
   "UNH": {
-    "fcf": 25.42,
+    "fcf": 25.13,
     "growth_long": 0.1172,
-    "growth_ttm": 0.0646,
-    "mcap": 340.46,
-    "netdebt": 41.86,
-    "rev": 451.17,
-    "shares": 0.9081
+    "growth_ttm": 0.0333,
+    "mcap": 376.92,
+    "netdebt": 42.7,
+    "rev": 447.47,
+    "shares": 0.8976
   },
   "UNP": {
     "fcf": 8.42,
     "growth_long": 0.0464,
     "growth_ttm": 0.0417,
-    "mcap": 165.35,
-    "netdebt": 28.71,
+    "mcap": 174.69,
+    "netdebt": 26.02,
     "rev": 25.41,
     "shares": 0.5941
   },
   "UPS": {
-    "fcf": 11.75,
+    "fcf": 11.76,
     "growth_long": 0.0094,
     "growth_ttm": -0.0042,
-    "mcap": 80.46,
-    "netdebt": 19.83,
-    "rev": 89.82,
-    "shares": 0.85
+    "mcap": 84.66,
+    "netdebt": 19.75,
+    "rev": 89.91,
+    "shares": 0.8508
   },
   "USB": {
     "fcf": 6.25,
     "growth_long": 0.0458,
     "growth_ttm": 0.8412,
-    "mcap": 88.93,
-    "netdebt": 96.01,
+    "mcap": 92.51,
+    "netdebt": 73.04,
     "rev": 28.14,
     "shares": 1.558
   },
@@ -1882,7 +1882,7 @@
     "fcf": 16.4,
     "growth_long": 0.1286,
     "growth_ttm": 0.1439,
-    "mcap": 719.65,
+    "mcap": 766.39,
     "netdebt": 11.5,
     "rev": 43.76,
     "shares": 1.867
@@ -1891,71 +1891,71 @@
     "fcf": 0.55,
     "growth_long": 0.1688,
     "growth_ttm": 0.165,
-    "mcap": 47.95,
-    "netdebt": -1.81,
-    "rev": 3.4,
-    "shares": 0.1624
+    "mcap": 51.9,
+    "netdebt": -2.8,
+    "rev": 3.39,
+    "shares": 0.1619
   },
   "VRT": {
     "fcf": 0.53,
     "growth_long": 0.1854,
     "growth_ttm": 0.2623,
-    "mcap": 93.47,
-    "netdebt": 0.13,
+    "mcap": 81.68,
+    "netdebt": 0.99,
     "rev": 11.25,
     "shares": 0.385
   },
   "VRTX": {
-    "fcf": 3.54,
+    "fcf": 3.53,
     "growth_long": 0.141,
     "growth_ttm": 0.1023,
-    "mcap": 129.29,
+    "mcap": 132.95,
     "netdebt": -7.85,
-    "rev": 12.52,
-    "shares": 0.2538
+    "rev": 12.5,
+    "shares": 0.2535
   },
   "VZ": {
     "fcf": 38.17,
     "growth_long": 0.015,
     "growth_ttm": 0.0138,
-    "mcap": 170.76,
+    "mcap": 180.98,
     "netdebt": 163.48,
     "rev": 138.36,
-    "shares": 4.155
+    "shares": 4.1548
   },
   "WDAY": {
-    "fcf": 0.19,
+    "fcf": 0.18,
     "growth_long": 0.1721,
     "growth_ttm": 0.1335,
-    "mcap": 39.05,
-    "netdebt": 7.77,
-    "rev": 10.18,
-    "shares": 0.247
+    "mcap": 48.91,
+    "netdebt": 2.68,
+    "rev": 9.94,
+    "shares": 0.241
   },
   "WDC": {
-    "fcf": -1.83,
+    "fcf": -1.99,
     "growth_long": -0.0526,
     "growth_ttm": 0.357,
-    "mcap": 183.73,
-    "netdebt": -46.78,
-    "rev": 11.45,
-    "shares": 0.3447
+    "mcap": 141.4,
+    "netdebt": -0.53,
+    "rev": 12.41,
+    "shares": 0.3736
   },
   "WFC": {
-    "fcf": 18.76,
+    "fcf": 18.62,
     "growth_long": -0.0172,
     "growth_ttm": 0.7275,
-    "mcap": 258.34,
-    "netdebt": 441.84,
-    "rev": 65.7,
-    "shares": 3.024
+    "mcap": 247.39,
+    "netdebt": 432.1,
+    "rev": 65.21,
+    "shares": 3.0016
   },
   "WM": {
     "fcf": 4.3,
     "growth_long": 0.1062,
     "growth_ttm": 0.0717,
-    "mcap": 90.47,
-    "netdebt": 16.37,
+    "mcap": 91.77,
+    "netdebt": 22.8,
     "rev": 25.49,
     "shares": 0.3997
   },
@@ -1963,46 +1963,46 @@
     "fcf": 4.97,
     "growth_long": 0.0913,
     "growth_ttm": 0.0872,
-    "mcap": 86.72,
-    "netdebt": 32.85,
-    "rev": 12.18,
-    "shares": 1.223
+    "mcap": 89.05,
+    "netdebt": 30.0,
+    "rev": 12.19,
+    "shares": 1.2232
   },
   "WMT": {
-    "fcf": 82.25,
+    "fcf": 81.99,
     "growth_long": 0.0499,
     "growth_ttm": 0.0616,
-    "mcap": 884.14,
-    "netdebt": 61.99,
-    "rev": 734.0,
-    "shares": 7.9581
+    "mcap": 934.6,
+    "netdebt": 63.93,
+    "rev": 731.75,
+    "shares": 7.9337
   },
   "XOM": {
-    "fcf": 61.25,
+    "fcf": 60.76,
     "growth_long": 0.1265,
     "growth_ttm": 0.0962,
-    "mcap": 650.63,
-    "netdebt": 73.18,
-    "rev": 358.54,
-    "shares": 4.1449
+    "mcap": 732.29,
+    "netdebt": 31.78,
+    "rev": 355.69,
+    "shares": 4.1119
   },
   "YUM": {
-    "fcf": 1.64,
+    "fcf": 1.62,
     "growth_long": 0.0776,
     "growth_ttm": 0.1028,
-    "mcap": 43.27,
-    "netdebt": 7.91,
-    "rev": 8.68,
-    "shares": 0.2756
+    "mcap": 41.27,
+    "netdebt": 10.64,
+    "rev": 8.59,
+    "shares": 0.2729
   },
   "ZTS": {
-    "fcf": 2.5,
+    "fcf": 2.46,
     "growth_long": 0.0724,
     "growth_ttm": 0.0141,
-    "mcap": 31.87,
-    "netdebt": 6.47,
-    "rev": 9.55,
-    "shares": 0.4192
+    "mcap": 32.9,
+    "netdebt": 7.58,
+    "rev": 9.41,
+    "shares": 0.4132
   },
-  "_fetched_at": "2026-10-12T18:22:45Z"
+  "_fetched_at": "2026-10-22T15:57:10Z"
 }
