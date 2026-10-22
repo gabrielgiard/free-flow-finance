@@ -64,7 +64,7 @@ function viewHome() {
 
   const sectorCards = FF_DATA.sectors.map(s => `
     <div class="sector-card" data-route="sector" data-key="${s.k}">
-      <div class="sc-top"><span class="sc-icon">${SECTOR_ICONS[s.k] || ''}</span><span class="sc-count">${s.count} COS</span></div>
+      <div class="sc-top"><span class="sc-icon">${SECTOR_ICONS[s.k] || ''}</span><span class="sc-count">${s.count} companies</span></div>
       <h3>${s.n}</h3>
       <p>${s.d}</p>
       <div class="sc-stats">
@@ -86,7 +86,7 @@ function viewHome() {
       <td>${c.n}<div class="row-name">${fmtSector(c.sec)}</div></td>
       <td class="num">${FMT.usd(c.price)}</td>
       <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      <td class="num ${upClass(c.upside)}">${FMT.pct(c.upside)}</td>
+      ${upCellHTML(c)}
       <td><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span></td>
     </tr>`).join('');
 
@@ -96,14 +96,15 @@ function viewHome() {
       <td>${c.n}<div class="row-name">${fmtSector(c.sec)}</div></td>
       <td class="num">${FMT.usd(c.price)}</td>
       <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      <td class="num ${upClass(c.upside)}">${FMT.pct(c.upside)}</td>
+      ${upCellHTML(c)}
       <td><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span></td>
     </tr>`).join('');
 
   return `
-  <section class="hero">
+  <section class="hero hero-split">
     ${heroFlowSVG()}
     <div class="wrap">
+      <div class="hsplit">
       <div class="hero-inner">
         <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
         <h1>One model. ${cov.n} companies. Every fair value built the same way.</h1>
@@ -112,6 +113,8 @@ function viewHome() {
           <button class="btn btn-violet" data-route="sector" data-key="semis">${ICN.arrow.replace('currentColor','#fff')} Explore the coverage</button>
           <button class="btn btn-ghost" data-route="methodology">How the model works</button>
         </div>
+      </div>
+      ${heroFeaturedHTML()}
       </div>
       ${(m.price_lag ?? ((m.price_age_days ?? 0) > 3 ? 2 : 0)) >= 2 ? `
       <div class="comp-note" style="border-left-color:var(--red);margin-bottom:18px">
@@ -127,7 +130,6 @@ function viewHome() {
         <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${cov.medianUpside >= 0 ? 'up' : 'down'}">${FMT.pct(cov.medianUpside)}</div></div>
         <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${cov.buys}</div></div>
         <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${cov.sells}</div></div>
-        <div class="snap-item"><div class="snap-label">Strong Buy</div><div class="snap-value up">${cov.strongBuys}</div></div>
       </div>
     </div>
   </section>
@@ -182,7 +184,7 @@ function viewHome() {
         <div class="card">
           <span class="tag tag-lilac" style="margin-bottom:14px;">About the analyst</span>
           <h2 style="font-size:22px;">Built by a 17-year-old who got a couple of stocks for Christmas.</h2>
-          <p>I'm Gabriel Giard, an incoming high school senior. FreeFlow Finance is my attempt to build the kind of coverage a junior analyst at a bank would produce — for anyone to read, whether you know what a discount rate is or you're about to learn.</p>
+          <p>I'm Gabriel Giard, a high school senior. FreeFlow Finance is my attempt to build the kind of coverage a junior analyst at a bank would produce — for anyone to read, whether you know what a discount rate is or you're about to learn.</p>
           <button class="btn btn-ghost" data-route="about">Read the full story ${ICN.arrow}</button>
         </div>
         <div class="card">
@@ -194,6 +196,83 @@ function viewHome() {
       </div>
     </div>
   </section>`;
+}
+
+/* ============================ HOMEPAGE HERO ============================ */
+/* One company's real price chart against our fair value, beside the
+   headline, switchable between the largest names. */
+
+const HF_PICKS = () => [...FF_DATA.companies].filter(c => c.fv > 0)
+  .sort((a, b) => b.mcap - a.mcap).slice(0, 6);
+
+function heroFeaturedBody(c) {
+  return `
+    <div class="hf-head">
+      <div class="hf-id">
+        <span class="hf-t">${escapeHtml(c.t)}</span>
+        <span class="hf-n">${escapeHtml(c.n)}</span>
+      </div>
+      <div class="hf-nums">
+        <span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span>
+        <span class="hf-fv">Fair value <b>${fvStr(c.fv)}</b></span>
+      </div>
+    </div>
+    ${priceChartSVG(c.t, c.fv, c.price)}
+    <a class="hf-open" href="#/company/${encodeURIComponent(c.t)}">Read the full ${escapeHtml(c.n.split(/[ ,]/)[0])} valuation</a>`;
+}
+
+function heroFeaturedHTML() {
+  const picks = HF_PICKS();
+  const first = picks[0];
+  return `
+  <div class="hf" data-hf>
+    <div class="hf-tabs" role="tablist" aria-label="Featured company">
+      ${picks.map((c, i) => `<button type="button" role="tab" data-hf-t="${escapeHtml(c.t)}" aria-selected="${i === 0}">${escapeHtml(c.t)}</button>`).join('')}
+    </div>
+    <div class="hf-body" role="tabpanel">${heroFeaturedBody(first)}</div>
+  </div>`;
+}
+
+function mountHomeHero(root) {
+  const r = root || document;
+  r.querySelectorAll('[data-hf]').forEach(el => {
+    if (el._hf) return; el._hf = true;
+    el.querySelectorAll('[data-hf-t]').forEach(btn => btn.addEventListener('click', () => {
+      const c = byT(btn.dataset.hfT);
+      if (!c) return;
+      el.querySelectorAll('[data-hf-t]').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+      const body = el.querySelector('.hf-body');
+      body.innerHTML = heroFeaturedBody(c);
+      mountPriceCharts(body);
+    }));
+  });
+}
+
+/* Upside with a small bar, for every table: green to the right when the
+   price is below fair value, red to the left when it is above. */
+function upCellHTML(c) {
+  if (!(c.fv > 0)) return `<td class="num up-cell"><span class="ub nm"></span><span class="upside-neg">N/M</span></td>`;
+  const w = Math.min(1, Math.abs(c.upside) / 0.6) * 50;
+  const side = c.upside >= 0 ? `left:50%;width:${w.toFixed(1)}%` : `right:50%;width:${w.toFixed(1)}%`;
+  return `<td class="num up-cell"><span class="ub" aria-hidden="true"><i class="${c.upside >= 0 ? 'pos' : 'neg'}" style="${side}"></i></span><span class="${upClass(c.upside)}">${FMT.pct(c.upside)}</span></td>`;
+}
+
+/* The bear / base / bull range with today's price on it, for the company header. */
+function valuationStripHTML(c) {
+  const vals = [c.fv_bear, c.fv, c.fv_bull].filter(v => v > 0);
+  if (vals.length < 3 || !(c.price > 0)) return '';
+  const lo = Math.min(c.fv_bear, c.price) * 0.92, hi = Math.max(c.fv_bull, c.price) * 1.06;
+  const P = v => ((v - lo) / (hi - lo) * 100).toFixed(2) + '%';
+  const priceInside = c.price >= c.fv_bear && c.price <= c.fv_bull;
+  return `
+  <div class="vstrip" role="img" aria-label="Fair value range: bear ${FMT.usd(c.fv_bear)}, base ${FMT.usd(c.fv)}, bull ${FMT.usd(c.fv_bull)}; price ${FMT.usd(c.price)}">
+    <div class="vs-track">
+      <span class="vs-band" style="left:${P(c.fv_bear)};width:calc(${P(c.fv_bull)} - ${P(c.fv_bear)})"></span>
+      <span class="vs-base" style="left:${P(c.fv)}"></span>
+      <span class="vs-price" style="left:${P(c.price)}"></span>
+    </div>
+    <div class="vs-cap">Bear ${FMT.usd(c.fv_bear, 0)} to bull ${FMT.usd(c.fv_bull, 0)}. The price is ${priceInside ? 'inside' : c.price > c.fv_bull ? 'above' : 'below'} that range.</div>
+  </div>`;
 }
 
 /* ============================== SECTOR ================================ */
@@ -257,7 +336,7 @@ function sectorTableHTML(key) {
       <td>${c.n}</td>
       <td class="num">${FMT.usd(c.price)}</td>
       <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      <td class="num ${upClass(c.upside)}">${FMT.pct(c.upside)}</td>
+      ${upCellHTML(c)}
       <td class="num">${FMT.usdB(c.mcap)}</td>
       <td class="num">${FMT.x(c.ev_sales)}</td>
       <td class="num">${c.ev_fcf > 0 && c.ev_fcf < 999 ? FMT.x(c.ev_fcf) : '—'}</td>
@@ -323,6 +402,7 @@ function viewCompany(ticker) {
             <span class="co-fv">FV ${fvStr(c.fv)}</span>
             <span class="co-up ${upClass(c.upside)}">${FMT.pct(c.upside)}</span>
           </div>
+          ${valuationStripHTML(c)}
           <button type="button" class="co-share" data-share="${c.t}" aria-label="Share ${c.n}">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3M6 7l4-4 4 4M4 11v5h12v-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Share</span>
@@ -791,12 +871,15 @@ function screenerResults() {
   return rows;
 }
 
+const SHORT_SECTOR = { semis: 'Semis & AI hardware', software: 'Software', health: 'Healthcare', financials: 'Financials',
+  consumer: 'Consumer', energy: 'Energy & materials', industrials: 'Industrials', autos: 'Autos',
+  global: 'Global', telecom: 'Telecom & media', frontier: 'Frontier' };
 function screenerTableHTML() {
   const rows = screenerResults();
   if (!rows.length) {
     return `<div class="empty-state">
       <h3 style="color:var(--text);font-size:18px;">No companies match those filters</h3>
-      <p>Try loosening one — the whole universe is only 100 names.</p>
+      <p>Try loosening one: the whole library is ${FF_DATA.companies.length} companies.</p>
     </div>`;
   }
   const cols = [
@@ -812,10 +895,10 @@ function screenerTableHTML() {
     <tr data-route="company" data-ticker="${c.t}">
       <td class="tk">${c.t}</td>
       <td>${c.n}</td>
-      <td style="color:var(--text-dim);font-size:12px">${fmtSector(c.sec)}</td>
+      <td class="sec-cell">${SHORT_SECTOR[c.sec] || fmtSector(c.sec)}</td>
       <td class="num">${FMT.usd(c.price)}</td>
       <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      <td class="num ${upClass(c.upside)}">${FMT.pct(c.upside)}</td>
+      ${upCellHTML(c)}
       <td class="num">${FMT.usdB(c.mcap)}</td>
       <td class="num">${FMT.x(c.ev_sales)}</td>
       <td class="num">${FMT.pctPlain(c.fcf_yield)}</td>

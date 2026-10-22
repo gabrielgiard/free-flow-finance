@@ -125,7 +125,7 @@ def load_cards():
     """What og_cards.py drew, if it ran. Read as plain JSON so this file never
     needs Pillow."""
     try:
-        with open(os.path.join(DOCS, "og", "cards.json")) as f:
+        with open(os.path.join(DOCS, "company", "_cards", "cards.json")) as f:
             return json.load(f)
     except (OSError, ValueError):
         return {}
@@ -133,16 +133,16 @@ def load_cards():
 
 def card_for(t, cards):
     entry = cards.get("cards", {}).get(t)
-    if not entry or not os.path.exists(os.path.join(DOCS, "og", f"{t}.jpg")):
+    if not entry or not os.path.exists(os.path.join(DOCS, "company", "_cards", f"{t}.jpg")):
         return None
-    return f"{SITE_URL}/og/{t}.jpg?v={entry['v']}"
+    return f"{SITE_URL}/company/_cards/{t}.jpg?v={entry['v']}"
 
 
 def site_card(cards):
     entry = cards.get("site")
-    if not entry or not os.path.exists(os.path.join(DOCS, "og", "site.jpg")):
+    if not entry or not os.path.exists(os.path.join(DOCS, "company", "_cards", "site.jpg")):
         return None
-    return (f"{SITE_URL}/og/site.jpg?v={entry['v']}",
+    return (f"{SITE_URL}/company/_cards/site.jpg?v={entry['v']}",
             "FreeFlow Finance: free DCF valuations, one consistent model")
 
 

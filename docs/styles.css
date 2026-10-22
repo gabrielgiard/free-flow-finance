@@ -950,3 +950,246 @@ select.scr-input{ font-family:var(--font-body); cursor:pointer; }
 .pc-fvseg{ font-family:var(--font-mono); font-size:10.5px; fill:#c9a227; opacity:.85;
   paint-order:stroke; stroke:#0d0920; stroke-width:4px; stroke-linejoin:round; }
 .pc-fvseg.old2{ opacity:.55; }
+
+.sec-cell{ color:var(--text-dim); font-size:12px; white-space:nowrap; }
+
+/* ===================== Homepage hero options ===================== */
+/* the stats strip wraps instead of running off the edge */
+.snapshot-strip{ flex-wrap:wrap; }
+.snap-item{ flex:1 1 130px; }
+@media (max-width: 760px){ .snap-item{ border-right:none; border-bottom:1px solid var(--line); flex-basis:45%; } }
+
+/* A: featured company chart beside the headline */
+.hero-split .hsplit{ display:grid; grid-template-columns:minmax(0, 0.9fr) minmax(0, 1.1fr); gap:40px; align-items:center; position:relative; z-index:1; }
+.hero-split .hero-inner{ max-width:none; }
+.hero-split h1{ font-size:clamp(32px, 3.6vw, 46px); }
+.hero-split .lede{ font-size:15.5px; }
+.hf{ position:relative; }
+.hf-tabs{ display:flex; gap:4px; margin:0 0 12px; flex-wrap:wrap; }
+.hf-tabs button{ border:1px solid transparent; background:none; color:var(--text-dim); font:500 12px var(--font-mono);
+  padding:6px 11px; border-radius:999px; cursor:pointer; letter-spacing:.02em; }
+.hf-tabs button:hover{ color:var(--text); }
+.hf-tabs button[aria-selected="true"]{ color:var(--text); border-color:var(--line); background:rgba(255,255,255,.06); }
+.hf-tabs button:focus-visible{ outline:2px solid var(--lilac); outline-offset:1px; }
+.hf-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.hf-id{ display:flex; align-items:baseline; gap:10px; min-width:0; }
+.hf-t{ font-family:var(--font-mono); font-size:13px; color:var(--lilac); }
+.hf-n{ font-family:var(--font-display); font-size:22px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hf-nums{ display:flex; align-items:center; gap:12px; }
+.hf-fv{ font-size:12.5px; color:var(--text-dim); }
+.hf-fv b{ font-family:var(--font-mono); font-weight:500; color:var(--gold-soft); font-size:14px; margin-left:4px; }
+.hf-open{ display:inline-block; margin-top:12px; font-size:13px; color:var(--lilac); text-decoration:none; }
+.hf-open:hover{ text-decoration:underline; text-underline-offset:3px; }
+@media (max-width: 1100px){ .hero-split .hsplit{ grid-template-columns:minmax(0,1fr); gap:30px; } }
+
+.snapshot-strip{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); }
+.snap-item{ min-width:0; padding:16px 22px; }
+.hero-split .eyebrow{ font-size:10.5px; letter-spacing:.14em; }
+@media (max-width: 760px){
+  .snapshot-strip{ grid-template-columns:1fr 1fr; }
+  .snap-item{ border-right:none; border-bottom:1px solid var(--line); }
+  .snap-item:nth-child(odd){ border-right:1px solid var(--line); }
+  .snap-item:nth-last-child(-n+2){ border-bottom:none; }
+}
+
+/* ==========================================================================
+   Clean & fluid (October 2026)
+
+   One quieter surface everywhere instead of stacked glass. The blur behind
+   every card cost a repaint on every scroll frame; without it the page moves
+   smoothly, and hairlines plus space now do the separating. Labels are in
+   sentence case. Motion is kept to what answers the reader: pages ease in,
+   the tab marker slides to the tab you picked, panels cross-fade.
+   ========================================================================== */
+:root{
+  --line:      rgba(255,255,255,.075);
+  --line-soft: rgba(255,255,255,.045);
+  --surface:   rgba(255,255,255,.026);
+  --surface-2: rgba(255,255,255,.05);
+  --surface-3: rgba(255,255,255,.08);
+  --radius:    14px;
+  --radius-lg: 18px;
+  --fluid:     cubic-bezier(.22,.8,.24,1);
+}
+
+/* one soft light source, not five */
+body::before{
+  background:
+    radial-gradient(1200px 680px at 18% -18%, rgba(109,63,192,.28), transparent 62%),
+    radial-gradient(900px 560px at 100% -6%, rgba(88,52,190,.12), transparent 60%),
+    #07060d;
+}
+body::after{ opacity:.1; }
+body{ background-image:none; }
+
+/* surfaces: flat, hairline, no blur */
+.card, .table-wrap, .stat-cell, .sector-card, .snapshot-strip, .pchart, .case,
+.pf-summary, .pf-addcard, .pf-alloc, .pf-empty, .news-card{
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:none !important;
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+}
+.stat-grid{ gap:10px; background:none; border:0; overflow:visible; }
+.stat-cell{ border-radius:var(--radius) !important; }
+.card{ padding:24px; }
+
+/* header and sidebar: lighter, one blur only (the sticky header) */
+.site-header{
+  background:rgba(8,7,16,.72);
+  -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+  box-shadow:none; border-bottom:1px solid var(--line-soft);
+}
+.header-row{ height:62px; }
+.main-nav a, .nav-btn{ transition:color .2s var(--fluid), background .2s var(--fluid); }
+.main-nav a.active{ background:transparent; color:var(--text); box-shadow:inset 0 -2px 0 0 var(--lilac); border-radius:0; }
+.sidebar{
+  background:transparent !important;
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+  border-right:1px solid var(--line-soft);
+}
+.sb-head{ text-transform:none; letter-spacing:0; font-size:11.5px; }
+.sb-link, .sb-co, .sb-group-head{ transition:background .18s var(--fluid), color .18s var(--fluid); }
+.sb-link.active{ background:rgba(185,163,245,.10); }
+.sb-co.active{ background:rgba(185,163,245,.14); color:var(--text); }
+
+/* type: sentence case labels, calmer headings */
+.eyebrow{ text-transform:none; letter-spacing:.02em; font-family:var(--font-body); font-size:13px; color:var(--lilac); }
+.eyebrow::before{ width:18px; }
+.prose h4{ text-transform:none; letter-spacing:0; font-size:17px; font-family:var(--font-display); color:var(--text); margin:30px 0 10px; }
+.snap-label, .sector-card .sc-stat span, .stat-cell .label{ text-transform:none; letter-spacing:0; font-size:12px; }
+.snap-value{ font-size:19px; }
+.section-head h2{ font-size:30px; }
+section{ padding:56px 0; }
+
+/* tables: sentence case headers, airier rows */
+table.ff-table th{
+  font-family:var(--font-body); text-transform:none; letter-spacing:0; font-size:12px; font-weight:500;
+  background:rgba(12,10,22,.92); color:var(--text-dim);
+}
+table.ff-table td{ padding:14px 16px; }
+table.ff-table tbody tr{ transition:background .18s var(--fluid); }
+td.tk{ font-weight:500; }
+
+/* buttons */
+.btn{ transition:transform .18s var(--fluid), background .2s var(--fluid), border-color .2s var(--fluid), box-shadow .2s var(--fluid); }
+.btn:active{ transform:scale(.98); }
+.btn-violet{ background:#6d3fc0; box-shadow:0 6px 20px -8px rgba(109,63,192,.8); }
+.btn-violet:hover{ background:#7a4bd1; }
+.btn-ghost{ background:transparent; }
+.btn-ghost:hover{ background:var(--surface-2); border-color:var(--line); }
+
+/* cards: lift gently, no jumpy borders */
+.sector-card{ transition:transform .35s var(--fluid), background .25s var(--fluid), border-color .25s var(--fluid) !important; }
+.sector-card:hover{ transform:translateY(-3px); background:rgba(255,255,255,.045) !important; border-color:rgba(185,163,245,.25) !important; }
+.sector-card .sc-count{ font-family:var(--font-body); font-size:12px; }
+
+/* company tabs: a marker that slides to the chosen tab */
+.co-tabs{ position:relative; border-bottom:1px solid var(--line-soft); scrollbar-width:none; }
+.co-tabs::-webkit-scrollbar{ display:none; }
+.co-tab{ border-bottom:0 !important; transition:color .2s var(--fluid); }
+.co-ink{ position:absolute; left:0; bottom:-1px; height:2px; width:0; border-radius:2px; background:var(--gold);
+  transition:transform .42s var(--fluid), width .42s var(--fluid); pointer-events:none; }
+.co-panel.active{ animation:ff-fade .32s var(--fluid) both; }
+
+/* pages ease in */
+.route-enter > *{ animation:ff-rise .45s var(--fluid) both; }
+.route-enter > *:nth-child(2){ animation-delay:.04s; }
+.route-enter > *:nth-child(3){ animation-delay:.08s; }
+@keyframes ff-rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+@keyframes ff-fade{ from{ opacity:0; } to{ opacity:1; } }
+@media (prefers-reduced-motion: reduce){
+  .route-enter > *, .co-panel.active{ animation:none; }
+  .co-ink{ transition:none; }
+}
+
+/* homepage */
+.hero{ padding:64px 0 48px; }
+.hero-flow{ opacity:.45; }
+.hf-tabs button{ transition:color .2s var(--fluid), background .2s var(--fluid), border-color .2s var(--fluid); }
+.hf-body{ animation:ff-fade .35s var(--fluid) both; }
+.co-mono{ background:rgba(185,163,245,.08) !important; border:1px solid rgba(185,163,245,.22) !important; box-shadow:none !important; color:var(--lilac) !important; }
+.co-ink{ height:2px; box-shadow:0 0 12px rgba(201,162,39,.45); }
+
+/* ===================== Menu, clean (October 2026) =====================
+   The top bar holds the pages; the sidebar holds only the coverage, as a
+   quiet accordion with one sector open at a time. On phones the drawer adds
+   the page links above the sectors. */
+.layout{ grid-template-columns:236px minmax(0,1fr); }
+.sidebar{ top:62px; height:calc(100vh - 62px); padding:22px 0 40px; }
+.sb-pad{ padding:0 12px; }
+.sb-pages{ display:none; }
+.sb-head{ padding:0 10px; margin:0 0 10px; font-size:12px; color:var(--text-dim); text-transform:none; letter-spacing:0; }
+
+.sb-group{ margin:0; }
+.sb-group-head{ padding:8px 10px; border-radius:10px; font-size:13px; gap:10px; color:var(--text-muted); }
+.sb-group-head:hover{ background:rgba(255,255,255,.04); }
+.sb-group-head .sb-ico{ width:16px; height:16px; opacity:.85; }
+.sb-group-head .sb-n{ font-family:var(--font-body); font-size:11.5px; }
+.sb-group-head .sb-caret{ transition:transform .3s var(--fluid); }
+.sb-group.open .sb-group-head{ color:var(--text); background:rgba(255,255,255,.035); }
+
+/* smooth open and close: animate the row height from 0 to its content */
+.sb-list{ display:grid !important; grid-template-rows:0fr; padding:0; margin:0 0 0 18px; border-left:1px solid var(--line-soft);
+  transition:grid-template-rows .32s var(--fluid), opacity .25s var(--fluid); opacity:0; }
+.sb-group.open .sb-list{ grid-template-rows:1fr; opacity:1; margin-bottom:6px; }
+.sb-inner{ overflow:hidden; min-height:0; padding-left:8px; }
+.sb-group.open .sb-inner{ padding-top:4px; padding-bottom:4px; }
+
+.sb-co{ gap:9px; padding:6px 10px; border-radius:8px; font-size:12.5px; }
+.sb-co .tk{ font-size:11.5px; color:var(--text-muted); width:46px; }
+.sb-co .nm{ font-size:12px; opacity:.7; }
+.sb-co .dot{ width:5px; height:5px; opacity:.85; }
+.sb-co:hover{ background:rgba(255,255,255,.04); }
+.sb-co.active{ background:rgba(185,163,245,.12); color:var(--text); }
+.sb-co.active .tk{ color:var(--lilac); }
+.sb-co.active .nm{ opacity:.9; }
+.sb-all .nm{ opacity:.85; font-size:12px; color:var(--lilac); }
+
+/* top bar */
+.main-nav{ gap:2px; margin-left:18px; }
+.main-nav a, .nav-btn{ font-size:13.5px; padding:8px 12px; }
+.main-nav a.active{ box-shadow:inset 0 -2px 0 0 var(--lilac); }
+.sb-backdrop{ inset:62px 0 0 0; background:rgba(6,5,12,.55); -webkit-backdrop-filter:none; backdrop-filter:none;
+  opacity:0; transition:opacity .3s var(--fluid); display:block; pointer-events:none; }
+.sb-backdrop.show{ opacity:1; pointer-events:auto; }
+
+@media (max-width:1080px){
+  .layout{ grid-template-columns:minmax(0,1fr); }
+  .sidebar{ top:62px; height:calc(100vh - 62px); width:300px; max-width:86vw; background:#0b0916 !important;
+    transition:transform .38s var(--fluid); box-shadow:24px 0 60px -30px rgba(0,0,0,.9); }
+  .sb-pages{ display:block; margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--line-soft); }
+  .sb-pages .sb-link{ padding:10px 10px; font-size:14.5px; border-radius:10px; }
+  .sb-group-head{ font-size:14px; padding:10px; }
+  .sb-co{ padding:8px 10px; }
+}
+@media (min-width:1081px){ .sb-backdrop{ display:none; } }
+@media (prefers-reduced-motion: reduce){ .sb-list, .sb-backdrop{ transition:none; } }
+.layout{ grid-template-columns:256px minmax(0,1fr); }
+@media (max-width:1080px){ .layout{ grid-template-columns:minmax(0,1fr); } }
+
+/* ===================== Fair value bars ===================== */
+/* Tables: upside with a small diverging bar */
+.up-cell{ white-space:nowrap; }
+.up-cell .ub{ position:relative; display:inline-block; width:56px; height:6px; margin-right:10px; vertical-align:middle;
+  border-radius:3px; background:rgba(255,255,255,.06); }
+.up-cell .ub::after{ content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:rgba(255,255,255,.25); }
+.up-cell .ub i{ position:absolute; top:0; bottom:0; border-radius:3px; }
+.up-cell .ub i.pos{ background:var(--green); } .up-cell .ub i.neg{ background:var(--red); }
+@media (max-width: 640px){ .up-cell .ub{ display:none; } }
+
+/* Company header: bear-to-bull range with today's price */
+.vstrip{ width:300px; max-width:100%; margin:14px 0 0 auto; text-align:left; }
+.vs-track{ position:relative; height:8px; border-radius:4px; background:rgba(255,255,255,.06); }
+.vs-band{ position:absolute; top:0; bottom:0; border-radius:4px; background:linear-gradient(90deg, rgba(201,162,39,.28), rgba(201,162,39,.5), rgba(201,162,39,.28)); }
+.vs-base{ position:absolute; top:-4px; width:2px; height:16px; margin-left:-1px; background:#e4c97a; border-radius:1px; }
+.vs-price{ position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:#f1eef8; box-shadow:0 0 0 3px var(--ink); }
+.vs-labels{ position:relative; height:16px; margin-top:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-dim); }
+.vs-labels span{ position:absolute; top:0; transform:translateX(-50%); white-space:nowrap; }
+.vs-labels span:first-child{ transform:none; }
+.vs-labels span.r{ transform:translateX(-100%); }
+.vs-cap{ font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+@media (max-width: 860px){ .vstrip{ margin-left:0; } }
+.up-cell{ font-family:var(--font-mono); }
+.up-cell > span:last-child{ display:inline-block; min-width:62px; text-align:right; }
+.up-cell .upside-pos{ color:var(--green); } .up-cell .upside-neg{ color:var(--red); }

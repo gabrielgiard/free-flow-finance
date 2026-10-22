@@ -360,13 +360,15 @@ function pcSeries(key) {
   return out.closes.length ? out : null;
 }
 
-/* Fair value over time (docs/fv-history.js): a step series per company plus
+/* Fair value over time (FF_DATA.fvh, written by fv_history.py): a step series per company plus
    the dates the model itself was revised. Returns null when there is none. */
 function pcFvHistory(key) {
-  if (typeof FF_FV_HISTORY === 'undefined' || !FF_FV_HISTORY || !FF_FV_HISTORY.s) return null;
-  const s = FF_FV_HISTORY.s[key];
+  const H = (typeof FF_DATA !== 'undefined' && FF_DATA.fvh && FF_DATA.fvh.s) ? FF_DATA.fvh
+    : (typeof FF_FV_HISTORY !== 'undefined' && FF_FV_HISTORY && FF_FV_HISTORY.s) ? FF_FV_HISTORY : null;
+  if (!H) return null;
+  const s = H.s[key];
   if (!s || !Array.isArray(s.p) || !s.p.length) return null;
-  const updates = (FF_FV_HISTORY.updates || [])
+  const updates = (H.updates || [])
     .map(u => ({ n: u.n, date: pcParseISO(u.d), label: u.label || '' }))
     .filter(u => u.date).sort((a, b) => a.date - b.date);
   const verAt = d => updates.filter(u => u.date <= d).length;
@@ -580,8 +582,15 @@ function pcRender(fig) {
       const hits = (yA, yB) => closes.reduce((k, c, i) =>
         k + (X(i) >= x2 - tw && X(i) <= x2 && Y(c) >= yA && Y(c) <= yB ? 1 : 0), 0);
       const canAbove = y - 20 > padT, canBelow = y + 20 < H - padB;
-      const above = canAbove && (!canBelow || hits(y - 20, y) <= hits(y, y + 20));
-      labelLayer += `<text x="${(x2 - 5).toFixed(1)}" y="${(above ? y - 7 : y + 15).toFixed(1)}" text-anchor="end" class="pc-fvseg${v === latest - 1 ? '' : ' old2'}">${txt}</text>`;
+      // never print over today's fair-value label at the right edge
+      const fvTxtW = (W < 560 ? 18 : 30) * 6.6, fy0 = showFV ? Y(fv) : -1e9;
+      const fvTop = fy0 > padT + 22 ? fy0 - 20 : fy0 + 4;
+      const clash = ty => showFV && x2 - 5 > plotR - 6 - fvTxtW && x2 - 5 - tw < plotR - 6
+        && ty - 12 < fvTop + 16 && ty > fvTop;
+      let order = (canAbove && (!canBelow || hits(y - 20, y) <= hits(y, y + 20))) ? [y - 7, y + 15] : [y + 15, y - 7];
+      order = order.filter(ty => (ty < y ? canAbove : canBelow) && !clash(ty));
+      if (!order.length) return;                               // nowhere clean to put it
+      labelLayer += `<text x="${(x2 - 5).toFixed(1)}" y="${order[0].toFixed(1)}" text-anchor="end" class="pc-fvseg${v === latest - 1 ? '' : ' old2'}">${txt}</text>`;
     });
     // model-update markers; labels drop to a second row when two are close
     let lastEnd = -1e9, row = 0;

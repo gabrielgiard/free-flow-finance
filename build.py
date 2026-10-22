@@ -1079,6 +1079,17 @@ def main():
     # real entry at a time from here on. Never invent a past entry.
     log_rating_changes(target, out)
 
+    # Fair value over time, for the step line on the price charts. Read from
+    # the data.js about to be replaced, then carried inside the new one.
+    try:
+        import fv_history
+        hist, note = fv_history.record(out, meta)
+        data["fvh"] = hist
+        print(note)
+    except Exception as e:
+        print(f"Fair value history skipped ({type(e).__name__}: {e}) — "
+              f"charts show today's fair value only")
+
     with open(target, "w") as f:
         f.write("const FF_DATA = ")
         json.dump(data, f, separators=(",", ":"))
@@ -1099,17 +1110,19 @@ def main():
     # Static, indexable pages. The app routes on the URL fragment, which search
     # engines treat as a single page — so without these, all 234 write-ups are
     # invisible to anyone searching for a company by name.
-    # Fair value over time, for the step line on the price charts.
-    try:
-        import fv_history
-        print(fv_history.record(data["companies"], data.get("meta", {})))
-    except Exception as e:
-        print(f"Fair value history skipped ({type(e).__name__}: {e}) — "
-              f"charts show today's fair value only")
 
     # Preview cards first: the static pages point at them. Pillow missing or a
     # drawing error only costs the pictures on shared links, never the build.
     try:
+        try:
+            import PIL  # noqa: F401
+        except ImportError:
+            # On GitHub, install the image library ourselves rather than rely
+            # on the workflow file having the install step.
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                import subprocess
+                subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "pillow"],
+                               check=False, timeout=180)
         import og_cards
         og_cards.generate(data)
     except Exception as e:

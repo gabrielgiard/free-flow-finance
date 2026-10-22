@@ -2,7 +2,10 @@
 
 WHAT IS RECORDED
 
-docs/fv-history.js holds, per company, the fair value each time it moved by
+The history travels inside docs/data.js (as FF_DATA.fvh), which every
+version of the daily workflow already saves -- it used to be a separate
+docs/fv-history.js, which an older workflow file never committed, so the
+history silently vanished after every run. It holds, per company, the fair value each time it moved by
 1% or more (a step series: the value holds until the next point), plus a short
 list of MODEL UPDATES -- the dates the model itself was revised by hand. The
 chart draws the fair value as steps and marks each update, so a visitor can
@@ -11,9 +14,10 @@ tell "the price moved" apart from "the model was revised".
 MODEL UPDATES
 
 Add one line to MODEL_UPDATES when you revise the model (new assumptions, a
-methodology change, a big review). The next build stamps it with that day's
-date and it becomes "update 2", "update 3"... Never edit or remove old lines:
-they are history.
+methodology change, a big review): (date it went live, what changed). Leave
+the date as None and the next build stamps it with that day. On the charts
+the original model is "model update 1" and each line here adds one. Never
+edit or remove old lines: they are history.
 
 WHERE THE PAST COMES FROM
 
@@ -30,11 +34,11 @@ import os
 import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PATH = os.path.join(HERE, "docs", "fv-history.js")
-PREFIX = "var FF_FV_HISTORY = "
+DATA_PATH = os.path.join(HERE, "docs", "data.js")
+LEGACY_PATH = os.path.join(HERE, "docs", "fv-history.js")
 
 MODEL_UPDATES = [
-    "October 2026 review: corrected share counts, splits and net debt; every write-up refreshed",
+    ("2026-10-12", "October 2026 review: corrected share counts, splits and net debt; every write-up refreshed"),
 ]
 
 MOVE = 0.01          # record a new point when fair value moves 1% or more
@@ -74,14 +78,23 @@ def _moved(old, new):
     return old > 0 and abs(new / old - 1) >= MOVE
 
 
+def _valid(h):
+    return isinstance(h, dict) and isinstance(h.get("s"), dict) and isinstance(h.get("updates", []), list)
+
+
 def load():
-    try:
-        raw = open(PATH).read()
-        body = json.loads(raw[raw.index("{"):].rstrip().rstrip(";"))
-        if isinstance(body, dict) and "s" in body:
-            return body
-    except (OSError, ValueError):
-        pass
+    """The history the site last published: inside data.js, or the old
+    standalone file if that is all there is. None means start fresh."""
+    for path, pick in ((DATA_PATH, lambda b: b.get("fvh")), (LEGACY_PATH, lambda b: b)):
+        try:
+            raw = open(path).read()
+            body = json.loads(raw[raw.index("{"):].rstrip().rstrip(";"))
+            h = pick(body) if isinstance(body, dict) else None
+            if _valid(h):
+                h.setdefault("updates", [])
+                return h
+        except (OSError, ValueError):
+            continue
     return None
 
 
@@ -89,7 +102,7 @@ def _git(*args):
     return subprocess.run(["git", *args], cwd=HERE, capture_output=True, text=True, timeout=120)
 
 
-def backfill():
+def backfill(pin_days=()):
     """Rebuild the record from every past published docs/data.js in git."""
     hist = {"updates": [], "s": {}, "to": None}
     try:
@@ -111,26 +124,32 @@ def backfill():
             by_day[day] = {c["t"]: _fv(c) for c in data.get("companies", []) if "t" in c}
         except (ValueError, KeyError, subprocess.SubprocessError):
             continue
-    for day in sorted(by_day):
+    days = sorted(by_day)
+    # an update starts a segment on the first published day on or after it
+    pin_days = {next((x for x in days if x >= d), None) for d in pin_days} - {None}
+    for day in days:
         for t, v in by_day[day].items():
-            _add(hist["s"].setdefault(t, {}), day, v)
+            _add(hist["s"].setdefault(t, {}), day, v, pin=day in pin_days)
         hist["to"] = day
     return hist, len(by_day)
 
 
 def record(companies, meta):
-    """Add today's fair values. Returns a one-line summary for the build log."""
+    """Add today's fair values. Returns (history, one-line summary); the build
+    puts the history into data.js. Call it BEFORE data.js is overwritten, so
+    the previous history can be read from it."""
     day = _iso(meta.get("price_date") or dt.date.today())
     hist = load()
     note = ""
     if hist is None:
-        hist, days = backfill()
+        hist, days = backfill({d for d, _ in MODEL_UPDATES if d and d <= day})
         note = f" (rebuilt {days} past days from git history)" if days else " (starting today)"
 
     # Stamp any model update this build is the first to see.
     while len(hist["updates"]) < len(MODEL_UPDATES):
         n = len(hist["updates"]) + 1
-        hist["updates"].append({"n": n, "d": day, "label": MODEL_UPDATES[n - 1]})
+        d, label = MODEL_UPDATES[n - 1]
+        hist["updates"].append({"n": n, "d": d if d and d <= day else day, "label": label})
     new_update = any(u["d"] == day for u in hist["updates"])
 
     live = set()
@@ -151,10 +170,6 @@ def record(companies, meta):
             s["p"] = [[cutoff, old[-1][1]]] + [p for p in pts if p[0] >= cutoff]
     hist["to"] = max(hist.get("to") or day, day)
 
-    tmp = PATH + ".tmp"
-    with open(tmp, "w") as f:
-        f.write(PREFIX + json.dumps(hist, separators=(",", ":")) + ";\n")
-    os.replace(tmp, PATH)
     pts = sum(len(s.get("p", [])) for s in hist["s"].values())
-    return (f"Fair value history: {len(hist['s'])} companies, {pts} points, "
-            f"{len(hist['updates'])} model update(s){note}")
+    return hist, (f"Fair value history: {len(hist['s'])} companies, {pts} points, "
+                  f"{len(hist['updates'])} model update(s){note}")

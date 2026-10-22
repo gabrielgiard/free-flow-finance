@@ -341,13 +341,13 @@ check("a dropped company's card is deleted", not os.path.exists(jpg("MSTR"))
 cards = sp.load_cards()
 page = sp.company_page(mini["companies"][0], mini["sectors"], {c["t"]: c for c in mini["companies"]}, cards)
 check("company page names its card, with a version so apps refetch",
-      'og:image" content="https://free-flow-finance.pages.dev/og/NVDA.jpg?v=2026-10-02"' in page)
+      'og:image" content="https://free-flow-finance.pages.dev/company/_cards/NVDA.jpg?v=2026-10-02"' in page)
 check("company page has the twitter image too", 'twitter:image' in page)
 check("shared case links are forwarded into the app", "location.replace('../../#/company/NVDA'" in page)
 page_none = sp.company_page(pick["MSTR"], mini["sectors"], {}, cards)
 check("no card -> no broken image tag", "og:image" not in page_none)
 check("seo_pages never needs Pillow", "PIL" not in open("seo_pages.py").read())
-check("homepage names the site card", "og/site.jpg" in open("docs/index.html").read())
+check("homepage names the site card", "company/_cards/site.jpg" in open("docs/index.html").read())
 
 
 # ------------------------------------------------------------------------
@@ -392,48 +392,65 @@ import fv_history as fh2  # noqa: E402
 def fake(day, fvs):
     return {"meta": {"price_date": day},
             "companies": [{"t": t, "fv": v} for t, v in fvs.items()]}
+def run(cos, day):
+    """One build: record, then publish data.js carrying the history, as build.py does."""
+    hist, msg = fh2.record(cos, {"price_date": day})
+    open("docs/data.js", "w").write("const FF_DATA = " + json.dumps(
+        {"meta": {"price_date": day}, "companies": cos, "fvh": hist}) + ";")
+    return msg
 def pts(t):
     return fh2.load()["s"][t]["p"]
 
 # Rebuild the past from git, the way the first run on GitHub will.
-if os.path.exists(fh2.PATH):
-    os.remove(fh2.PATH)
+for f in (fh2.LEGACY_PATH, fh2.DATA_PATH):
+    if os.path.exists(f):
+        os.remove(f)
 g = lambda *a: subprocess.run(["git", *a], cwd=work, capture_output=True, text=True)
 g("init", "-q"); g("config", "user.email", "t@t"); g("config", "user.name", "t")
 for day, fvs in (("2026-09-01", {"AAA": 100.0, "BBB": 50.0}),
                  ("2026-09-02", {"AAA": 100.4, "BBB": 50.0}),      # <1%: no new point
-                 ("2026-09-03", {"AAA": 110.0, "BBB": -5.0})):     # BBB goes N/M
+                 ("2026-09-03", {"AAA": 110.0, "BBB": -5.0}),      # BBB goes N/M
+                 ("2026-09-04", {"AAA": 110.3, "BBB": -5.0})):     # model revised this day
     open("docs/data.js", "w").write("const FF_DATA = " + json.dumps(fake(day, fvs)) + ";")
     g("add", "docs/data.js"); g("commit", "-qm", day)
 saved_updates = fh2.MODEL_UPDATES
-fh2.MODEL_UPDATES = ["first revision"]
-msg = fh2.record([{"t": "AAA", "fv": 111.0}, {"t": "BBB", "fv": 52.0}], {"price_date": "2026-09-04"})
-check("first run rebuilds the past from git history", "rebuilt 3 past days" in msg, msg)
-check("small moves don't add points; real moves do",
+fh2.MODEL_UPDATES = [("2026-09-04", "first revision")]
+msg = run([{"t": "AAA", "fv": 111.0}, {"t": "BBB", "fv": 52.0}], "2026-09-07")
+check("first run rebuilds the past from git history", "rebuilt 4 past days" in msg, msg)
+check("small moves don't add points; real moves do; the update day starts a segment",
       [p[0] for p in pts("AAA")] == ["2026-09-01", "2026-09-03", "2026-09-04"], pts("AAA"))
 check("a fair value that stops being meaningful is recorded as 0", [p[1] for p in pts("BBB")][:2] == [50.0, 0.0], pts("BBB"))
 u = fh2.load()["updates"]
-check("a new model update is stamped with the day it goes live",
+check("an update keeps the date it went live, even when first recorded later",
       u == [{"n": 1, "d": "2026-09-04", "label": "first revision"}], u)
-check("every company starts a segment on the update day", pts("AAA")[-1] == ["2026-09-04", 111.0])
 
-fh2.record([{"t": "AAA", "fv": 111.5}], {"price_date": "2026-09-05"})
-check("after the update, small moves again add nothing", pts("AAA")[-1][0] == "2026-09-04")
+run([{"t": "AAA", "fv": 111.5}], "2026-09-08")
+check("the history survives from one build to the next inside data.js",
+      fh2.load() is not None and pts("AAA")[0][0] == "2026-09-01")
 check("companies that left coverage are dropped", "BBB" not in fh2.load()["s"])
-fh2.MODEL_UPDATES = ["first revision", "second revision"]
-fh2.record([{"t": "AAA", "fv": 111.5}], {"price_date": "2026-09-08"})
+fh2.MODEL_UPDATES = [("2026-09-04", "first revision"), (None, "second revision")]
+run([{"t": "AAA", "fv": 111.5}], "2026-09-09")
 u = fh2.load()["updates"]
-check("adding a line to MODEL_UPDATES creates update 2", [x["n"] for x in u] == [1, 2] and u[1]["d"] == "2026-09-08")
+check("a new line with no date is stamped with the day it first builds",
+      [x["n"] for x in u] == [1, 2] and u[1]["d"] == "2026-09-09")
+check("every company starts a segment on that day", pts("AAA")[-1] == ["2026-09-09", 111.5])
 check("update 1 keeps its original date", u[0]["d"] == "2026-09-04")
-fh2.record([{"t": "AAA", "fv": 112.0}], {"price_date": "2026-09-08"})
+run([{"t": "AAA", "fv": 112.0}], "2026-09-09")
 check("a second build the same day doesn't duplicate points",
-      [p[0] for p in pts("AAA")].count("2026-09-08") == 1)
-raw = open(fh2.PATH).read()
-check("history file is valid for the browser", raw.startswith("var FF_FV_HISTORY = {") and raw.rstrip().endswith(";"))
+      [p[0] for p in pts("AAA")].count("2026-09-09") == 1)
+
+# a site that only has the old standalone file carries it over
+legacy = fh2.load()
+os.remove(fh2.DATA_PATH)
+open(fh2.LEGACY_PATH, "w").write("var FF_FV_HISTORY = " + json.dumps(legacy) + ";")
+check("the old standalone history file is picked up", fh2.load() == legacy)
+os.remove(fh2.LEGACY_PATH)
 fh2.MODEL_UPDATES = saved_updates
-check("the page loads the history file", 'src="fv-history.js"' in open("docs/index.html").read())
-check("the workflow commits the history file",
-      "docs/fv-history.js" in open(".github/workflows/update-prices.yml").read())
+check("the charts read the history from FF_DATA", "FF_DATA.fvh" in open("docs/charts.js").read())
+check("the workflow commits data.js, so the history is published",
+      "docs/data.js" in open(".github/workflows/update-prices.yml").read())
+check("the real update list is well formed",
+      all(isinstance(x, tuple) and len(x) == 2 for x in fh2.MODEL_UPDATES))
 
 
 # ------------------------------------------------------------------------

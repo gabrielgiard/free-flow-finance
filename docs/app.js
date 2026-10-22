@@ -27,6 +27,7 @@ function renderRoute() {
   else { html = view404(); }
 
   APP.innerHTML = html;
+  APP.classList.remove('route-enter'); void APP.offsetWidth; APP.classList.add('route-enter');
   // 'instant' overrides the CSS smooth-scroll, which would otherwise animate
   // on every navigation and look sluggish.
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -36,6 +37,8 @@ function renderRoute() {
   mountPriceCharts(APP);
   mountCasePanels(APP);
   mountPortfolio(APP);
+  mountHomeHero(APP);
+  mountTabInk(APP);
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -86,46 +89,46 @@ function buildSidebar() {
           <span class="sb-n">${s.count}</span>
           <svg class="sb-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
         </button>
-        <div class="sb-list">
-          <div class="sb-co" data-route="sector" data-key="${s.k}" style="opacity:.8">
-            <span class="dot" style="background:var(--lilac)"></span>
-            <span class="tk">ALL</span><span class="nm">Sector overview</span>
+        <div class="sb-list"><div class="sb-inner">
+          <div class="sb-co sb-all" data-route="sector" data-key="${s.k}" data-co="sector:${s.k}">
+            <span class="nm">Sector overview</span>
           </div>
           ${cos}
-        </div>
+        </div></div>
       </div>`;
   }).join('');
 
+  // Page links live in the top bar; the drawer repeats them only on phones,
+  // where the top bar has no room. The rest of the sidebar is the coverage.
   el.innerHTML = `
     <div class="sb-pad">
-      <div class="sb-head">Browse</div>
+      <nav class="sb-pages" aria-label="Pages">
       <div class="sb-link" data-route="home" data-navlink="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
         Home
       </div>
-      <div class="sb-link" data-route="methodology" data-navlink="methodology">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
-        Methodology
-      </div>
-      <div class="sb-link" data-route="track-record" data-navlink="track-record">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 9 4-18 3 9h4"/></svg>
-        Track Record
-      </div>
-      <div class="sb-head">Tools</div>
       <div class="sb-link" data-route="screener" data-navlink="screener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
-        Stock Screener
+        Screener
       </div>
       <div class="sb-link" data-route="portfolio" data-navlink="portfolio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 019.5 4h5A1.5 1.5 0 0116 5.5V7M3 12h18"/></svg>
         Portfolio
       </div>
-      <div class="sb-head">More</div>
+      <div class="sb-link" data-route="track-record" data-navlink="track-record">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 9 4-18 3 9h4"/></svg>
+        Track record
+      </div>
+      <div class="sb-link" data-route="methodology" data-navlink="methodology">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+        Methodology
+      </div>
       <div class="sb-link" data-route="about" data-navlink="about">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/></svg>
         About
       </div>
-      <div class="sb-head">Coverage · ${FF_DATA.companies.length} companies</div>
+      </nav>
+      <div class="sb-head">Sectors</div>
       ${groups}
     </div>`;
 }
@@ -135,7 +138,7 @@ function updateSidebarActive(route, arg) {
   document.querySelectorAll('.sb-link').forEach(l =>
     l.classList.toggle('active', l.dataset.navlink === route));
   document.querySelectorAll('.sb-co').forEach(c =>
-    c.classList.toggle('active', !!arg && c.dataset.co === arg));
+    c.classList.toggle('active', !!arg && (c.dataset.co === arg || (route === 'sector' && c.dataset.co === 'sector:' + arg))));
 
   let openKey = null;
   if (route === 'company' && arg) {
@@ -146,17 +149,23 @@ function updateSidebarActive(route, arg) {
   }
   if (openKey) {
     const g = document.querySelector(`.sb-group[data-group="${openKey}"]`);
+    document.querySelectorAll('.sb-group.open').forEach(o => {
+      if (o !== g) { o.classList.remove('open'); o.querySelector('.sb-group-head')?.setAttribute('aria-expanded', 'false'); }
+    });
     if (g && !g.classList.contains('open')) {
       g.classList.add('open');
       g.querySelector('.sb-group-head')?.setAttribute('aria-expanded', 'true');
     }
     // bring the active row into view without yanking the whole page
-    const active = document.querySelector('.sb-co.active');
-    if (active) {
+    // after the group has finished opening, so the row's position is final
+    setTimeout(() => {
+      const active = document.querySelector('.sb-co.active');
       const sb = document.getElementById('sidebar');
-      const top = active.offsetTop - sb.clientHeight / 2;
-      sb.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
-    }
+      if (!active || !sb) return;
+      const r = active.getBoundingClientRect(), box = sb.getBoundingClientRect();
+      if (r.top < box.top + 40 || r.bottom > box.bottom - 40)
+        sb.scrollBy({ top: r.top - box.top - sb.clientHeight / 2, behavior: 'smooth' });
+    }, 360);
   }
 }
 
@@ -246,6 +255,7 @@ document.addEventListener('click', (e) => {
     STATE.activeTab[ticker] = tab;
     document.querySelectorAll('.co-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.co-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    moveTabInk(tabEl.closest('.co-tabs'));
     return;
   }
   const sortEl = e.target.closest('[data-sort-col]');
@@ -314,6 +324,9 @@ document.addEventListener('click', (e) => {
   if (grpEl) {
     const g = grpEl.closest('.sb-group');
     const nowOpen = !g.classList.contains('open');
+    if (nowOpen) document.querySelectorAll('.sb-group.open').forEach(o => {
+      if (o !== g) { o.classList.remove('open'); o.querySelector('.sb-group-head')?.setAttribute('aria-expanded', 'false'); }
+    });
     g.classList.toggle('open', nowOpen);
     grpEl.setAttribute('aria-expanded', String(nowOpen));
     return;
@@ -437,3 +450,27 @@ document.addEventListener('click', async e => {
     window.prompt('Copy this link:', url);
   }
 });
+
+
+/* The gold marker under the company tabs slides to the chosen tab. */
+function moveTabInk(tabs) {
+  if (!tabs) return;
+  let ink = tabs.querySelector('.co-ink');
+  if (!ink) { ink = document.createElement('span'); ink.className = 'co-ink'; tabs.appendChild(ink); }
+  const on = tabs.querySelector('.co-tab.active');
+  if (!on) { ink.style.width = '0'; return; }
+  ink.style.width = on.offsetWidth + 'px';
+  ink.style.transform = `translateX(${on.offsetLeft}px)`;
+}
+function mountTabInk(root) {
+  (root || document).querySelectorAll('.co-tabs').forEach(tabs => {
+    const ink = document.createElement('span');
+    ink.className = 'co-ink';
+    ink.style.transition = 'none';             // land in place on first paint
+    tabs.appendChild(ink);
+    moveTabInk(tabs);
+    requestAnimationFrame(() => { ink.style.transition = ''; });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => moveTabInk(tabs));
+  });
+}
+window.addEventListener('resize', () => document.querySelectorAll('.co-tabs').forEach(moveTabInk));

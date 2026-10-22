@@ -4,7 +4,8 @@ WHAT THIS DOES
 
 iMessage, WhatsApp, LinkedIn, X and Discord show a link with a picture when
 the page names one in an og:image tag. This script draws that picture for
-every company (1200x630, the size all of them expect) into docs/og/, plus one
+every company (1200x630, the size all of them expect) into docs/company/_cards/,
+plus one
 for the homepage. seo_pages.py then points each company page at its card.
 
 WHY CARDS ARE NOT REDRAWN EVERY DAY
@@ -21,7 +22,7 @@ has really changed:
 Every card carries the date its numbers are from, so a card is never wrong
 about its own numbers, only up to a few days older than the site.
 
-docs/og/cards.json remembers what each card shows. Its "v" field goes into the
+docs/company/_cards/cards.json remembers what each card shows. Its "v" field goes into the
 image address (NVDA.jpg?v=2026-10-01) so apps fetch the new picture when a
 card is redrawn instead of showing the one they cached.
 
@@ -37,7 +38,10 @@ import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT_DIR = os.path.join(HERE, "docs", "og")
+# Inside docs/company because every version of the daily workflow already
+# saves that folder; the cards' first home, docs/og, needed a workflow change
+# that never reached GitHub, so the cards were drawn and then thrown away.
+OUT_DIR = os.path.join(HERE, "docs", "company", "_cards")
 FONT_DIR = os.path.join(HERE, "og_fonts")
 MANIFEST = os.path.join(OUT_DIR, "cards.json")
 
