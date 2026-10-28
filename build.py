@@ -135,8 +135,11 @@ def load_companies():
     from companies.expansion import EXPANSION
     from companies.expansion2 import EXPANSION2
     from companies.expansion3 import EXPANSION3
+    from companies.expansion4 import EXPANSION4
+    from companies.expansion5 import EXPANSION5
     companies = (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
-                 + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3)
+                 + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3
+                 + EXPANSION4 + EXPANSION5)
     # Recent developments (dated, sourced headlines) for the Thesis tab.
     try:
         from companies.news import NEWS
@@ -826,7 +829,7 @@ def warn_implausible(companies):
         # Post-split, very few large caps trade above $900. A high price here
         # is the single best signal that a split happened and the stored share
         # count was never updated to match.
-        if c["price"] > 900 and c["t"] not in ("BKNG", "ASML"):
+        if c["price"] > 900 and c["t"] not in ("BKNG", "ASML", "MELI", "AZO", "FICO"):
             warnings.append(f"{c['t']:6s} ${c['price']:>9,.2f}  "
                             f"mcap ${mcap:>7,.0f}B  — high price, verify not pre-split")
     return warnings
