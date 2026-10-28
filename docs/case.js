@@ -174,13 +174,13 @@ function caseHTML(c) {
       </div>
       <div class="case-result" aria-live="polite">
         <div class="case-fv-label">Your fair value</div>
-        <div class="case-fv">${fvStr(c.fv)}</div>
+        <div class="case-fv">${fvStr(dcfOf(c).fv)}</div>
         <div class="case-verdict">
-          <span class="rating-pill ${ratingClass(c.rating)} case-rating">${c.rating}</span>
-          <span class="case-up ${upClass(c.upside)}">${FMT.pct(c.upside)}</span>
+          <span class="rating-pill ${ratingClass(dcfOf(c).rating)} case-rating">${dcfOf(c).rating}</span>
+          <span class="case-up ${upClass(dcfOf(c).upside)}">${FMT.pct(dcfOf(c).upside)}</span>
           <span class="case-vsprice">vs ${FMT.usd(c.price)}</span>
         </div>
-        <div class="case-model">Model's fair value <b>${fvStr(c.fv)}</b> · official rating <b>${c.rating}</b></div>
+        <div class="case-model">Model's fair value <b>${fvStr(dcfOf(c).fv)}</b> · official rating <b>${dcfOf(c).rating}</b></div>
         <p class="case-why"></p>
         <p class="case-market"></p>
         <p class="case-warn" hidden></p>
@@ -309,9 +309,9 @@ function caseUpdate(sec) {
     why.textContent = 'These are the model\'s own assumptions — the same numbers behind the site\'s rating.';
   } else {
     const parts = caseAttribution(c, s, model)
-      .filter(p => Math.abs(p.dv) >= Math.max(0.005, Math.abs(fv - c.fv) * 0.08))
+      .filter(p => Math.abs(p.dv) >= Math.max(0.005, Math.abs(fv - dcfOf(c).fv) * 0.08))
       .sort((a, b) => Math.abs(b.dv) - Math.abs(a.dv)).slice(0, 3);
-    const total = fv - c.fv;
+    const total = fv - dcfOf(c).fv;
     why.textContent = parts.length
       ? `Versus the model, you assume ${parts.map(p =>
           `${p.text} (${p.dv >= 0 ? '+' : '−'}${FMT.usd(Math.abs(p.dv), 0)} a share)`).join(', ')
@@ -365,7 +365,7 @@ function caseUpdate(sec) {
   // showing the model's own fair value.
   const scope = sec.closest('.co-panel') || document;
   const fig = scope.querySelector(`.pchart[data-key="${CSS.escape(c.t)}"]`);
-  if (fig && typeof pcSetFV === 'function') pcSetFV(fig, meaningful ? fv : 0, c.fv, custom);
+  if (fig && typeof pcSetFV === 'function') pcSetFV(fig, meaningful ? fv : 0, dcfOf(c).fv, custom);
 
   st.result = { fv, up, rating, meaningful };
 }
@@ -402,7 +402,7 @@ function caseShareText(st) {
   return {
     link,
     text: `My ${c.t} case: ${g}% growth, ${casePts(s.m1, 0)}% margin, ${casePts(s.wacc)}% WACC → ${fvTxt} fair value${upTxt}. ` +
-          `FreeFlow Finance's model says ${fvStr(c.fv)}. What's your take?\n${link}`,
+          `FreeFlow Finance's model says ${fvStr(dcfOf(c).fv)}. What's your take?\n${link}`,
   };
 }
 
@@ -445,7 +445,7 @@ function mountCasePanels(root) {
       const banner = sec.querySelector('.case-shared');
       const v = caseValue(c, shared).perShare;
       banner.innerHTML = `You're looking at a shared case: fair value <b>${v > 0 ? FMT.usd(v) : 'N/M'}</b>
-        against the model's <b>${fvStr(c.fv)}</b>. <button type="button" class="case-linkbtn" data-preset="model">Reset to the model</button>`;
+        against the model's <b>${fvStr(dcfOf(c).fv)}</b>. <button type="button" class="case-linkbtn" data-preset="model">Reset to the model</button>`;
       banner.hidden = false;
       requestAnimationFrame(() => sec.scrollIntoView({ block: 'center' }));
     }

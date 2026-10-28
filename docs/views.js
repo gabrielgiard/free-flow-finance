@@ -9,6 +9,34 @@ const STATE = {
 };
 
 function byT(t) { return FF_DATA.companies.find(c => c.t === t); }
+
+/* ============================== VALUATION MODEL ========================= */
+/* Two models: the DCF (the site's official one) and peer multiples. Every
+   page reads c.fv, c.upside, c.rating and the bear/bull values, so switching
+   swaps those fields on every company and redraws; the DCF's own numbers are
+   kept in c._dcf so pages that are DCF by definition can still read them. */
+const MODEL_KEY = 'freeflow.model';
+const MODEL_FIELDS = ['fv', 'fv_bear', 'fv_bull', 'upside', 'up_bear', 'up_bull', 'rating'];
+const MODEL = { cur: 'dcf' };
+function modelName(m = MODEL.cur) { return m === 'mx' ? 'Multiples' : 'DCF'; }
+function dcfOf(c) { return c._dcf || c; }
+function applyModel(mode) {
+  const want = mode === 'mx' && FF_DATA.companies.some(c => c.mx) ? 'mx' : 'dcf';
+  FF_DATA.companies.forEach(c => {
+    if (!c._dcf) { c._dcf = {}; MODEL_FIELDS.forEach(k => { c._dcf[k] = c[k]; }); }
+    const src = want === 'mx' && c.mx ? c.mx : c._dcf;
+    MODEL_FIELDS.forEach(k => { c[k] = src[k]; });
+  });
+  MODEL.cur = want;
+  document.documentElement.dataset.model = want;
+  document.querySelectorAll('button[data-model]:not(.mtog-sw)').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.model === want)));
+  if (typeof syncModelControls === 'function') syncModelControls();
+  try { localStorage.setItem(MODEL_KEY, want); } catch (e) { /* private mode: in-session only */ }
+}
+function savedModel() {
+  try { return localStorage.getItem(MODEL_KEY) || 'dcf'; } catch (e) { return 'dcf'; }
+}
+function modelSwitchHTML(variant = 'sb') { return modelSliderHTML(variant); }   // interact.js
 function sectorMeta(k) { return FF_DATA.sectors.find(s => s.k === k); }
 function inSector(k) { return FF_DATA.companies.filter(c => c.sec === k); }
 function fmtSector(k) { const s = sectorMeta(k); return s ? s.n : k; }
@@ -50,137 +78,249 @@ function coverageStats() {
   };
 }
 
+/* ============================== HOMEPAGE ==============================
+   Top to bottom, one idea per band:
+     markets      the indices, oil, gold, the 10-year: what moved today
+     hero         what this site is, beside a live company chart
+     the library  how the ratings split, under whichever model is selected
+     top ideas    most upside / most downside, one table with a switch
+     sectors      every sector as a compact tile
+     about        who built it and how the model works                    */
+
+/* Keep in step with MARKET in fetch_history.py. */
+const MARKETS = [
+  { k: '^GSPC',   n: 'S&P 500',        u: 'pts', note: 'The 500 largest US companies, weighted by size.' },
+  { k: '^IXIC',   n: 'Nasdaq',         u: 'pts', note: 'Every stock on the Nasdaq exchange; heavy in technology.' },
+  { k: '^DJI',    n: 'Dow Jones',      u: 'pts', note: 'Thirty large US companies, weighted by share price.' },
+  { k: '^VIX',    n: 'VIX',            u: 'pts', inv: true, note: 'The volatility the options market expects for the S&P 500 over the next 30 days. Higher means more fear.' },
+  { k: '^TNX',    n: '10-yr Treasury', u: 'pct', note: 'The ten-year US Treasury yield. Every discount rate in this library starts from it, so when it moves, every fair value moves.' },
+  { k: 'BZ=F',    n: 'Brent crude',    u: 'usd', note: 'The global oil benchmark, in dollars a barrel.' },
+  { k: 'GC=F',    n: 'Gold',           u: 'usd', note: 'Gold futures, in dollars a troy ounce.' },
+  { k: 'BTC-USD', n: 'Bitcoin',        u: 'usd', note: 'Bitcoin in dollars. It trades every day, so its last point can be a weekend.' },
+];
+
+function marketRows() {
+  const ref = pcParseISO((FF_DATA.meta && FF_DATA.meta.price_date) || '');
+  return MARKETS.map(m => {
+    const s = typeof hasHistory === 'function' && hasHistory(m.k) ? pcSeries(m.k) : null;
+    if (!s || s.closes.length < 2) return null;
+    const n = s.closes.length, last = s.closes[n - 1], prev = s.closes[n - 2], when = s.dates[n - 1];
+    // a series that stopped updating is hidden rather than shown as today's
+    if (ref && (ref - when) / 86400000 > 6) return null;
+    return Object.assign({}, m, { s, last, prev, when, chg: last / prev - 1, diff: last - prev });
+  }).filter(Boolean);
+}
+
+function mktSpark(r) {
+  const v = r.s.closes.slice(-23), w = 96, h = 26;
+  const lo = Math.min(...v), hi = Math.max(...v), sp = (hi - lo) || 1;
+  const pts = v.map((x, i) => `${(i / (v.length - 1) * w).toFixed(1)},${(h - 2 - (x - lo) / sp * (h - 4)).toFixed(1)}`);
+  // same colour as the day's change beside it, so a tile never says two things
+  const good = (r.chg >= 0) !== !!r.inv;
+  return `<svg class="mkt-sp ${good ? 'up' : 'down'}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="M${pts.join(' L')}"/></svg>`;
+}
+
+function marketStripHTML() {
+  const rows = marketRows();
+  if (!rows.length) return '';
+  const asof = rows.find(r => r.k === '^GSPC') || rows[0];
+  const tiles = rows.map(r => {
+    const good = (r.chg >= 0) !== !!r.inv;
+    const chg = r.u === 'pct' ? `${r.diff >= 0 ? '+' : '−'}${Math.abs(r.diff * 100).toFixed(Math.abs(r.diff * 100) < 10 ? 1 : 0)} bp` : `${r.chg >= 0 ? '+' : '−'}${Math.abs(r.chg * 100).toFixed(2)}%`;
+    return `
+      <button type="button" class="mkt-tile" data-mkt="${r.k}" aria-pressed="false" aria-label="${r.n}: ${pcFmtUnit(r.last, r.u)}, ${chg} on the day. Show the chart.">
+        <span class="mkt-n">${r.n}</span>
+        <span class="mkt-v">${pcFmtUnit(r.last, r.u)}</span>
+        <span class="mkt-c ${good ? 'up' : 'down'}">${r.chg >= 0 ? '▲' : '▼'} ${chg}</span>
+        ${mktSpark(r)}
+      </button>`;
+  }).join('');
+  return `
+  <section class="mkt-band" data-markets>
+    <div class="wrap">
+      <div class="mkt-head"><span class="mkt-k">Markets</span><span class="mkt-when">close · ${pcFmtDate(asof.when, false)} · tap any to chart it</span></div>
+      <div class="mkt-row">${tiles}</div>
+      <div class="mkt-panel" hidden></div>
+    </div>
+  </section>`;
+}
+
+function mountMarkets(root) {
+  (root || document).querySelectorAll('[data-markets]').forEach(band => {
+    if (band._mk) return; band._mk = true;
+    const panel = band.querySelector('.mkt-panel');
+    band.addEventListener('click', e => {
+      const t = e.target.closest('[data-mkt]'), x = e.target.closest('.mkt-x');
+      if (x || (t && t.getAttribute('aria-pressed') === 'true')) {
+        band.querySelectorAll('[data-mkt]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        panel.hidden = true; panel.innerHTML = '';
+        return;
+      }
+      if (!t) return;
+      const m = MARKETS.find(r => r.k === t.dataset.mkt);
+      const s = pcSeries(m.k);
+      band.querySelectorAll('[data-mkt]').forEach(b => b.setAttribute('aria-pressed', String(b === t)));
+      panel.innerHTML = `
+        <div class="mkt-ph"><div><b>${m.n}</b><span>${m.note}</span></div>
+          <button type="button" class="mkt-x" aria-label="Close the chart">×</button></div>
+        ${priceChartSVG(m.k, 0, s.closes[s.closes.length - 1], m.u)}`;
+      panel.hidden = false;
+      mountPriceCharts(panel);
+    });
+  });
+}
+
+const IDEA_TABS = [['up', 'Most upside'], ['down', 'Most downside'], ['big', 'Largest companies']];
+function ideaRows(kind) {
+  const all = FF_DATA.companies.filter(c => kind === 'big' || c.fv > 0);
+  const list = kind === 'up' ? [...all].sort((a, b) => b.upside - a.upside)
+    : kind === 'down' ? [...all].sort((a, b) => a.upside - b.upside)
+    : [...all].sort((a, b) => b.mcap - a.mcap);
+  return list.slice(0, 8).map((c, i) => `
+    <tr data-route="company" data-ticker="${c.t}">
+      <td class="idx hide-sm">${i + 1}</td>
+      <td class="tk">${c.t}</td>
+      <td>${c.n}<div class="row-name">${fmtSector(c.sec)}</div></td>
+      <td class="num hide-sm">${FMT.usd(c.price)}</td>
+      <td class="num hide-sm" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
+      ${upCellHTML(c)}
+      <td class="hide-sm"><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span></td>
+    </tr>`).join('');
+}
+
+function mountHomeIdeas(root) {
+  (root || document).querySelectorAll('[data-ideas]').forEach(box => {
+    if (box._id) return; box._id = true;
+    box.querySelector('.pc-ranges').addEventListener('click', e => {
+      const b = e.target.closest('[data-idea]');
+      if (!b) return;
+      box.querySelectorAll('[data-idea]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      STATE.homeIdeas = b.dataset.idea;
+      const tb = box.querySelector('tbody');
+      tb.innerHTML = ideaRows(b.dataset.idea);
+      tb.classList.remove('fresh'); void tb.offsetWidth; tb.classList.add('fresh');
+    });
+  });
+}
+
+const RATING_ORDER = ['Strong Buy', 'Buy', 'Hold', 'Reduce', 'Sell'];
+function sectorTileHTML(s) {
+  const cs = inSector(s.k);
+  const ups = cs.filter(c => c.fv > 0).map(c => c.upside).sort((a, b) => a - b);
+  const med = ups.length ? (ups.length % 2 ? ups[(ups.length - 1) / 2] : (ups[ups.length / 2 - 1] + ups[ups.length / 2]) / 2) : null;
+  const mix = RATING_ORDER.map(r => {
+    const n = cs.filter(c => c.rating === r).length;
+    return n ? `<i style="flex:${n};background:${ratingColor(r)}" title="${r}: ${n}"></i>` : '';
+  }).join('');
+  const w = med == null ? 0 : Math.min(1, Math.abs(med) / 0.4) * 50;
+  return `
+    <div class="st-tile" data-route="sector" data-key="${s.k}" tabindex="0" role="link" aria-label="${escapeHtml(s.n)}: ${s.count} companies">
+      <div class="st-top"><span class="st-ico">${SECTOR_ICONS[s.k] || ''}</span><span class="st-n">${s.count}</span></div>
+      <h3>${s.n}</h3>
+      <div class="st-mix" aria-hidden="true">${mix}</div>
+      <div class="st-row">
+        <span class="st-k">Median upside</span>
+        <span class="st-ub" aria-hidden="true"><i class="${med >= 0 ? 'pos' : 'neg'}" data-tw="st-${s.k}" style="${med >= 0 ? 'left:50%' : 'right:50%'};width:${w.toFixed(1)}%"></i></span>
+        <span class="st-v ${med == null ? '' : upClass(med)}" data-num="st-${s.k}" data-val="${med}" data-fmt="pct">${med == null ? '—' : FMT.pct(med)}</span>
+      </div>
+    </div>`;
+}
+
 function viewHome() {
   const m = FF_DATA.meta;
   const cov = coverageStats();
   const all = FF_DATA.companies;
-  const ratingOrder = ['Strong Buy', 'Buy', 'Hold', 'Reduce', 'Sell'];
-  const counts = {}; ratingOrder.forEach(r => counts[r] = 0);
+  const counts = {}; RATING_ORDER.forEach(r => counts[r] = 0);
   all.forEach(c => counts[c.rating]++);
   const total = all.length;
+  const tab = STATE.homeIdeas || 'up';
+  const modelWord = MODEL.cur === 'mx' ? 'peer multiples' : 'the DCF';
 
-  const topUp = [...all].sort((a, b) => b.upside - a.upside).slice(0, 8);
-  const topDown = [...all].sort((a, b) => a.upside - b.upside).slice(0, 6);
-
-  const sectorCards = FF_DATA.sectors.map(s => `
-    <div class="sector-card" data-route="sector" data-key="${s.k}">
-      <div class="sc-top"><span class="sc-icon">${SECTOR_ICONS[s.k] || ''}</span><span class="sc-count">${s.count} companies</span></div>
-      <h3>${s.n}</h3>
-      <p>${s.d}</p>
-      <div class="sc-stats">
-        <div class="sc-stat"><b>$${s.mcap}T</b><span>Combined Mkt Cap</span></div>
-        <div class="sc-stat"><b>${s.med_ev_sales}x</b><span>Median EV / Sales</span></div>
-      </div>
-    </div>`).join('');
-
-  const ratingBar = ratingOrder.map(r => `
-    <div style="flex:${counts[r] || 0.001}; background:${ratingColor(r)}; opacity:.75" title="${r}: ${counts[r]}"></div>
-  `).join('');
-  const ratingLegend = ratingOrder.map(r => `
-    <div class="li"><span class="sw" style="background:${ratingColor(r)}"></span>${r} — ${counts[r]} <span style="color:var(--text-dim)">(${(counts[r]/total*100).toFixed(0)}%)</span></div>
-  `).join('');
-
-  const upRows = topUp.map(c => `
-    <tr data-route="company" data-ticker="${c.t}">
-      <td class="tk">${c.t}</td>
-      <td>${c.n}<div class="row-name">${fmtSector(c.sec)}</div></td>
-      <td class="num">${FMT.usd(c.price)}</td>
-      <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      ${upCellHTML(c)}
-      <td><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span></td>
-    </tr>`).join('');
-
-  const downRows = topDown.map(c => `
-    <tr data-route="company" data-ticker="${c.t}">
-      <td class="tk">${c.t}</td>
-      <td>${c.n}<div class="row-name">${fmtSector(c.sec)}</div></td>
-      <td class="num">${FMT.usd(c.price)}</td>
-      <td class="num" style="color:var(--gold-soft)">${fvStr(c.fv)}</td>
-      ${upCellHTML(c)}
-      <td><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span></td>
-    </tr>`).join('');
+  const ratingSegs = RATING_ORDER.map(r => `
+    <button type="button" class="rb-seg" data-screen-rating="${r}" style="flex:${counts[r] || 0.001};--c:${ratingColor(r)}"
+      aria-label="${r}: ${counts[r]} companies. Open them in the screener.">
+      ${counts[r] / total > 0.07 ? `<span>${counts[r]}</span>` : ''}</button>`).join('');
+  const ratingKey = RATING_ORDER.map(r => `
+    <button type="button" class="rb-key" data-screen-rating="${r}"><i style="background:${ratingColor(r)}"></i>${r}<b>${counts[r]}</b></button>`).join('');
 
   return `
-  <section class="hero hero-split">
+  ${marketStripHTML()}
+
+  <section class="hero hero-split home-hero">
     ${heroFlowSVG()}
     <div class="wrap">
-      <div class="hsplit">
-      <div class="hero-inner">
-        <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
-        <h1>One model. ${cov.n} companies. Every fair value built the same way.</h1>
-        <p class="lede">A discounted cash flow, comparable-company set, investment thesis and target price for ${cov.n} of the world's largest and most-talked-about public companies — built with a single consistent methodology so you can actually compare them, not just read about them.</p>
-        <div class="hero-cta">
-          <button class="btn btn-violet" data-route="sector" data-key="semis">${ICN.arrow.replace('currentColor','#fff')} Explore the coverage</button>
-          <button class="btn btn-ghost" data-route="methodology">How the model works</button>
-        </div>
-      </div>
-      ${heroFeaturedHTML()}
-      </div>
       ${(m.price_lag ?? ((m.price_age_days ?? 0) > 3 ? 2 : 0)) >= 2 ? `
-      <div class="comp-note" style="border-left-color:var(--red);margin-bottom:18px">
+      <div class="comp-note" style="border-left-color:var(--red);margin-bottom:22px">
         <b>Prices are from the ${m.asof} close.</b> The daily update has missed
         ${m.price_lag ?? 'several'} market sessions since then &mdash; every
         valuation below uses those closing prices rather than the latest ones.
-        The page itself works; the update job needs a look.
       </div>` : ''}
-      <div class="snapshot-strip">
-        <div class="snap-item"><div class="snap-label">Companies Covered</div><div class="snap-value">${cov.n}</div></div>
-        <div class="snap-item"><div class="snap-label">Sectors</div><div class="snap-value">${cov.sectors}</div></div>
-        <div class="snap-item"><div class="snap-label">Market Cap Covered</div><div class="snap-value">$${cov.mcap}T</div></div>
-        <div class="snap-item"><div class="snap-label">Median Upside</div><div class="snap-value ${cov.medianUpside >= 0 ? 'up' : 'down'}">${FMT.pct(cov.medianUpside)}</div></div>
-        <div class="snap-item"><div class="snap-label">Buy Rated</div><div class="snap-value up">${cov.buys}</div></div>
-        <div class="snap-item"><div class="snap-label">Sell Rated</div><div class="snap-value down">${cov.sells}</div></div>
+      <div class="hsplit">
+        <div class="hero-inner">
+          <div class="eyebrow">FreeFlow Finance · Independent Equity Research</div>
+          <h1>Two models. ${cov.n} companies. Every fair value built the same way.</h1>
+          <p class="lede">A discounted cash flow and a peer-multiples valuation for ${cov.n} of the world's largest and most-talked-about companies, each with its comparables, thesis and target price. One consistent method, so you can actually compare them.</p>
+          <div class="hero-cta">
+            <button class="btn btn-violet" data-route="screener">${ICN.arrow.replace('currentColor', '#fff')} Screen all ${cov.n}</button>
+            <button class="btn btn-ghost" data-route="methodology">How the models work</button>
+          </div>
+          <div class="hero-kpis">
+            <div><b>${cov.n}</b><span>companies</span></div>
+            <div><b>$${cov.mcap}T</b><span>market value covered</span></div>
+            <div data-kpi="median"><b class="${cov.medianUpside >= 0 ? 'upside-pos' : 'upside-neg'}" data-num="kpi-med" data-val="${cov.medianUpside}" data-fmt="pct">${FMT.pct(cov.medianUpside)}</b><span>median upside</span></div>
+          </div>
+        </div>
+        ${heroFindHTML()}
       </div>
     </div>
   </section>
 
-  <section>
+  <section class="home-band">
     <div class="wrap">
-      <div class="section-head">
-        <div><h2>Coverage by sector</h2><p class="sub">${cov.sectors} sectors, from AI silicon to frontier technology. Each card links to the full sortable list and every company inside has its own research page.</p></div>
+      <div class="hb-head">
+        <div><div class="eyebrow">The library today</div><h2>How ${total} companies are rated</h2>
+          <p class="sub">On the same five-point scale, from the upside under ${modelWord}. Click a rating to see those companies.</p></div>
+        <div class="hb-model"><span>Rated with</span>${modelSliderHTML('hdr')}</div>
       </div>
-      <div class="sector-grid">${sectorCards}</div>
+      <div class="rb" role="group" aria-label="Ratings across the library">${ratingSegs}</div>
+      <div class="rb-keys">${ratingKey}</div>
     </div>
   </section>
 
-  <section>
+  <section class="home-band">
     <div class="wrap">
-      <div class="section-head">
-        <div><h2>Where the model sees the most upside</h2><p class="sub">Ranked by upside to our discounted cash flow fair value versus the current share price.</p></div>
+      <div class="hb-head">
+        <div><div class="eyebrow">Ideas</div><h2>Where the model disagrees with the market</h2>
+          <p class="sub">Ranked by the gap between the price and the fair value under ${modelWord}.</p></div>
         <span class="section-link" data-route="screener">Screen all ${cov.n} companies</span>
       </div>
-      <div class="two-col" style="grid-template-columns: 1fr 1fr;">
-        <div class="table-wrap">
-          <table class="ff-table">
-            <thead><tr><th>Ticker</th><th>Company</th><th class="num">Price</th><th class="num">Fair Value</th><th class="num">Upside</th><th>Rating</th></tr></thead>
-            <tbody>${upRows}</tbody>
-          </table>
+      <div class="ideas" data-ideas>
+        <div class="pc-ranges" role="group" aria-label="Which list">
+          ${IDEA_TABS.map(([k, l]) => `<button type="button" class="pc-range${k === tab ? ' on' : ''}" data-idea="${k}" aria-pressed="${k === tab}">${l}</button>`).join('')}
         </div>
         <div class="table-wrap">
-          <table class="ff-table">
-            <thead><tr><th>Ticker</th><th>Company</th><th class="num">Price</th><th class="num">Fair Value</th><th class="num">Downside</th><th>Rating</th></tr></thead>
-            <tbody>${downRows}</tbody>
+          <table class="ff-table ideas-table">
+            <thead><tr><th class="hide-sm"></th><th>Ticker</th><th>Company</th><th class="num hide-sm">Price</th><th class="num hide-sm">Fair value</th><th class="num">Upside</th><th class="hide-sm">Rating</th></tr></thead>
+            <tbody>${ideaRows(tab)}</tbody>
           </table>
         </div>
       </div>
     </div>
   </section>
 
-  <section>
+  <section class="home-band">
     <div class="wrap">
-      <div class="card">
-        <div class="section-head" style="margin-bottom:20px;">
-          <div><h2 style="font-size:20px;">Ratings across the library</h2><p class="sub">All ${total} companies, rated on the same five-point scale from our DCF upside.</p></div>
-        </div>
-        <div class="seg-bar" style="height:26px;">${ratingBar}</div>
-        <div class="seg-legend">${ratingLegend}</div>
+      <div class="hb-head">
+        <div><div class="eyebrow">Coverage</div><h2>${cov.sectors} sectors</h2>
+          <p class="sub">Each bar is the sector's rating mix; open one for the full sortable list.</p></div>
       </div>
+      <div class="st-grid">${FF_DATA.sectors.map(sectorTileHTML).join('')}</div>
     </div>
   </section>
 
-  <section>
+  <section class="home-band">
     <div class="wrap">
-      <div class="two-col">
+      <div class="two-col home-about">
         <div class="card">
           <span class="tag tag-lilac" style="margin-bottom:14px;">About the analyst</span>
           <h2 style="font-size:22px;">Built by a 17-year-old who got a couple of stocks for Christmas.</h2>
@@ -189,13 +329,69 @@ function viewHome() {
         </div>
         <div class="card">
           <span class="tag tag-lilac" style="margin-bottom:14px;">Methodology</span>
-          <h2 style="font-size:22px;">Same model, every time. On purpose.</h2>
-          <p>Every company runs through the identical two-stage discounted cash flow: five years of explicit forecasts, five years fading to a terminal growth rate, then a Gordon Growth terminal value. No cherry-picked assumptions to hit a target — the model decides, then we explain what it decided.</p>
+          <h2 style="font-size:22px;">Same models, every time. On purpose.</h2>
+          <p>Every company runs through the identical two-stage discounted cash flow, and a second model values it at the multiples of its closest peers. No cherry-picked assumptions to hit a target: the models decide, then the pages explain what they decided. Flip between the two anywhere on the site.</p>
           <button class="btn btn-ghost" data-route="methodology">See how it works ${ICN.arrow}</button>
         </div>
       </div>
     </div>
   </section>`;
+}
+
+/* ====================== HOMEPAGE: COMPANY FINDER ======================
+   Beside the headline: a search box for the whole library, with the
+   largest names one tap away. Light on purpose; the charts live on the
+   company pages. */
+function heroFindRow(c) {
+  return `
+    <a class="hfind-row" href="#/company/${encodeURIComponent(c.t)}">
+      <span class="tk">${escapeHtml(c.t)}</span>
+      <span class="nm">${escapeHtml(c.n)}</span>
+      <span class="up ${c.fv > 0 ? upClass(c.upside) : ''}" data-num="hf-${c.t}" data-val="${c.upside}" data-fmt="pct">${c.fv > 0 ? FMT.pct(c.upside) : 'N/M'}</span>
+      <span class="dot" style="background:${ratingColor(c.rating)}" title="${c.rating}"></span>
+    </a>`;
+}
+function heroFindDefault() {
+  return [...FF_DATA.companies].sort((a, b) => b.mcap - a.mcap).slice(0, 6);
+}
+function heroFindHTML() {
+  return `
+  <div class="hfind" data-hfind>
+    <label class="hfind-k" for="hfind-q">Look up any of the ${FF_DATA.companies.length} companies</label>
+    <div class="hfind-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="hfind-q" type="text" autocomplete="off" spellcheck="false" placeholder="Ticker or name, e.g. Apple" aria-describedby="hfind-cap">
+    </div>
+    <div class="hfind-head"><span id="hfind-cap">Largest companies</span><span>upside · rating</span></div>
+    <div class="hfind-list" role="list">${heroFindDefault().map(heroFindRow).join('')}</div>
+  </div>`;
+}
+function mountHeroFind(root) {
+  (root || document).querySelectorAll('[data-hfind]').forEach(box => {
+    if (box._hf) return; box._hf = true;
+    const q = box.querySelector('input'), list = box.querySelector('.hfind-list'), cap = box.querySelector('#hfind-cap');
+    const show = () => {
+      const v = q.value.trim().toLowerCase();
+      let hits = v
+        ? FF_DATA.companies.filter(c => c.t.toLowerCase().startsWith(v) || c.n.toLowerCase().includes(v))
+            .sort((a, b) => (b.t.toLowerCase() === v) - (a.t.toLowerCase() === v) || b.mcap - a.mcap).slice(0, 6)
+        : heroFindDefault();
+      cap.textContent = v ? (hits.length ? `${hits.length === 6 ? 'Top matches' : 'Matches'}` : `Nothing matches "${q.value.trim()}"`) : 'Largest companies';
+      list.innerHTML = hits.map(heroFindRow).join('');
+    };
+    q.addEventListener('input', show);
+    q.addEventListener('keydown', e => {
+      const rows = [...list.querySelectorAll('.hfind-row')];
+      const i = rows.indexOf(document.activeElement);
+      if (e.key === 'Enter' && rows[0]) { e.preventDefault(); rows[0].click(); }
+      if (e.key === 'ArrowDown' && rows[0]) { e.preventDefault(); rows[0].focus(); }
+    });
+    list.addEventListener('keydown', e => {
+      const rows = [...list.querySelectorAll('.hfind-row')], i = rows.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' && rows[i + 1]) { e.preventDefault(); rows[i + 1].focus(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); (rows[i - 1] || q).focus(); }
+    });
+  });
 }
 
 /* ============================ HOMEPAGE HERO ============================ */
@@ -254,7 +450,7 @@ function upCellHTML(c) {
   if (!(c.fv > 0)) return `<td class="num up-cell"><span class="ub nm"></span><span class="upside-neg">N/M</span></td>`;
   const w = Math.min(1, Math.abs(c.upside) / 0.6) * 50;
   const side = c.upside >= 0 ? `left:50%;width:${w.toFixed(1)}%` : `right:50%;width:${w.toFixed(1)}%`;
-  return `<td class="num up-cell"><span class="ub" aria-hidden="true"><i class="${c.upside >= 0 ? 'pos' : 'neg'}" style="${side}"></i></span><span class="${upClass(c.upside)}">${FMT.pct(c.upside)}</span></td>`;
+  return `<td class="num up-cell"><span class="ub" aria-hidden="true"><i class="${c.upside >= 0 ? 'pos' : 'neg'}" data-tw="ub-${c.t}" style="${side}"></i></span><span class="${upClass(c.upside)}" data-num="up-${c.t}" data-val="${c.upside}" data-fmt="pct">${FMT.pct(c.upside)}</span></td>`;
 }
 
 /* The bear / base / bull range with today's price on it, for the company header. */
@@ -267,11 +463,11 @@ function valuationStripHTML(c) {
   return `
   <div class="vstrip" role="img" aria-label="Fair value range: bear ${FMT.usd(c.fv_bear)}, base ${FMT.usd(c.fv)}, bull ${FMT.usd(c.fv_bull)}; price ${FMT.usd(c.price)}">
     <div class="vs-track">
-      <span class="vs-band" style="left:${P(c.fv_bear)};width:calc(${P(c.fv_bull)} - ${P(c.fv_bear)})"></span>
-      <span class="vs-base" style="left:${P(c.fv)}"></span>
-      <span class="vs-price" style="left:${P(c.price)}"></span>
+      <span class="vs-band" data-tw="vs-band" style="left:${P(c.fv_bear)};width:calc(${P(c.fv_bull)} - ${P(c.fv_bear)})"></span>
+      <span class="vs-base" data-tw="vs-base" style="left:${P(c.fv)}"></span>
+      <span class="vs-price" data-tw="vs-price" style="left:${P(c.price)}"></span>
     </div>
-    <div class="vs-cap">Bear ${FMT.usd(c.fv_bear, 0)} to bull ${FMT.usd(c.fv_bull, 0)}. The price is ${priceInside ? 'inside' : c.price > c.fv_bull ? 'above' : 'below'} that range.</div>
+    <div class="vs-cap">${MODEL.cur === 'mx' ? 'At the low to high end of peer multiples' : 'Bear to bull'}: ${FMT.usd(c.fv_bear, 0)} to ${FMT.usd(c.fv_bull, 0)}. The price is ${priceInside ? 'inside' : c.price > c.fv_bull ? 'above' : 'below'} that range.</div>
   </div>`;
 }
 
@@ -364,18 +560,20 @@ function viewCompany(ticker) {
   if (caseDecode(caseQuery())) STATE.activeTab[ticker] = 'case';
   const active = STATE.activeTab[ticker];
 
-  const tabsHTML = TABS.map(([id, label]) =>
+  const mx = MODEL.cur === 'mx' && c.mx;
+  const MX_LABEL = { model: 'Peer Set', dcf: 'Multiples & Valuation' };
+  const tabsHTML = TABS.map(([id, label0]) => [id, mx && MX_LABEL[id] ? MX_LABEL[id] : label0]).map(([id, label]) =>
     `<div class="co-tab ${active === id ? 'active' : ''}" data-tab="${id}" data-ticker="${ticker}">${label}</div>`
   ).join('');
 
   const panels = {
     overview: panelOverview(c),
-    model: panelModel(c),
+    model: mx ? panelPeerSet(c) : panelModel(c),
     financials: panelFinancials(c),
-    dcf: panelDCF(c),
+    dcf: mx ? panelMxValuation(c) : panelDCF(c),
     comps: panelComps(c),
     thesis: panelThesis(c),
-    case: panelCase(c),
+    case: mx ? panelMxCase(c) : panelCase(c),
   };
   const panelsHTML = TABS.map(([id]) =>
     `<div class="co-panel ${active === id ? 'active' : ''}" data-panel="${id}">${panels[id]}</div>`
@@ -398,9 +596,9 @@ function viewCompany(ticker) {
         <div class="co-price-block">
           <div class="co-price">${FMT.usd(c.price)}<span class="cur"> ${priceDateLabel(c)}</span></div>
           <div class="co-fv-row">
-            <span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span>
-            <span class="co-fv">FV ${fvStr(c.fv)}</span>
-            <span class="co-up ${upClass(c.upside)}">${FMT.pct(c.upside)}</span>
+            <span class="rating-pill ${ratingClass(c.rating)}" data-swap="co-rating">${c.rating}</span>
+            <span class="co-fv"><small>${MODEL.cur === 'mx' ? 'Multiples' : 'DCF'}</small> <span data-num="co-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</span></span>
+            <span class="co-up ${upClass(c.upside)}" data-num="co-up" data-val="${c.upside}" data-fmt="pct">${FMT.pct(c.upside)}</span>
           </div>
           ${valuationStripHTML(c)}
           <button type="button" class="co-share" data-share="${c.t}" aria-label="Share ${c.n}">
@@ -409,6 +607,7 @@ function viewCompany(ticker) {
           </button>
         </div>
       </div>
+      ${c.mx ? modelBarHTML(c) : ''}
       <div class="co-tabs">${tabsHTML}</div>
     </div>
   </section>
@@ -424,6 +623,15 @@ function panelCase(c) {
   return `
   <div style="margin-bottom:18px">${priceChartSVG(c.t, c.fv, c.price)}</div>
   ${caseHTML(c)}`;
+}
+
+/* Where the company sits in its sector on one measure, as a small meter. */
+function pmHTML(c, k, verb) {
+  const p = c.pctl && c.pctl[k];
+  if (p == null) return '';
+  const n = inSector(c.sec).length - 1;
+  return `<div class="pm" title="${verb} ${p}% of the other ${n} ${escapeHtml(fmtSector(c.sec))} companies">
+    <span class="pm-t"><i class="grow" style="width:${Math.max(2, p)}%"></i></span><span class="pm-l">${verb} ${p}% of sector</span></div>`;
 }
 
 function panelOverview(c) {
@@ -448,11 +656,11 @@ function panelOverview(c) {
         <div class="stat-cell"><div class="label">Market Cap</div><div class="value">${FMT.usdB(c.mcap)}</div></div>
         <div class="stat-cell"><div class="label">Enterprise Value</div><div class="value">${FMT.usdB(c.ev_now)}</div></div>
         <div class="stat-cell"><div class="label">TTM Revenue</div><div class="value">${FMT.usdB(c.rev)}</div></div>
-        <div class="stat-cell"><div class="label">TTM Free Cash Flow</div><div class="value">${FMT.usdB(c.ttm_fcf)}</div></div>
-        <div class="stat-cell"><div class="label">FCF Yield</div><div class="value">${FMT.pctPlain(c.fcf_yield)}</div></div>
+        <div class="stat-cell"><div class="label">TTM Free Cash Flow</div><div class="value">${FMT.usdB(c.ttm_fcf)}</div>${pmHTML(c, 'm0', 'Margin above')}</div>
+        <div class="stat-cell"><div class="label">FCF Yield</div><div class="value">${FMT.pctPlain(c.fcf_yield)}</div>${pmHTML(c, 'fcf_yield', 'Higher than')}</div>
         <div class="stat-cell"><div class="label">Net ${c.netdebt>=0?'Debt':'Cash'}</div><div class="value">${FMT.usdB(Math.abs(c.netdebt))}</div></div>
         <div class="stat-cell"><div class="label">Shares Out.</div><div class="value">${FMT.num(c.shares,2)}B</div></div>
-        <div class="stat-cell"><div class="label">EV / Sales</div><div class="value">${FMT.x(c.ev_sales)}</div></div>
+        <div class="stat-cell"><div class="label">EV / Sales</div><div class="value">${FMT.x(c.ev_sales)}</div>${pmHTML(c, 'ev_sales', 'Pricier than')}</div>
       </div>
     </div>
   </div>`;
@@ -461,7 +669,7 @@ function panelOverview(c) {
 function panelModel(c) {
   const rows = c.model.map((r, i) => `
     ${i === 5 ? `<tr class="stage-divider"><td colspan="6" style="text-align:center;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:.08em;">Fade to terminal growth — Years 6–10</td></tr>` : ''}
-    <tr class="${r.stage === 2 ? 'stage2' : ''}">
+    <tr class="${r.stage === 2 ? 'stage2' : ''}" data-pj-i="${i + 1}">
       <td>Year ${r.y}</td>
       <td>${FMT.usdB(r.rev)}</td>
       <td>${FMT.pct(r.growth)}</td>
@@ -473,7 +681,7 @@ function panelModel(c) {
   <div class="two-col">
     <div>
       <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:12px;">Revenue &amp; Free Cash Flow Projection</h4>
-      ${sparklineSVG(c.model, 'rev', 'var(--lilac)')}
+      ${projChartHTML(c)}
       <div class="table-wrap" style="margin-top:18px;">
         <table class="ff-table model-table">
           <thead><tr><th>Period</th><th>Revenue</th><th>Growth</th><th>FCF Margin</th><th>Free Cash Flow</th><th>PV of FCF</th></tr></thead>
@@ -510,7 +718,7 @@ function panelDCF(c) {
     <div>
       <div class="card" style="margin-bottom:16px;">
         <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">Target Price</div>
-        <div style="font-family:var(--font-mono);font-size:38px;color:var(--gold-soft);line-height:1;">${fvStr(c.fv)}</div>
+        <div style="font-family:var(--font-mono);font-size:38px;color:var(--gold-soft);line-height:1;" data-num="dcf-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</div>
         <div style="margin-top:10px;"><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span> <span class="mono ${upClass(c.upside)}" style="margin-left:10px;font-size:13px;">${FMT.pct(c.upside)} vs current price</span></div>
       </div>
       <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin-bottom:14px;">Bear / Base / Bull Range</h4>
@@ -528,6 +736,30 @@ function panelDCF(c) {
   </div>`;
 }
 
+/* A short summary of the multiples value; the full working is on the
+   Multiples & Valuation tab when the switch is set to peer multiples. */
+function multiplesHTML(c) {
+  const m = c.mx;
+  if (!m) return '';
+  const meaningful = m.fv > 0;
+  return `
+    <div class="card mx-card">
+      <div class="mx-head">
+        <div>
+          <div class="mx-k">Value at peer multiples</div>
+          <div class="mx-v">${meaningful ? FMT.usd(m.fv) : 'N/M'}</div>
+          <div class="mx-s">${meaningful ? `${FMT.pct(m.upside)} vs. ${FMT.usd(c.price)} · range ${FMT.usd(m.fv_bear)} to ${FMT.usd(m.fv_bull)}` : ''}</div>
+        </div>
+        <div class="mx-vs">
+          <div><span>DCF</span><b>${fvStr(dcfOf(c).fv)}</b></div>
+          <div><span>Peer multiples</span><b>${meaningful ? FMT.usd(m.fv) : 'N/M'}</b></div>
+        </div>
+      </div>
+      <p class="mx-how">${m.methods.map(x => `${x.k} ${FMT.x(x.med)}`).join(', ')}, blended ${m.methods.map(x => Math.round(x.w * 100) + '%').join(' / ')}.
+        ${MODEL.cur === 'mx' ? 'The full working is on the Multiples &amp; Valuation tab.' : 'Flip the switch above to peer multiples to see the full working.'}</p>
+    </div>`;
+}
+
 function panelComps(c) {
   const s = sectorMeta(c.sec);
   const peers = c.peers.map(t => byT(t)).filter(Boolean);
@@ -542,8 +774,9 @@ function panelComps(c) {
     </tr>`).join('');
   return `
   <div class="prose">
-    <h4>Comparable Companies — ${s.n}</h4>
-    <p>How ${c.n} trades against its closest sector peers, using enterprise value multiples of sales and free cash flow. The premium/discount column compares each company's EV/Sales to the ${s.n} sector median of ${s.med_ev_sales}x.</p>
+    ${multiplesHTML(c)}
+    <h4>Comparable companies</h4>
+    <p>The ${s.n} companies most like ${c.n} on size, growth, cash margin and leverage. Their multiples set the value above. The last column compares each company's EV/Sales to the sector median of ${s.med_ev_sales}x.</p>
     ${s.note ? `<div class="comp-note">${s.note}</div>` : ''}
     <div class="table-wrap">
       <table class="ff-table">
@@ -601,10 +834,10 @@ function panelThesis(c) {
       <div class="card">
         <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:12px;">Rating &amp; Target</div>
         <span class="rating-pill ${ratingClass(c.rating)}" style="font-size:14px;padding:8px 16px;">${c.rating}</span>
-        <div style="margin-top:14px;font-family:var(--font-mono);font-size:26px;color:var(--gold-soft)">${fvStr(c.fv)}</div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">12-month DCF fair value · ${FMT.pct(c.upside)} vs. ${FMT.usd(c.price)} current</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:26px;color:var(--gold-soft)" data-num="th-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${MODEL.cur === 'mx' ? 'Value at peer multiples' : '12-month DCF fair value'} · ${FMT.pct(c.upside)} vs. ${FMT.usd(c.price)} current</div>
       </div>
-      <p style="font-size:11px;color:var(--text-dim);margin-top:16px;">This page is educational research produced for FreeFlow Finance and is not investment advice. Ratings are generated mechanically from DCF upside, not analyst discretion — see the Methodology page for the exact thresholds.</p>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:16px;">This page is educational research produced for FreeFlow Finance and is not investment advice. Ratings are generated mechanically from the upside under the model you have selected (${modelName()}), not analyst discretion — see the Methodology page for the exact thresholds.</p>
     </div>
   </div>`;
 }
@@ -689,6 +922,7 @@ function viewTrackRecord() {
       <p style="max-width:640px;font-size:14.5px;">Ratings move when the recalibration engine updates on real data — a
         price move, a margin change, a rate shift. Every change is logged here automatically, with the price at the
         time. There is no backfilled history: this only records what happens from the day it was switched on.</p>
+      ${MODEL.cur === 'mx' ? `<p class="mx-trk-note">You are viewing peer multiples. The track record always follows the DCF, the site's official model, so every rating on this page is a DCF rating.</p>` : ''}
     </div>
   </section>
   <section style="padding-top:8px;">
@@ -773,6 +1007,22 @@ function viewMethodology() {
           <div class="formula">FV = Σ [FCFₜ ÷ (1+WACC)^(t-0.5)] + [TV ÷ (1+WACC)^(n-0.5)]</div>
           <p style="font-size:12px;color:var(--text-dim);">Where TV = FCF₁₀ × (1 + g) ÷ (WACC − g), and g is the terminal growth rate.</p>
         </div>
+      </div>
+      <div style="margin-top:50px;" id="multiples">
+        <h2 style="font-size:22px;margin-bottom:14px;">The second model: peer multiples</h2>
+        <p style="max-width:720px;font-size:14px;">The switch at the top of every page, and the slider on every company page, lets you see each company valued a second way: at the multiples its closest peers trade on. After the DCF, this is the method analysts use most, and it answers a different question. The DCF asks what a company is worth on its own future cash; multiples ask what it would be worth if the market priced it like the companies most similar to it. Flip the slider on a company page and every tab follows: the Financial Model becomes the Peer Set, DCF &amp; Valuation becomes Multiples &amp; Valuation, and Your Case lets you choose the peers and the multiple yourself.</p>
+        <div class="card" style="margin:18px 0 10px;">
+          <ul class="bullets cat">
+            <li><strong style="color:var(--text)">Peers</strong>: within the sector, the eight companies closest on size (market value on a log scale), five-year growth, cash margin and leverage. A sector label alone is too coarse, since a chip designer and a disk-drive maker share one. Each peer gets a closeness score from 0 to 100.</li>
+            <li><strong style="color:var(--text)">Three readings, blended</strong>: the peers' median multiple of trailing free cash flow (35%), their median multiple of next year's forecast free cash flow (35%, the single reading research finds most accurate), and a growth-adjusted multiple (30%) read off the line that best fits multiple against five-year growth across the whole sector, at the company's own growth rate. That last reading stops a fast grower being priced like slower peers, or the reverse; when the line explains too little in a sector, its weight goes to the other two.</li>
+            <li><strong style="color:var(--text)">Which multiple</strong>: enterprise value to free cash flow. For banks, insurers, exchanges and asset managers, where debt is part of the business, price to free cash flow instead.</li>
+            <li><strong style="color:var(--text)">Value</strong>: each multiple times the company's own cash flow, blended by weight, less net debt, divided by shares. The peers' 25th and 75th percentile multiples give the low and high ends, and the valuation tab shows every step, a football field, and a grid of value by multiple and cash flow.</li>
+            <li><strong style="color:var(--text)">No cash flow yet</strong>: the few companies without positive free cash flow are valued on sales instead, and their page says so, because a sales multiple borrowed from more profitable peers flatters them.</li>
+            <li><strong style="color:var(--text)">Guard rails</strong>: multiples that are negative or above 150 times cash flow are left out, and if fewer than three peers give a usable figure, the whole sector is used.</li>
+            <li><strong style="color:var(--text)">Ratings</strong>: the same fixed thresholds, applied to the upside under whichever model you have selected. The DCF stays the site's official model: the track record, link previews and search pages use it.</li>
+          </ul>
+        </div>
+        <p style="max-width:720px;font-size:13px;color:var(--text-dim);">The limit to keep in mind: if a whole sector is expensive, every company in it can look fairly valued next to its peers. When the two models disagree, that gap is usually the most interesting thing on the page.</p>
       </div>
       <div style="margin-top:50px;">
         <h2 style="font-size:22px;margin-bottom:14px;">How the model stays current</h2>
@@ -926,7 +1176,7 @@ function viewScreener() {
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Screener' })}
       <div class="eyebrow">Stock Screener</div>
       <h1 style="font-size:32px;max-width:680px;">Filter all ${FF_DATA.companies.length} companies on the model's own output.</h1>
-      <p style="max-width:600px;font-size:14.5px;">Every number here comes from the same DCF, so the comparisons hold. Combine filters to find, say, every net-cash company trading below 5x sales with upside to fair value.</p>
+      <p style="max-width:600px;font-size:14.5px;">Every number here comes from the same ${MODEL.cur === 'mx' ? 'peer multiples model' : 'DCF'}, so the comparisons hold. Combine filters to find, say, every net-cash company trading below 5x sales with upside to fair value.</p>
     </div>
   </section>
   <section style="padding-top:8px;">
@@ -1212,7 +1462,7 @@ function viewPortfolio() {
       <div class="pf-allocbar">${allocBar}</div>
       <div class="pf-allockey">${allocKey}</div>
     </div>
-    <p class="pf-foot">Fair values come from our DCF model and update every market day. Not investment advice.</p>
+    <p class="pf-foot">Fair values come from ${MODEL.cur === 'mx' ? 'the peer multiples model' : 'our DCF model'} and update every market day. Not investment advice.</p>
   </div></section>`;
 }
 

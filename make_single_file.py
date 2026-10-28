@@ -19,8 +19,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DOCS = os.path.join(HERE, "docs")
 OUT = os.path.join(HERE, "FreeFlow-Finance.html")
 
-SCRIPTS = ["data.js", "history.js", "track-record.js", "charts.js", "case.js",
-           "views.js", "app.js"]
+SCRIPTS = ["data.js", "history.js", "track-record.js", "charts.js", "case.js", "multiples.js",
+           "interact.js", "views.js", "app.js"]
 
 # Optional data files and what to put in their place when missing. Without
 # the track-record fallback, the inlined page left FF_TRACK_RECORD undefined

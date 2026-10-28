@@ -9,7 +9,7 @@ const APP = document.getElementById('app');
 // looks like it loaded the wrong page. We manage scrolling ourselves instead.
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-function renderRoute() {
+function renderRoute(opts) {
   // Anything after "?" is options for the page (a shared "Your case" link
   // carries ?case=...), not part of which page to show.
   const hash = location.hash.replace(/^#\/?/, '').split('?')[0];
@@ -27,10 +27,14 @@ function renderRoute() {
   else { html = view404(); }
 
   APP.innerHTML = html;
-  APP.classList.remove('route-enter'); void APP.offsetWidth; APP.classList.add('route-enter');
+  APP.classList.remove('route-enter');
+  if (opts && opts.swap) {
+    // a model switch redraws the same page: no entrance, the values slide instead
+    APP.classList.add('swapping'); clearTimeout(APP._sw); APP._sw = setTimeout(() => APP.classList.remove('swapping'), 900);
+  } else { void APP.offsetWidth; APP.classList.add('route-enter'); }
   // 'instant' overrides the CSS smooth-scroll, which would otherwise animate
   // on every navigation and look sluggish.
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  if (!(opts && opts.keepScroll)) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   updateNavActive(navKey, arg);
   updateSidebarActive(navKey, arg ? decodeURIComponent(arg) : null);
   markDecorativeSvgs();
@@ -39,6 +43,11 @@ function renderRoute() {
   mountPortfolio(APP);
   mountHomeHero(APP);
   mountTabInk(APP);
+  mountMxCase(APP);
+  mountProjCharts(APP);
+  mountMarkets(APP);
+  mountHomeIdeas(APP);
+  mountHeroFind(APP);
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -102,6 +111,11 @@ function buildSidebar() {
   // where the top bar has no room. The rest of the sidebar is the coverage.
   el.innerHTML = `
     <div class="sb-pad">
+      <div class="sb-modelbox">
+        <div class="sb-mk">Valuation model</div>
+        ${modelSliderHTML('sb')}
+        <p class="sb-mnote">Every fair value, rating and screen on the site follows this.</p>
+      </div>
       <nav class="sb-pages" aria-label="Pages">
       <div class="sb-link" data-route="home" data-navlink="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
@@ -237,6 +251,39 @@ searchInput?.addEventListener('focus', e => { if (e.target.value) runSearch(e.ta
 
 /* ---------------------------------- global delegated clicks ---------------- */
 document.addEventListener('click', (e) => {
+  // Switch the valuation model: every fair value, upside and rating on the
+  // site changes, so redraw in place (same page, same tab, same scroll).
+  const modelBtn = e.target.closest('button[data-model]');
+  if (modelBtn) {
+    if (modelBtn.dataset.model === MODEL.cur) return;
+    const want = modelBtn.dataset.model;
+    const go = () => {
+      const y = window.scrollY;
+      const snap = twCapture(APP);
+      const open = [...document.querySelectorAll('.sb-group.open')].map(g => g.dataset.group);
+      applyModel(want);
+      buildSidebar();
+      open.forEach(k => { const g = document.querySelector(`.sb-group[data-group="${k}"]`); if (g) { g.classList.add('open'); const b = g.querySelector('[data-toggle-group]'); if (b) b.setAttribute('aria-expanded', 'true'); } });
+      renderRoute({ keepScroll: true, swap: true });
+      window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+      twPlay(APP, snap);
+      modelToast();
+    };
+    if (!FF_REDUCED()) {
+      // every slider on the page moves together, then the numbers follow
+      document.querySelectorAll('[data-mtog]').forEach(t => t.classList.add('flip'));
+      setTimeout(go, 230);
+    } else go();
+    return;
+  }
+  // A rating on the homepage opens the screener filtered to it.
+  const rateEl = e.target.closest('[data-screen-rating]');
+  if (rateEl) {
+    SCREEN.sectors.clear(); SCREEN.ratings.clear();
+    SCREEN.ratings.add(rateEl.dataset.screenRating);
+    go('#/screener');
+    return;
+  }
   const navEl = e.target.closest('[data-route]');
   if (navEl) {
     const r = navEl.dataset.route;
@@ -344,6 +391,8 @@ document.addEventListener('click', (e) => {
 // Escape closes the mobile drawer
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeSidebar(); closeSearch(); closeSectorMenu(); }
+  // tiles that act as links open on Enter, like a real link
+  if (e.key === 'Enter' && e.target.matches && e.target.matches('[role="link"][data-route]')) e.target.click();
 });
 
 /* ---------------------------------- back-to-top ----------------------------- */
@@ -362,9 +411,11 @@ backTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'sm
   const foot = document.getElementById('footer-count');
   if (foot) foot.textContent =
     `An independent, educational equity research library covering ${n} global ` +
-    `companies — one consistent DCF model, built and maintained by a high school student.`;
+    `companies — two consistent models, DCF and peer multiples, built and maintained by a high school student.`;
 })();
 
+applyModel(savedModel());
+{ const h = document.getElementById('hdr-model'); if (h) h.innerHTML = modelSliderHTML('hdr'); }
 buildSectorMenu();
 buildSidebar();
 markDecorativeSvgs();   // header, sidebar and footer icons on first paint

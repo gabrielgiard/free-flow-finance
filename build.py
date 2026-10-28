@@ -1054,6 +1054,14 @@ def main():
                 else:
                     p["pctl"][metric] = 50
 
+    # Second model: what each company is worth at its closest peers'
+    # multiples. Also replaces the comparables list with those peers.
+    try:
+        import multiples
+        multiples.apply(out)
+    except Exception as e:
+        print(f"Multiples model skipped ({type(e).__name__}: {e}) — DCF only")
+
     # Invariant: the number of companies published must equal the number
     # loaded. The count on the homepage silently fell from 234 to 231 once,
     # because the sanity gate was dropping companies with no announcement.

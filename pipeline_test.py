@@ -43,7 +43,7 @@ section("0. Every script the workflow runs can start")
 # swallowed the error. Importing each script here catches that class of bug.
 import importlib  # noqa: E402
 for mod in ("market_calendar", "fetch_prices", "fetch_history", "fetch_fundamentals",
-            "build", "check_freshness", "seo_pages", "engine", "og_cards"):
+            "build", "check_freshness", "seo_pages", "engine", "og_cards", "multiples"):
     try:
         importlib.import_module(mod)
         check(f"{mod}.py imports", True)
@@ -451,6 +451,108 @@ check("the workflow commits data.js, so the history is published",
       "docs/data.js" in open(".github/workflows/update-prices.yml").read())
 check("the real update list is well formed",
       all(isinstance(x, tuple) and len(x) == 2 for x in fh2.MODEL_UPDATES))
+
+
+# ------------------------------------------------------------------------
+section("Second model: peer multiples")
+import multiples as mxm  # noqa: E402
+import statistics  # noqa: E402
+def co(t, sec="semis", mcap=100.0, fcf=5.0, rev=20.0, nd=0.0, sh=1.0, px=100.0, g=0.10, m=0.25):
+    return {"t": t, "sec": sec, "mcap": mcap, "ev_now": mcap + nd, "ttm_fcf": fcf, "rev": rev,
+            "netdebt": nd, "shares": sh, "price": px, "cagr5": g, "m0": m, "nd_ev": nd / (mcap + nd) if mcap + nd else 0}
+peers = [co(f"P{i}", mcap=100 + i, fcf=5.0, rev=20.0) for i in range(6)]      # each EV/FCF = (100+i)/5
+target = co("T", fcf=4.0, nd=10.0, sh=2.0, px=50.0)
+mx = mxm.value(target, peers, peers + [target])
+med = sorted((100 + i) / 5 for i in range(6))
+want = (statistics.median(med) * 4.0 - 10.0) / 2.0
+check("value = median peer EV/FCF x own FCF, less net debt, per share",
+      mx and abs(mx["fv"] - round(want, 2)) < 0.01, (mx and mx["fv"], want))
+check("trailing and forward readings, weights summing to 1",
+      [m["id"] for m in mx["methods"]] == ["ttm", "fwd"] and abs(sum(m["w"] for m in mx["methods"]) - 1) < 1e-3,
+      mx["methods"])
+check("no growth spread in the sector -> no growth-adjusted reading", mx["reg"] is None)
+check("range comes from the peers' quartile multiples", mx["fv_bear"] <= mx["fv"] <= mx["fv_bull"])
+check("rating uses the same thresholds as the DCF", mx["rating"] == __import__("engine").rate(mx["upside"]))
+check("the middle of the sensitivity grid is the fair value", abs(mx["grid"]["values"][2][2] - mx["fv"]) < 0.02, mx["grid"])
+check("bridge adds up: blended value less net debt is equity",
+      abs(mx["whole"] - mx["netdebt"] - mx["equity"]) < 0.02)
+fwdp = [dict(p, model=[{"fcf": 10.0, "rev": 22.0}]) for p in peers]          # forward EV/FCF = (100+i)/10
+fwdt = dict(target, model=[{"fcf": 8.0, "rev": 22.0}])
+mxf = mxm.value(fwdt, fwdp, fwdp + [fwdt])
+fm = [m for m in mxf["methods"] if m["id"] == "fwd"][0]
+check("forward reading uses each company's year-one forecast",
+      abs(fm["med"] - round(statistics.median([(100 + i) / 10 for i in range(6)]), 2)) < 0.01 and fm["own"] == 8.0, fm)
+grow = [co(f"G{i}", mcap=100.0, fcf=100.0 / (10 + 100 * g), g=g) for i, g in enumerate([.02, .05, .08, .11, .14, .17, .20, .23])]
+gt = co("GT", fcf=4.0, g=0.20)
+mxg = mxm.value(gt, grow[:4], grow + [gt])
+rm = [m for m in mxg["methods"] if m["id"] == "reg"]
+check("when growth explains multiples, a growth-adjusted reading is blended in",
+      mxg["reg"]["usable"] and rm and mxg["reg"]["r2"] > 0.9, mxg["reg"])
+check("the growth-adjusted multiple reads the line at the company's own growth",
+      rm and abs(rm[0]["med"] - (10 + 100 * 0.20)) < 1.5, rm)
+check("weights renormalise to 1 with three readings", abs(sum(m["w"] for m in mxg["methods"]) - 1) < 1e-3)
+falling = [co(f"F{i}", mcap=100.0, fcf=100.0 / (40 - 100 * g), g=g) for i, g in enumerate([.02, .05, .08, .11, .14, .17, .20, .23])]
+mxfl = mxm.value(gt, falling[:4], falling + [gt])
+check("a line that falls with growth is not used", mxfl["reg"] and not mxfl["reg"]["usable"]
+      and all(m["id"] != "reg" for m in mxfl["methods"]), mxfl["reg"])
+loss = co("L", fcf=-1.0, rev=8.0)
+mxl = mxm.value(loss, peers, peers)
+check("no positive cash flow -> valued on sales, and flagged",
+      mxl["sales_only"] and mxl["methods"][0]["k"].startswith("EV/Sales") and mxl["reg"] is None, mxl["methods"])
+bank = co("B", sec="financials", nd=500.0)
+bpeers = [co(f"Q{i}", sec="financials", mcap=100.0, fcf=10.0, nd=900.0) for i in range(5)]
+mxb = mxm.value(bank, bpeers, bpeers)
+check("financials use equity multiples and ignore net debt",
+      mxb["basis"] == "equity" and mxb["methods"][0]["k"].startswith("P/FCF") and abs(mxb["fv"] - 10.0 * 5.0 / 1.0) < 0.01, mxb)
+wild = peers[:2] + [co("W", mcap=100.0, fcf=0.2)]                 # EV/FCF 500x is out of band
+mxw = mxm.value(target, wild, peers + wild)
+check("absurd multiples are left out; thin peer sets fall back to the sector",
+      mxw["methods"][0]["from"] == "sector")
+big = co("BIG", mcap=4000.0)
+pk = mxm.pick_peers(big, [co(f"S{i}", mcap=10.0 * 3 ** i) for i in range(9)] + [big])
+check("peers are the closest in size (and growth, margin, leverage)",
+      [p["t"] for p in pk][:2] == ["S5", "S6"], [p["t"] for p in pk])
+check("a company is never its own peer", "BIG" not in [p["t"] for p in pk])
+check("closeness is 100 for a twin and falls with distance",
+      mxm.closeness(big, dict(big, t="X")) == 100 > mxm.closeness(big, co("Y", mcap=400.0)) > mxm.closeness(big, co("Z", mcap=4.0)))
+deep = co("D", fcf=1.0, nd=1000.0)
+check("worth less than its debt -> no per-share value", mxm.value(deep, peers, peers)["fv"] == 0.0)
+
+# the browser repeats the arithmetic for "Your case": it must agree for every company
+_repo = os.path.dirname(os.path.abspath(__file__))
+raw = open(os.path.join(_repo, "docs/data.js")).read()
+live = json.loads(raw[raw.index("{"):].rstrip().rstrip(";"))
+js = open(os.path.join(_repo, "docs/multiples.js")).read()
+js = js[:js.index("/* ---------------------------------------------------------- shared bits")]
+parity = subprocess.run(["node", "-e", """
+const fs = require('fs'), vm = require('vm');
+const raw = fs.readFileSync(process.argv[2], 'utf8');
+const ctx = { FF_DATA: JSON.parse(raw.slice(raw.indexOf('{')).trim().replace(/;$/, '')) };
+ctx.byT = t => ctx.FF_DATA.companies.find(c => c.t === t);
+vm.createContext(ctx);
+vm.runInContext(process.argv[1] + ';this.FF_MX = FF_MX;', ctx);
+let worst = 0, bad = [];
+for (const c of ctx.FF_DATA.companies) {
+  if (!c.mx) continue;
+  const v = ctx.FF_MX.value(c);
+  const d = Math.abs(v.fv - c.mx.fv) / Math.max(1, c.mx.fv);
+  if (d > worst) worst = d;
+  if (d > 0.001) bad.push(c.t + ' ' + v.fv.toFixed(2) + ' vs ' + c.mx.fv);
+}
+console.log(JSON.stringify({ worst, bad }));
+""", js, os.path.join(_repo, "docs/data.js")], capture_output=True, text=True)
+try:
+    pr = json.loads(parity.stdout)
+except Exception:
+    pr = {"bad": ["node failed: " + parity.stderr[-300:]]}
+check("the browser's multiples arithmetic matches the pipeline for every company",
+      not pr["bad"] and sum(1 for c in live["companies"] if c.get("mx")) > 200, pr)
+import re as _re  # noqa: E402
+import fetch_history as _fh  # noqa: E402
+_js_mk = _re.findall(r"\{ k: '([^']+)'", open(os.path.join(_repo, "docs/views.js")).read())
+check("homepage market strip and the history fetch list the same series", _js_mk == _fh.MARKET, (_js_mk, _fh.MARKET))
+check("indices and futures skip Twelve Data (no free coverage)", all(x in _fh.YAHOO_ONLY for x in _fh.MARKET))
+check("the page reads the model from data.js", "c.mx" in open("docs/views.js").read())
 
 
 # ------------------------------------------------------------------------

@@ -65,10 +65,16 @@ TWELVE_PAUSE = 8.0        # free tier allows 8 calls/minute
 HISTORY_PATH = os.path.join(HERE, "docs", "history.js")
 PRICES_PATH = os.path.join(HERE, "prices.json")
 
-# Homepage sparklines, plus ^TNX -- the 10-year Treasury yield. That last one
-# is not decorative: it is the risk-free rate every WACC in the library is
-# built from, so fetching it lets the model recalibrate itself when rates move.
-MARKET = ["SPY", "QQQ", "GLD", "BNO", "^TNX"]
+# The homepage market strip: the real indices and futures, fetched exactly
+# like the company charts (Yahoo's chart endpoint already serves ^TNX here).
+# ^TNX -- the 10-year Treasury yield -- is not decorative: it is the risk-free
+# rate every WACC in the library is built from, so fetching it lets the model
+# recalibrate itself when rates move. Keep this list in step with MARKETS in
+# docs/views.js.
+MARKET = ["^GSPC", "^IXIC", "^DJI", "^VIX", "^TNX", "BZ=F", "GC=F", "BTC-USD"]
+# Twelve Data's free tier has no indices or futures; asking only burns the
+# 8-second pause, so these go to Yahoo alone.
+YAHOO_ONLY = tuple(s for s in MARKET if s.startswith("^") or "=" in s or "-" in s)
 
 # Foreign primaries Finnhub's free tier does not cover. Yahoo does, using
 # exchange suffixes. Each entry is (Yahoo symbol, rough FX rate to USD):
@@ -365,7 +371,7 @@ def main():
                 if res:
                     by_source["yahoo"] += 1
 
-            if not res and sym not in FOREIGN:
+            if not res and sym not in FOREIGN and sym not in YAHOO_ONLY:
                 res, err2 = from_twelve(sym, key)
                 if res:
                     by_source["twelve"] += 1
@@ -373,6 +379,8 @@ def main():
                     err = f"yahoo: {err}; twelve: {err2}"
                 if key:
                     time.sleep(TWELVE_PAUSE)
+            elif not res:
+                err = f"yahoo: {err}"
 
             if res:
                 dates, vals = res

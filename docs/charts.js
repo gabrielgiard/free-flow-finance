@@ -159,7 +159,10 @@ function sparklineSVG(model, key, color, h = 60, w = 400) {
 }
 
 /* WACC x terminal-growth sensitivity heatmap ---------------------------- */
-function sensitivityGridHTML(grid, price) {
+function sensitivityGridHTML(grid, price, axes) {
+  const ax = Object.assign({ corner: 'WACC ↓ / g →', row: v => v.toFixed(2) + '%', col: v => v.toFixed(2) + '%',
+    rn: 'WACC', cn: 'terminal growth', base: 'the model' }, axes || {});
+  const mr = Math.floor(grid.values.length / 2), mc = Math.floor((grid.values[0] || []).length / 2);
   const flat = grid.values.flat();
   const lo = Math.min(...flat), hi = Math.max(...flat);
   function shade(v) {
@@ -180,12 +183,14 @@ function sensitivityGridHTML(grid, price) {
     const bl = Math.round(a[2] + (b[2] - a[2]) * k);
     return `rgba(${r},${g},${bl},.55)`;
   }
-  let head = `<tr><th class="corner">WACC ↓ / g →</th>` + grid.tgs.map(t => `<th>${t.toFixed(2)}%</th>`).join('') + `</tr>`;
+  let head = `<tr><th class="corner">${ax.corner}</th>` + grid.tgs.map((t, j) => `<th data-c="${j}">${ax.col(t)}</th>`).join('') + `</tr>`;
   let rows = grid.values.map((row, i) => {
-    const cells = row.map(v => `<td style="background:${shade(v)}">${FMT.usd(v, 0)}</td>`).join('');
-    return `<tr><td class="axis">${grid.waccs[i].toFixed(2)}%</td>${cells}</tr>`;
+    const cells = row.map((v, j) => `<td data-r="${i}" data-c="${j}" data-v="${v}" class="${i === mr && j === mc ? 'base' : ''}" style="background:${shade(v)}">${FMT.usd(v, 0)}</td>`).join('');
+    return `<tr><td class="axis" data-r="${i}">${ax.row(grid.waccs[i])}</td>${cells}</tr>`;
   }).join('');
-  return `<table class="grid-table">${head}${rows}</table>`;
+  const idle = `The outlined cell is ${ax.base}. Hover any cell to read it.`;
+  return `<table class="grid-table" data-price="${price}" data-rn="${ax.rn}" data-cn="${ax.cn}">${head}${rows}</table>
+    <div class="grid-read" aria-live="polite" data-idle="${idle}">${idle}</div>`;
 }
 
 /* DCF build-up waterfall (PV explicit + PV terminal = EV, - debt = equity) */
@@ -202,7 +207,7 @@ function dcfWaterfallHTML(dcf, shares) {
         <span>${it.label}</span><span class="mono">${FMT.usdB(it.val)}</span>
       </div>
       <div style="height:10px;background:var(--surface-3);border-radius:5px;overflow:hidden">
-        <div style="width:${w}%;height:100%;background:${it.color}"></div>
+        <div class="grow" style="width:${w}%;height:100%;background:${it.color}"></div>
       </div>
     </div>`;
   }).join('');
@@ -357,12 +362,15 @@ function pcSeries(key) {
       out.dates.push(dates[i]); out.closes.push(v);
     }
   }
+  // Yahoo has quoted the 10-year yield both as 43.1 and as 4.31; show 4.31.
+  if (key === '^TNX' && out.closes.length && out.closes[out.closes.length - 1] > 20) out.closes = out.closes.map(v => v / 10);
   return out.closes.length ? out : null;
 }
 
 /* Fair value over time (FF_DATA.fvh, written by fv_history.py): a step series per company plus
    the dates the model itself was revised. Returns null when there is none. */
 function pcFvHistory(key) {
+  if (typeof MODEL !== 'undefined' && MODEL.cur === 'mx') return null;   // the history is the DCF's
   const H = (typeof FF_DATA !== 'undefined' && FF_DATA.fvh && FF_DATA.fvh.s) ? FF_DATA.fvh
     : (typeof FF_FV_HISTORY !== 'undefined' && FF_FV_HISTORY && FF_FV_HISTORY.s) ? FF_FV_HISTORY : null;
   if (!H) return null;
@@ -405,12 +413,21 @@ function pcNiceTicks(lo, hi, count) {
   return ticks;
 }
 
-function pcMoney(v) { return FMT.usd(v, v >= 10000 ? 0 : 2); }
+/* The same chart draws market series too: index points, a yield, dollars. */
+let PC_UNIT = 'usd';
+function pcFmtUnit(v, unit) {
+  if (unit === 'pts') return v.toLocaleString('en-US', { minimumFractionDigits: v >= 1000 ? 0 : 2, maximumFractionDigits: v >= 1000 ? 0 : 2 });
+  if (unit === 'pct') return v.toFixed(2) + '%';
+  return FMT.usd(v, v >= 10000 ? 0 : 2);
+}
+function pcMoney(v) { return pcFmtUnit(v, PC_UNIT); }
 function pcTick(v) {
+  if (PC_UNIT === 'pts') return v.toLocaleString('en-US', { maximumFractionDigits: Number.isInteger(v) ? 0 : 2 });
+  if (PC_UNIT === 'pct') return (+v.toFixed(2)) + '%';
   return '$' + v.toLocaleString('en-US', { maximumFractionDigits: Number.isInteger(v) ? 0 : 2 });
 }
 
-function priceChartSVG(key, fv, price) {
+function priceChartSVG(key, fv, price, unit = 'usd') {
   const series = pcSeries(key);
   if (!series) return historyEmptyState(key);
   const last = series.closes[series.closes.length - 1];
@@ -419,16 +436,16 @@ function priceChartSVG(key, fv, price) {
     `<button type="button" class="pc-range${label === '1Y' ? ' on' : ''}" data-r="${r}"
        aria-pressed="${label === '1Y'}">${label}</button>`).join('');
   return `
-  <figure class="pchart" data-key="${escapeHtml(key)}" data-fv="${fv > 0 ? fv : ''}">
+  <figure class="pchart" data-key="${escapeHtml(key)}" data-fv="${fv > 0 ? fv : ''}" data-unit="${unit}">
     <div class="pc-head">
       <div class="pc-readout" aria-live="polite">
-        <div class="pc-price">${pcMoney(last)}</div>
+        <div class="pc-price">${pcFmtUnit(last, unit)}</div>
         <div class="pc-meta"><span class="pc-chg"></span><span class="pc-when"></span></div>
       </div>
       <div class="pc-ranges" role="group" aria-label="Chart time range">${ranges}</div>
     </div>
     <div class="pc-plot" tabindex="0" role="img"
-         aria-label="Share price chart for ${escapeHtml(key)}. Latest close ${FMT.usd(last)} on ${pcFmtDate(lastDate)}${fv > 0 ? `, against a fair value of ${FMT.usd(fv)}` : ''}. Use the left and right arrow keys to step through daily closes."></div>
+         aria-label="${unit === 'usd' ? 'Share price' : 'Price'} chart for ${escapeHtml(key)}. Latest close ${pcFmtUnit(last, unit)} on ${pcFmtDate(lastDate)}${fv > 0 ? `, against a fair value of ${FMT.usd(fv)}` : ''}. Use the left and right arrow keys to step through daily closes."></div>
     <figcaption class="pc-key">
       <span><i class="k-line"></i>Daily close</span>
       <span class="pc-k-fv"${fv > 0 ? '' : ' hidden'}><i class="k-fv"></i><span class="pc-k-fv-text">Today's fair value</span></span>
@@ -442,6 +459,7 @@ function priceChartSVG(key, fv, price) {
 
 /* Draw (or redraw) one chart at its current width. */
 function pcRender(fig) {
+  PC_UNIT = fig.dataset.unit || 'usd';
   const plot = fig.querySelector('.pc-plot');
   const W = Math.round(plot.clientWidth);
   if (W < 40) return;                                   // hidden tab: wait for resize
@@ -623,6 +641,7 @@ function pcRender(fig) {
       <text x="${(plotR - 6).toFixed(1)}" y="${(labelAbove ? fy - 8 : fy + 16).toFixed(1)}"
             class="pc-fvlabel" text-anchor="end">${st.custom ? 'Your fair value'
               : steps.length && st.fvh.latest ? (W < 560 ? `FV · upd ${pcVerNo(st.fvh.latest)}` : `Fair value since update ${pcVerNo(st.fvh.latest)}`)
+              : (typeof MODEL !== 'undefined' && MODEL.cur === 'mx') ? (W < 560 ? 'Multiples' : 'Value at peer multiples')
               : 'Fair value'} ${FMT.usd(fv)}</text>
       <g class="pc-gap">
         <line x1="${lx.toFixed(1)}" x2="${bx}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" class="pc-gap-lead"/>
@@ -667,7 +686,8 @@ function pcRender(fig) {
     kfv.hidden = !(fv > 0);
     const latest = st.fvh ? st.fvh.latest : 0;
     kfv.querySelector('.pc-k-fv-text').textContent = st.custom ? 'Your fair value'
-      : steps.length ? (latest ? `Fair value since model update ${pcVerNo(latest)}` : 'Fair value') : "Today's fair value";
+      : steps.length ? (latest ? `Fair value since model update ${pcVerNo(latest)}` : 'Fair value')
+      : (typeof MODEL !== 'undefined' && MODEL.cur === 'mx') ? 'Value at peer multiples' : "Today's fair value";
   }
   const kold = fig.querySelector('.pc-k-old');
   if (kold) {
@@ -680,13 +700,14 @@ function pcRender(fig) {
   if (kmodel) kmodel.hidden = !ghost;
   const note = fig.querySelector('.pc-note');
   if (note) note.textContent = (fv > 0 && !showFV)
-    ? `Fair value is ${FMT.pct(fv / lastV - 1, 0)} from the price — too far to draw on the same scale. The gap is the finding; see the DCF tab.`
+    ? `Fair value is ${FMT.pct(fv / lastV - 1, 0)} from the price — too far to draw on the same scale. The gap is the finding; see the valuation tab.`
     : '';
   pcReadout(fig, null);
 }
 
 /* Header text: the latest close, or the hovered day while scrubbing. */
 function pcReadout(fig, i) {
+  PC_UNIT = fig.dataset.unit || 'usd';
   const st = fig._pc, g = st.geo;
   if (!g) return;
   const idx = i == null ? g.n - 1 : i;
