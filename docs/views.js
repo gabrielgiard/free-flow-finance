@@ -37,6 +37,25 @@ function savedModel() {
   try { return localStorage.getItem(MODEL_KEY) || 'dcf'; } catch (e) { return 'dcf'; }
 }
 function modelSwitchHTML(variant = 'sb') { return modelSliderHTML(variant); }   // interact.js
+/* Search ranking shared by the header box and the homepage finder: exact
+   ticker, then ticker prefix, then a word in the name that starts with the
+   query, then the query anywhere in the name; larger companies first within
+   each. "re" finds REGN, RELIANCE and Reddit before Lam Research. */
+function searchCompanies(q, limit = 8) {
+  q = String(q || '').trim().toLowerCase();
+  if (!q) return [];
+  const rank = c => {
+    const t = c.t.toLowerCase(), n = c.n.toLowerCase();
+    if (t === q) return 0;
+    if (t.startsWith(q)) return 1;
+    if (n.startsWith(q)) return 2;
+    if (n.split(/[^a-z0-9&]+/).some(w => w.startsWith(q))) return 3;
+    if (n.includes(q)) return 4;
+    return 9;
+  };
+  return FF_DATA.companies.map(c => [rank(c), c]).filter(([r]) => r < 9)
+    .sort((a, b) => a[0] - b[0] || b[1].mcap - a[1].mcap).slice(0, limit).map(([, c]) => c);
+}
 function sectorMeta(k) { return FF_DATA.sectors.find(s => s.k === k); }
 function inSector(k) { return FF_DATA.companies.filter(c => c.sec === k); }
 function fmtSector(k) { const s = sectorMeta(k); return s ? s.n : k; }
@@ -372,10 +391,7 @@ function mountHeroFind(root) {
     const q = box.querySelector('input'), list = box.querySelector('.hfind-list'), cap = box.querySelector('#hfind-cap');
     const show = () => {
       const v = q.value.trim().toLowerCase();
-      let hits = v
-        ? FF_DATA.companies.filter(c => c.t.toLowerCase().startsWith(v) || c.n.toLowerCase().includes(v))
-            .sort((a, b) => (b.t.toLowerCase() === v) - (a.t.toLowerCase() === v) || b.mcap - a.mcap).slice(0, 6)
-        : heroFindDefault();
+      let hits = v ? searchCompanies(v, 6) : heroFindDefault();
       cap.textContent = v ? (hits.length ? `${hits.length === 6 ? 'Top matches' : 'Matches'}` : `Nothing matches "${q.value.trim()}"`) : 'Largest companies';
       list.innerHTML = hits.map(heroFindRow).join('');
     };

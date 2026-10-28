@@ -1589,3 +1589,19 @@ html[data-model="dcf"] .mx-vs div:first-child b, html[data-model="mx"] .mx-vs di
 @media (max-width: 860px){ .hfind-list{ min-height:0; } }
 .home-hero .hsplit{ grid-template-columns:minmax(0, 1.1fr) minmax(0, .9fr); gap:56px; }
 @media (max-width: 1100px){ .home-hero .hsplit{ grid-template-columns:minmax(0, 1fr); gap:30px; } }
+
+/* search results: a solid panel above everything (it was see-through) */
+.search-results{ background:#120e22 !important; border:1px solid rgba(185,163,245,.22) !important;
+  box-shadow:0 24px 60px -12px rgba(0,0,0,.85) !important; z-index:120; width:360px; }
+.site-header{ z-index:90; }
+.sr-item{ display:grid; grid-template-columns:auto 1fr auto; gap:12px; }
+.sr-tick{ width:auto; min-width:52px; }
+.sr-item.kb, .sr-item:hover{ background:rgba(255,255,255,.06); }
+@media (max-width: 640px){ .search-results{ width:auto; left:0; right:0; } }
+@media (max-width: 640px){ .search-results{ position:fixed; top:64px; left:12px !important; right:12px !important; width:auto; max-height:70vh; } }
+/* mid-width screens: the header ran past the right edge; the model slider
+   stays available in the sidebar, so the header copy steps aside first */
+@media (max-width: 1240px){ .hdr-model{ display:none; } }
+.header-right{ min-width:0; }
+.search-box{ min-width:0; }
+@media (min-width: 641px) and (max-width: 1100px){ .search-input, .search-input:focus{ width:190px; } }

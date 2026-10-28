@@ -230,9 +230,7 @@ const searchResults = document.getElementById('search-results');
 function runSearch(q) {
   q = q.trim().toLowerCase();
   if (!q) { closeSearch(); return; }
-  const hits = FF_DATA.companies.filter(c =>
-    c.t.toLowerCase().startsWith(q) || c.n.toLowerCase().includes(q)
-  ).slice(0, 8);
+  const hits = searchCompanies(q, 8);
   if (!hits.length) {
     searchResults.innerHTML = `<div class="sr-item" style="color:var(--text-dim);cursor:default;">No matches for "${escapeHtml(q)}"</div>`;
   } else {
