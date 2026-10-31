@@ -32,7 +32,7 @@ EXPANSION3 = [
        "Heavy customer concentration, with Apple historically a very large share of revenue.",
        "Capital intensive: new capacity requires spending well ahead of the revenue it serves."],
       "Regarded as a way to own AI packaging demand at a much lower multiple than the chip designers, with the discount reflecting genuinely weaker economics.",
-      "Third-quarter results on 26 October 2026, advanced packaging utilisation, Arizona phase 2 plans, customer concentration, capex guidance.",
+      "Fourth-quarter results in early 2027, advanced packaging utilisation, Arizona phase 2 plans, customer concentration, capex guidance.",
       (3, 4, 3, 3)),
 
     C("ON", "ON Semiconductor Corporation", "semis", "Scottsdale, Arizona, USA", 1999,
@@ -77,7 +77,7 @@ EXPANSION3 = [
    "China restrictions limit access to a meaningful part of the market.",
    "Debt from the CMC Materials acquisition remains elevated, although $200 million was repaid in the second quarter of 2026."],
       "Viewed as a quality consumables business leveraged to the semiconductor cycle rather than to any single chipmaker. Second-quarter 2026 revenue rose about 11% to $883 million, and third-quarter guidance of $905–935 million points to a continuing recovery.",
-      "Third-quarter results on 29 October 2026, investor day on 9 November 2026, wafer start trends, content per wafer, China policy, debt reduction.",
+      "Investor day on 9 November 2026, fourth-quarter results in early 2027, wafer start trends, content per wafer, China policy, debt reduction.",
       (5, 4, 3, 4)),
 
     C("STX", "Seagate Technology Holdings plc", "semis", "Fremont, California, USA", 1978,
@@ -229,7 +229,7 @@ EXPANSION3 = [
    "European pharmaceutical companies face persistent pricing pressure at home.",
    "The pipeline behind Dupixent is less proven than the market would like, and the October 2026 Regeneron deal adds $1 billion upfront and up to $7 billion in milestones for mostly early-stage antibodies."],
       "Generally viewed as reasonably valued with real single-product concentration risk. The October 2026 expansion of the Regeneron alliance into long-acting successors to Dupixent is read as an attempt to extend the franchise, while the planned transfer of 20 mature medicines to Cheplapharm continues the narrowing of the portfolio.",
-      "Third-quarter results on 30 October 2026, Dupixent indication expansions, progress of long-acting Regeneron antibodies, Cheplapharm transfer from early 2027, vaccine season strength, currency effects.",
+      "Fourth-quarter results in early 2027, Dupixent indication expansions, progress of long-acting Regeneron antibodies, Cheplapharm transfer from early 2027, vaccine season strength, currency effects.",
       (4, 3, 4, 4)),
 
     C("GSK", "GSK plc", "health", "London, United Kingdom", 1715,
@@ -349,7 +349,7 @@ EXPANSION3 = [
        "Large pharmaceutical clients have been consolidating vendor spend and pushing on price.",
        "Meaningful debt load from the merger and subsequent acquisitions."],
       "Viewed as the leading contract research organisation, with the debate centred on biotech funding recovery.",
-      "Third-quarter results on 27 October 2026, backlog and book-to-bill, biotech funding conditions, large pharma awards, data business growth.",
+      "Fourth-quarter results in February 2027, backlog and book-to-bill, biotech funding conditions, large pharma awards, data business growth.",
       (4, 3, 3, 4)),
 
     C("DXCM", "DexCom, Inc.", "health", "San Diego, California, USA", 1999,
@@ -364,7 +364,7 @@ EXPANSION3 = [
        "Reimbursement decisions by insurers determine how fast the market can expand.",
        "A US sales force reorganisation caused a growth stumble that damaged credibility."],
       "The category growth is not in doubt; DexCom's share of it against Abbott is.",
-      "Third-quarter results on 29 October 2026, new patient starts, international growth, type 2 reimbursement decisions, competitive pricing.",
+      "Fourth-quarter results in February 2027, new patient starts, international growth, type 2 reimbursement decisions, competitive pricing.",
       (4, 4, 4, 4)),
 
     C("HUM", "Humana Inc.", "health", "Louisville, Kentucky, USA", 1961,
@@ -379,7 +379,7 @@ EXPANSION3 = [
        "Star ratings declines directly reduce bonus payments, and one downgrade costs hundreds of millions.",
        "Almost entirely dependent on a single government programme and its reimbursement decisions."],
       "Sentiment has turned more constructive: Barclays upgraded the shares to Overweight on 25 September 2026 with a $515 target, and the stock was up about 60% this year. The debate now centres on whether 2027 star ratings recover after only about 20% of members sat in four-star-plus plans for 2026, with draft cutpoints for 2027 tougher on about half of measures.",
-      "Final 2027 star ratings (October 2026), third-quarter results, 2027 membership after exiting plans covering about 600,000 members, medical loss ratio, CenterWell expansion.",
+      "Third-quarter results in early November 2026, response to the 2027 star ratings, 2027 membership after exiting plans covering about 600k members, medical loss ratio, CenterWell expansion.",
       (3, 3, 3, 3)),
 
     # ===================== FINANCIALS =====================

@@ -87,7 +87,7 @@ EXPANSION = [
    "Chinese domestic chipmakers are moving up the value chain in automotive.",
    "Heavier debt load than analog peers limits flexibility."],
       "Seen as cheap relative to analog peers, with the discount attributed to automotive cyclicality and China exposure. Growth has returned, with second-quarter 2026 revenue up 19.5% and third-quarter guidance above consensus, and management says data-centre revenue should exceed $500 million in 2026. The stock closed at $238.08 on 25 September 2026 against an average analyst target of about $306.",
-      "Q3 results, auto production forecasts, data-centre and physical AI revenue, radar design wins, China competitive dynamics.",
+      "Q4 2026 results in early 2027, auto production forecasts, data-centre and physical AI revenue, radar design wins, China competitive dynamics.",
       (4, 3, 3, 4)),
 
     # ===================== SOFTWARE & INTERNET =====================
@@ -103,7 +103,7 @@ EXPANSION = [
        "Consulting is exposed to enterprise IT budget cycles.",
        "Competing against AWS, Azure and Google Cloud with a fraction of their capital investment."],
       "Sentiment soured after the second quarter of 2026, when a shortfall in Z mainframe sales left revenue up only 1% and the shares fell 25% in a single day; they were down 26% for the year by the end of September. Bulls point to resilient software and steady consulting demand; bears to low underlying growth and the reliability of mainframe cycles.",
-      "Z mainframe deal closures, third-quarter 2026 results, software segment growth, Red Hat bookings, consulting backlog, free cash flow guidance.",
+      "Z mainframe deal closures, fourth-quarter 2026 results in January 2027, software segment growth, Red Hat bookings, consulting backlog, free cash flow guidance.",
       (4, 2, 3, 4)),
 
     C("CSCO", "Cisco Systems, Inc.", "software", "San Jose, California, USA", 1984,
@@ -209,7 +209,7 @@ EXPANSION = [
        "China represents a meaningful share of revenue and has been weak.",
        "The post-pandemic normalisation in lab spending has taken longer than expected."],
       "Held in high regard as a compounder, and sentiment has improved: the shares rose about 25% in the three months to early October 2026. Deutsche Bank and JPMorgan both turned more positive, citing end-market improvement, a path to high-single-digit growth by 2028 and demand from US pharmaceutical manufacturing reshoring.",
-      "Third-quarter results on 21 October 2026, biotech funding conditions, China demand, bioproduction orders, pharma R&D budgets.",
+      "Fourth-quarter results and 2027 guidance in January 2027, biotech funding conditions, China demand, bioproduction orders, pharma R&D budgets.",
       (5, 3, 4, 5)),
 
     C("ABT", "Abbott Laboratories", "health", "Abbott Park, Illinois, USA", 1888,
@@ -224,7 +224,7 @@ EXPANSION = [
        "Ongoing litigation relating to preterm infant formula creates a tail risk that is hard to size.",
        "Dexcom competes directly and aggressively in continuous glucose monitoring."],
       "Viewed as a steady, defensive compounder. Rothschild & Co Redburn upgraded the shares to Buy in October 2026, arguing Exact Sciences strengthens diagnostics growth and margins; the $385m settlement in September 2026 closed the government's 2022 formula recall case, leaving preterm formula litigation and Libre growth as the main swing factors.",
-      "Libre user growth and the Libre Duo launch, Cologuard and SimpleScreen CRC uptake, structural heart procedure volumes, preterm formula litigation, third-quarter results.",
+      "Libre user growth and the Libre Duo launch, Cologuard and SimpleScreen CRC uptake, Exact Sciences integration, structural heart procedure volumes, remaining preterm formula litigation, fourth-quarter results in January 2027.",
       (5, 3, 4, 5)),
 
     C("DHR", "Danaher Corporation", "health", "Washington, D.C., USA", 1969,
@@ -254,7 +254,7 @@ EXPANSION = [
        "Recent acquisitions have been expensive and have not yet demonstrated returns.",
        "US drug pricing reform disproportionately affects the highest-revenue products."],
       "A classic value-versus-patent-cliff debate, now focused on a cluster of pipeline readouts. In October 2026 Leerink downgraded to Market Perform with a $59 target, doubting milvexian against Eliquis, admilparant and Cobenfy in Alzheimer's disease psychosis, while Piper Sandler had raised its target to $82 in September on the same milestones.",
-      "Milvexian atrial fibrillation data, admilparant phase 3 in pulmonary fibrosis, Cobenfy in Alzheimer's disease psychosis, Cobenfy launch trajectory, Eliquis exclusivity timeline, third-quarter results on 29 October 2026.",
+      "Milvexian atrial fibrillation data, admilparant phase 3 in pulmonary fibrosis, Cobenfy in Alzheimer's disease psychosis, Cobenfy launch trajectory, Eliquis exclusivity timeline, fourth-quarter results in early 2027.",
       (3, 2, 3, 3)),
 
     C("GILD", "Gilead Sciences, Inc.", "health", "Foster City, California, USA", 1987,
@@ -269,7 +269,7 @@ EXPANSION = [
        "The oncology expansion, particularly Trodelvy and the Immunomedics acquisition, has disappointed relative to its cost.",
        "HIV patent exclusivity begins to erode in the 2030s and the replacement is not yet visible."],
       "Viewed as a cash-generative franchise with a concentration problem, but sentiment has improved, with the shares up nearly 20% in 2026 by late August. Lenacapavir uptake in prevention and new combinations such as Bixlenvo, approved in August 2026, are the main swing factors.",
-      "Lenacapavir prevention uptake and international access deals, Bixlenvo launch, Biktarvy share, oncology pipeline, third-quarter results on 29 October 2026.",
+      "Lenacapavir prevention uptake and international access deals, Bixlenvo launch, Biktarvy share, oncology pipeline, fourth-quarter results in early 2027.",
       (4, 3, 4, 4)),
 
     C("ELV", "Elevance Health, Inc.", "health", "Indianapolis, Indiana, USA", 1946,
@@ -284,7 +284,7 @@ EXPANSION = [
    "Medicare Advantage reimbursement rates have tightened and utilisation has run above expectations.",
    "Health insurance is politically exposed in a way few industries are."],
       "Trades at a discount to UnitedHealth, which most attribute to Carelon being less developed than Optum. In September 2026 management reaffirmed 2026 adjusted EPS of at least $27, said third-quarter results were tracking ahead of plan and targeted at least 12% EPS growth in 2027.",
-      "Third-quarter results on 21 October 2026, Medicaid rate adequacy, Medicare Advantage margin recovery, star ratings, Carelon growth.",
+      "Fourth-quarter results and 2027 guidance in January 2027, Medicaid rate adequacy, Medicare Advantage margin recovery, star ratings, Carelon growth.",
       (4, 3, 3, 4)),
 
     C("MDT", "Medtronic plc", "health", "Dublin, Ireland", 1949,
@@ -299,7 +299,7 @@ EXPANSION = [
        "The Hugo surgical robot is far behind Intuitive's da Vinci in adoption.",
        "Diabetes has lost share to Dexcom and Abbott in continuous glucose monitoring."],
       "Generally seen as a solid but slower-growing franchise, though momentum has improved: the first quarter of fiscal 2027 beat expectations and organic growth guidance was raised to 7.25–7.75%. Pulsed field ablation and completion of the MiniMed separation are the main points of debate.",
-      "MiniMed exchange offer result (expires 9 October 2026), pulsed field ablation adoption, Hugo and Sentire robot placements, procedure volume growth.",
+      "Follow-through on the MiniMed separation, pulsed field ablation adoption, Hugo and Sentire robot placements, procedure volume growth, fiscal second-quarter results in November 2026.",
       (4, 2, 3, 4)),
 
     # ===================== FINANCIALS =====================
@@ -315,7 +315,7 @@ EXPANSION = [
        "Commercial real estate exposure, particularly office, remains a concern.",
        "The reputational damage from the accounts scandal took years to repair and constrains regulatory goodwill."],
       "The asset cap removal is largely priced in, and 2026 is seen as a transition year while Wells rebuilds its growth engine. In October 2026 Morgan Stanley upgraded the shares to Overweight and a top pick, forecasting a 17% return on tangible common equity in the second half of 2027, while several brokers trimmed targets on deposit costs and normalising capital-markets activity.",
-      "Third-quarter results on 13 October 2026, net interest income guidance, loan growth post asset cap, return on tangible common equity, expense reduction.",
+      "Fourth-quarter results in mid-January 2027, net interest income guidance, loan growth post asset cap, return on tangible common equity, expense reduction.",
       (3, 3, 3, 4)),
 
     C("C", "Citigroup Inc.", "financials", "New York, New York, USA", 1812,
@@ -330,7 +330,7 @@ EXPANSION = [
        "Consent orders relating to risk management and data infrastructure remain outstanding.",
        "Emerging market exposure adds volatility that domestic-focused peers do not carry."],
       "The classic value case in US banking — cheap for identifiable reasons, with the argument being whether Fraser's restructuring finally closes the gap. The shares fell with other bank stocks in early October 2026 as Treasury yields rose, leaving Citi at roughly 11 times forward earnings, level with Bank of America and below JPMorgan.",
-      "Third-quarter results on 13 October 2026, Banamex deconsolidation in early 2027, return on tangible common equity progress, expense targets, consent order resolution, capital returns.",
+      "Fourth-quarter results in mid-January 2027, Banamex deconsolidation in early 2027, return on tangible common equity progress, expense targets, consent order resolution, capital returns.",
       (3, 2, 3, 3)),
 
     C("SCHW", "The Charles Schwab Corporation", "financials", "Westlake, Texas, USA", 1971,
@@ -345,7 +345,7 @@ EXPANSION = [
        "Clients moving cash to higher-yielding alternatives compresses the most profitable revenue line.",
        "Zero-commission trading removed a revenue stream permanently and increased reliance on net interest."],
       "Recovery from the 2023 deposit stress has been the dominant theme, and asset gathering remains strong: core net new assets were a record $64.8 billion for August 2026 while client cash fell to 8.8% of client assets. The debate is the normalised earnings power once cash sorting fully ends.",
-      "Fall Business Update on 15 October 2026, net new asset growth, client cash balances, net interest margin, margin lending balances.",
+      "Monthly activity reports, net new asset growth, client cash balances, net interest margin, margin lending balances, fourth-quarter results in January 2027.",
       (4, 3, 3, 4)),
 
     C("SPGI", "S&P Global Inc.", "financials", "New York, New York, USA", 1860,
@@ -481,7 +481,7 @@ EXPANSION = [
        "Very limited e-commerce presence compared with the rest of retail.",
        "Freight and wage inflation compress margins in a low-gross-margin model."],
       "One of the most consistently well-regarded retailers. In August 2026 TJX raised its full-year EPS guidance to $5.31 to $5.36 and lifted its long-term store target to 7,500, although Marmaxx comparable sales rose only 1% on what management called self-inflicted merchandising errors. The main debate is whether merchandise availability tightens.",
-      "Marmaxx comparable sales recovery, merchandise margin, inventory availability, store growth towards the 7,500 target.",
+      "Marmaxx comparable sales recovery, merchandise margin, inventory availability, store growth towards the 7500-store target.",
       (5, 3, 5, 5)),
 
     C("MO", "Altria Group, Inc.", "consumer", "Richmond, Virginia, USA", 1847,
@@ -527,7 +527,7 @@ EXPANSION = [
        "The energy transition creates long-term terminal value uncertainty that is hard to model.",
        "Operations in politically unstable regions carry contract and asset risk."],
       "Viewed as the highest-quality operator in oilfield services. The bear case is structural rather than company-specific.",
-      "Third-quarter results on 23 October 2026, international rig counts, offshore project sanctions, digital revenue growth, Middle East activity including the Aramco well construction contracts.",
+      "Fourth-quarter results in January 2027, Data Center Solutions growth, international rig counts, offshore project sanctions, digital revenue growth, Middle East activity including the Aramco well construction contracts.",
       (4, 3, 4, 4)),
 
     C("EOG", "EOG Resources, Inc.", "energy", "Houston, Texas, USA", 1985,
@@ -557,7 +557,7 @@ EXPANSION = [
        "Long-term fuel demand faces obvious pressure from vehicle electrification.",
        "Refineries are capital-intensive assets with significant maintenance and environmental liabilities."],
       "Sentiment has turned more positive as refining margins surged, with the realised margin reaching $24.08 per barrel in the second quarter of 2026 and the shares setting an all-time high above $274 in September. BMO raised its target to $310 in September 2026, pointing to momentum across the integrated portfolio and the midstream growth outlook.",
-      "Third-quarter results on 28 October 2026, crack spreads, refinery utilisation, Western Gateway Pipeline progress, capital return pace.",
+      "Fourth-quarter results in early 2027, crack spreads, refinery utilisation, Western Gateway Pipeline progress, capital return pace.",
       (3, 2, 3, 3)),
 
     C("OXY", "Occidental Petroleum Corporation", "energy", "Houston, Texas, USA", 1920,
@@ -618,7 +618,7 @@ EXPANSION = [
    "Coal, historically a major freight category, is in permanent structural decline.",
    "The $85 billion Norfolk Southern acquisition still needs Surface Transportation Board approval and faces organised opposition, and service problems during any integration would draw regulatory intervention."],
       "The pending Norfolk Southern acquisition now dominates the debate. The Surface Transportation Board unanimously rejected requests to dismiss the revised application in September 2026, keeping the review on course for a targeted close in the second half of 2027, while the companies point to about $1 billion of annual operating savings.",
-      "Third-quarter results on 22 October 2026, Surface Transportation Board review of the Norfolk Southern merger, carload volumes, operating ratio.",
+      "Surface Transportation Board review of the Norfolk Southern merger with public comments due 18 November 2026, carload volumes, operating ratio, fourth-quarter results in January 2027.",
       (5, 3, 4, 5)),
 
     C("UPS", "United Parcel Service, Inc.", "industrials", "Atlanta, Georgia, USA", 1907,
@@ -633,7 +633,7 @@ EXPANSION = [
        "The 2023 Teamsters contract substantially raised the cost base ahead of the volume recovery.",
        "Amazon's own logistics network keeps expanding and competes directly."],
       "One of the more contested industrials. With the Amazon volume glide-down and network reconfiguration completed in June 2026 and a new global operating model in place from September, attention is moving to whether yield gains and healthcare growth can restore earnings; bears still point to structural volume loss.",
-      "US domestic revenue per piece, healthcare revenue growth, cost per piece, peak-season performance, third-quarter results.",
+      "US domestic revenue per piece, healthcare revenue growth, cost per piece, peak-season performance, fourth-quarter results in early 2027.",
       (3, 2, 3, 4)),
 
     C("ETN", "Eaton Corporation plc", "industrials", "Dublin, Ireland", 1911,
@@ -693,7 +693,7 @@ EXPANSION = [
        "Sentinel has faced major cost overruns and a Nunn-McCurdy breach review.",
        "Heavy dependence on the US government means budget politics drive the business."],
       "The strategic position is well regarded; the concern is margin risk on fixed-price development work. Missile defence has become an added support after Northrop signed framework agreements worth more than $3 billion in August 2026 to supply PAC-3 MSE and THAAD rocket motors and components.",
-      "Third-quarter results on 20 October 2026, B-21 production milestones and charges, Sentinel flight test in 2027, defence budget appropriations, free cash flow.",
+      "Fourth-quarter results in early 2027, B-21 production milestones and charges, Sentinel flight test in 2027, defence budget appropriations, free cash flow.",
       (4, 3, 3, 5)),
 
     # ===================== TELECOM & MEDIA =====================
@@ -739,7 +739,7 @@ EXPANSION = [
    "Growth increasingly depends on fixed wireless and rural expansion rather than core share gains, and management expects higher account churn while it migrates customers off legacy rate plans.",
    "Deutsche Telekom's majority ownership limits governance independence."],
       "Still regarded as the best-executing US carrier, but sentiment has cooled: the shares hit a one-year low of about $166 in September 2026, down 17% for the year, as management deliberately slowed account growth while modernising legacy plans. Investors are also weighing spectrum auction spending in 2027 and 2028 and a CFO handover to Jessica Uhl.",
-      "Third-quarter results on 28 October 2026, postpaid net account additions, fixed wireless growth, CFO transition, spectrum auction spending.",
+      "Fourth-quarter results in early 2027, postpaid net account additions, fixed wireless growth, CFO transition, spectrum auction spending.",
       (4, 3, 3, 4)),
 
     C("CMCSA", "Comcast Corporation", "telecom", "Philadelphia, Pennsylvania, USA", 1963,

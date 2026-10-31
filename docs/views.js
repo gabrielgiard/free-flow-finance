@@ -839,7 +839,7 @@ function panelThesis(c) {
       <h4>Street View</h4>
       <p>${c.street}</p>
       <h4>Catalysts to Watch</h4>
-      <ul class="bullets cat">${c.cat.split(/,\s+/).map(x => `<li>${x.replace(/\.$/,'')}</li>`).join('')}</ul>
+      <ul class="bullets cat">${c.cat.split(/,\s+(?![^()]*\))/).map(x => `<li>${x.replace(/\.$/,'')}</li>`).join('')}</ul>
     </div>
     <div>
       ${newsHTML(c)}

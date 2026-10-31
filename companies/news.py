@@ -1,11 +1,12 @@
 """Recent developments shown on each company's Thesis tab.
 
-From a source-checked news review covering 1 August to 8 October 2026.
+From a source-checked news review covering 1 August to 30 October 2026,
+including the Q3 2026 earnings season (Model update 3).
 Each item: d = date, h = one-line summary in our words, u = source.
 Refresh by re-running the review; keep at most four items a company.
 """
 
-NEWS_ASOF = "2026-10-08"
+NEWS_ASOF = "2026-10-30"
 
 NEWS = {
  "NVDA": [
@@ -21,6 +22,11 @@ NEWS = {
   }
  ],
  "TSM": [
+  {
+   "d": "2026-10-15",
+   "h": "Q3 revenue US$46.7bn, up 41% in dollars; net income up 69%; 66.4% gross margin; Q4 guided to US$52.3-54.3bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001046179/000104617926000726/a3q26e_withguidancexfinal.htm"
+  },
   {
    "d": "2026-10-05",
    "h": "Musk said TSMC is in early discussions to join his Terafab chip venture in Texas; TSM rose about 2.5% while Intel fell",
@@ -70,6 +76,11 @@ NEWS = {
  ],
  "INTC": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue $16.5bn, up 21%; data-centre and AI revenue $7.3bn, up 78%; Intel Foundry $6.7bn, up 58%; Q4 guided to $15-16bn",
+   "u": "https://www.verdict.co.uk/intel-q3-2026-results/"
+  },
+  {
    "d": "2026-10-05",
    "h": "Intel fell about 2% after Musk said TSMC is in talks to join Terafab, where Intel's 14A was the only named process",
    "u": "https://finance.yahoo.com/markets/stocks/articles/intel-drops-musk-signals-tsmc-151956208.html"
@@ -83,14 +94,14 @@ NEWS = {
    "d": "2026-09-02",
    "h": "CFO Zinsner said external 14A customer engagements have significantly increased; no deal announced; risk production 2027, volume 2028",
    "u": "https://bits-chips.com/article/intel-signals-external-customer-wins-for-14a-foundry-process/"
-  },
-  {
-   "d": "2026-08-10",
-   "h": "Intel priced 210.5m shares at $95, upsized from $15bn; full greenshoe of 31.6m shares took the raise to about $23bn",
-   "u": "https://www.fool.com/investing/2026/08/21/intel-sold-usd20-billion-of-stock-at-usd95-a-share-it-now-trades-below-usd93/"
   }
  ],
  "ASML": [
+  {
+   "d": "2026-10-14",
+   "h": "Record Q3 net sales of €11.7bn at a 57.5% gross margin; 2026 guided to €44-45bn and supply for 2027-28 said to fall short of demand",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000937966/000162828026065813/pressreleasefinancialresul.htm"
+  },
   {
    "d": "2026-09-20",
    "h": "Reuters: TSMC plans High-NA EUV in high-volume production from 2030; ASML targets larger-mask pilot line in 2031 for ~40% productivity gain",
@@ -131,6 +142,11 @@ NEWS = {
  ],
  "LRCX": [
   {
+   "d": "2026-10-21",
+   "h": "September-quarter revenue $8.22bn, up about 54% year on year; 52.3% gross margin; December quarter guided to $8.6bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000707549/000070754926000052/lrcx_exhibitx991xq1x2027.htm"
+  },
+  {
    "d": "2026-09-18",
    "h": "Lam rose nearly 7% to $288.11, reversing some of the mid-September equipment selloff",
    "u": "https://seekingalpha.com/news/4644525-lam-research-advances-7-reversing-some-recent-losses"
@@ -154,6 +170,11 @@ NEWS = {
   }
  ],
  "TXN": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue $6.06bn, up 28%; analog up 32%; gross margin 64.2%; Q4 guided to $5.8-6.3bn",
+   "u": "https://stockhub.kr/en/insights/20261022-txn-cy26q3"
+  },
   {
    "d": "2026-08-01",
    "h": "Julie Knecht became CFO, succeeding Rafael Lizardi, who stayed as adviser through August",
@@ -182,7 +203,19 @@ NEWS = {
    "u": "https://finance.yahoo.com/technology/ai/articles/qualcomm-announces-multi-generational-product-130000757.html"
   }
  ],
+ "KLAC": [
+  {
+   "d": "2026-10-28",
+   "h": "September-quarter revenue $4.14bn, up about 29%; December quarter guided to $4.7bn ± $0.2bn",
+   "u": "https://finviz.com/news/410498/kla-corporation-reports-fiscal-2027-first-quarter-results"
+  }
+ ],
  "MSFT": [
+  {
+   "d": "2026-10-28",
+   "h": "Fiscal Q1 revenue $92.3bn, up 19%; Azure up 48% to $33.2bn; capital spending $39.4bn, about double a year earlier",
+   "u": "https://www.aichatdaily.com/ai-business/microsoft-revenue-rises-19-92-3b-azure-grows"
+  },
   {
    "d": "2026-10-05",
    "h": "Melius Research upgraded Microsoft to buy, arguing AI-safety fears make it the trusted enterprise vendor",
@@ -201,6 +234,11 @@ NEWS = {
  ],
  "GOOGL": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 revenue $127.6bn, up 25%; Google Cloud up 103% to $30.7bn; capex $51.4bn; shares fell about 8% after hours on an EPS miss and negative free cash flow",
+   "u": "https://www.xtb.com/en/market-analysis/alphabet-disappoints-wall-street-despite-record-results-shares-plunge-over-8-and-test-300"
+  },
+  {
    "d": "2026-09-16",
    "h": "Judge Brinkema rejected an ad-tech breakup, ordering six years of auction-rule changes and a compliance monitor; Google to appeal liability",
    "u": "https://www.thestar.com.my/tech/tech-news/2026/09/17/google-should-relax-ad-tech-rules-appoint-antitrust-monitor-us-judge-finds"
@@ -218,6 +256,11 @@ NEWS = {
  ],
  "AMZN": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 net sales $201.9bn, up 12%; AWS up 39% to $46.0bn with a $578bn backlog; Q4 guided to $240-247bn; 2026 capex about $220bn",
+   "u": "https://www.datastudios.org/post/amazon-q3-2026-results-aws-39-percent-growth-46-billion-220-billion-capex"
+  },
+  {
    "d": "2026-09-26",
    "h": "Anthropic reported to be preparing an IPO as soon as October 2026; Amazon's stake was carried at $190.4bn by June 2026",
    "u": "https://finance.yahoo.com/technology/ai/articles/anthropics-ipo-300-billion-test-014700775.html"
@@ -234,6 +277,11 @@ NEWS = {
   }
  ],
  "META": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue $64.6bn, up 26%; a $9.9bn charge for an agreement with state attorneys general; 2026 capex now $135-145bn; Q4 guided to $73-76bn",
+   "u": "https://www.hl.co.uk/shares/share-research/meta-q3-results-strong-quarter-spending-still-a-question"
+  },
   {
    "d": "2026-09-30",
    "h": "Meta shares rose nearly 25% in September 2026, lifting the forward P/E from about 18 to about 23",
@@ -286,6 +334,11 @@ NEWS = {
  ],
  "NOW": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 subscription revenue $3.99bn, up 21%; cRPO up 20.5%; full-year subscription guidance raised, though shares fell after hours",
+   "u": "https://www.tradingkey.com/news/earnings/262248853-tradingkey"
+  },
+  {
    "d": "2026-09-03",
    "h": "ServiceNow rallied about 28% in a month on a sector-wide software re-rating rather than company-specific news",
    "u": "https://247wallst.com/investing/2026/09/03/servicenow-just-rallied-28-in-a-month-take-profits-or-buy-more/"
@@ -308,7 +361,19 @@ NEWS = {
    "u": "https://www.stocktitan.net/news/PLTR/palantir-reports-q2-2026-u-s-comm-revenue-growth-of-149-y-y-and-c8762wptyyap.html"
   }
  ],
+ "SAP": [
+  {
+   "d": "2026-10-21",
+   "h": "First €10bn quarter: Q3 revenue €10.27bn, up 13%; cloud revenue up 26% to €6.67bn; current cloud backlog €24.1bn, up 28%",
+   "u": "https://finviz.com/news/405805/sap-quarterly-statement-q3-2026"
+  }
+ ],
  "NFLX": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 revenue $12.9bn, up 12%; 34.6% operating margin; 2026 ad revenue outlook cut to about $2.7bn from $3bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001065280/000106528026000290/ex991_q326.htm"
+  },
   {
    "d": "2026-09-14",
    "h": "Netflix will report Q3 2026 results on 20 October 2026",
@@ -370,6 +435,11 @@ NEWS = {
  ],
  "LLY": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 39% to $24.4bn as Mounjaro reaches $10.7bn and Zepbound $5.4bn; 2026 revenue guide raised to $91bn-$92bn",
+   "u": "https://www.stocktitan.net/articles/eli-lilly-q3-2026-earnings-mounjaro-zepbound"
+  },
+  {
    "d": "2026-09-29",
    "h": "Phase 3 TRIUMPH-2: retatrutide produced up to 20.8% weight loss at 80 weeks in type 2 diabetes; US filing planned Q1 2027",
    "u": "https://www.stocktitan.net/news/LLY/lilly-s-triple-agonist-retatrutide-delivered-substantial-weight-loss-ib5k8uwks8bp.html"
@@ -383,14 +453,14 @@ NEWS = {
    "d": "2026-08-31",
    "h": "Lilly agreed to acquire Merida Biosciences for up to $2.875bn in cash, including milestones",
    "u": "https://www.stocktitan.net/news/LLY/lilly-to-acquire-merida-biosciences-to-advance-treatments-for-uzrhnbx0jyuh.html"
-  },
-  {
-   "d": "2026-08-28",
-   "h": "FDA approved Mounjaro to cut major cardiovascular event risk in high-risk type 2 diabetes, based on SURPASS-CVOT",
-   "u": "https://www.stocktitan.net/news/LLY/fda-approves-lilly-s-mounjaro-tirzepatide-to-reduce-cardiovascular-fxtq29fm6h0j.html"
   }
  ],
  "JNJ": [
+  {
+   "d": "2026-10-13",
+   "h": "Q3 sales up 5.9% to $25.4bn on MedTech growth; 2026 guidance raised to $101.0bn-$101.4bn of sales and $11.05-$11.15 adjusted EPS",
+   "u": "https://finviz.com/news/401782/johnson-johnson-beats-third-quarter-earnings-estimates-and-raises-2026-revenue-and-profit-outlook"
+  },
   {
    "d": "2026-09-25",
    "h": "Five-year data showed a single Carvykti infusion gave treatment-free remission in 50% of early-line relapsed myeloma patients",
@@ -426,6 +496,11 @@ NEWS = {
  ],
  "UNH": [
   {
+   "d": "2026-10-13",
+   "h": "Q3 adjusted EPS of $4.69 beats as the medical care ratio improves to 88.4%; 2026 adjusted EPS outlook raised to at least $20.50",
+   "u": "https://www.xtb.com/en/market-analysis/unitedhealth-group-shares-gain-3-after-stronger-than-expected-earnings-and-guidance"
+  },
+  {
    "d": "2026-10-01",
    "h": "UnitedHealthcare and Aetna said their 2027 Medicare Advantage plans will offer more limited provider networks.",
    "u": "https://www.msn.com/en-us/news/other/unitedhealthcare-aetna-say-2027-medicare-advantage-plans-to-offer-more-limited-provider-networks/ar-AA2dliN9"
@@ -443,6 +518,11 @@ NEWS = {
  ],
  "ABBV": [
   {
+   "d": "2026-10-30",
+   "h": "Q3 revenue up 10.3% to $17.4bn as Skyrizi ($5.78bn) and Rinvoq ($2.71bn) each grow over 22%; 2026 adjusted EPS guide raised to $13.95-$13.99",
+   "u": "https://www.stocktitan.net/articles/abbvie-q3-2026-earnings-skyrizi-rinvoq-outgrow-humira"
+  },
+  {
    "d": "2026-09-28",
    "h": "FDA approved Juvmo (tavapadon), the first selective D1/D5 agonist for Parkinson's disease, as monotherapy or with levodopa; US availability expected October 2026.",
    "u": "https://news.abbvie.com/2026-09-28-U-S-FDA-Approves-AbbVies-JUVMO-TM-tavapadon-for-Parkinsons-Disease"
@@ -454,6 +534,11 @@ NEWS = {
   }
  ],
  "MRK": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 sales up 5% to $18.1bn; Keytruda IV sales slip 5% to $7.8bn as patients move to subcutaneous Keytruda Qlex at $830m",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000310158/000110465926119825/tm2628203d1_ex99-2.htm"
+  },
   {
    "d": "2026-08-19",
    "h": "Phase 3 INTerpath-001: intismeran autogene plus Keytruda met recurrence-free and distant-metastasis-free survival endpoints in resected melanoma; shares jumped about 12%.",
@@ -484,6 +569,11 @@ NEWS = {
  ],
  "NVS": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 net sales up 4% to $14.5bn and core EPS up 9% to $2.46; full-year core operating income guidance raised",
+   "u": "https://www.indianpharmapost.com/news/novartis-raises-2026-profit-outlook-as-q3-sales-rise-4-22263"
+  },
+  {
    "d": "2026-09-11",
    "h": "Major shareholder Artisan Partners said the board 'failed to properly scrutinize deals' after trial setbacks undermined the $12B Avidity acquisition.",
    "u": "https://www.biospace.com/business/novartis-board-faces-investor-scrutiny-after-m-a-misfires-and-r-d-flops"
@@ -497,6 +587,13 @@ NEWS = {
    "d": "2026-09-07",
    "h": "Pelacarsen lowered Lp(a) but failed to reduce cardiovascular events in the 8,000-patient Phase 3 Lp(a)HORIZON trial.",
    "u": "https://pharmaphorum.com/news/novartis-hit-lpa-drug-fails-cardio-outcomes-trial"
+  }
+ ],
+ "ISRG": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 revenue up 22% to $3.05bn as da Vinci procedures grow about 14% and 546 systems are placed; GAAP EPS hit by a $450m antitrust settlement",
+   "u": "https://www.biospace.com/press-releases/intuitive-announces-third-quarter-2026-earnings"
   }
  ],
  "VRTX": [
@@ -530,6 +627,11 @@ NEWS = {
  ],
  "REGN": [
   {
+   "d": "2026-10-30",
+   "h": "Q3 revenue up 36% to $5.1bn with record Dupixent, EYLEA HD up 62% and Libtayo; non-GAAP EPS up 70% to $20.07",
+   "u": "https://www.quiverquant.com/news/Regeneron+Reports+Third+Quarter+2026+Results,+Raises+Full-Year+Guidance+and+Expands+Sanofi+Collaboration"
+  },
+  {
    "d": "2026-10-01",
    "h": "Expanded Sanofi alliance: $1B upfront and up to $7B milestones for four long-acting antibodies, split 50:50; Dupixent terms unchanged; shares fell 2.9%.",
    "u": "https://finance.yahoo.com/markets/stocks/articles/why-regeneron-regn-stock-trading-220507553.html"
@@ -549,6 +651,11 @@ NEWS = {
  ],
  "JPM": [
   {
+   "d": "2026-10-13",
+   "h": "Q3 net income $15.3bn on revenue of $50.9bn, up 8%; net interest income up 13%; investment banking fees up 14% and equities trading up 49%",
+   "u": "https://pulse2.com/jpmorgan-chase-q3-2026-results"
+  },
+  {
    "d": "2026-09-15",
    "h": "Co-president Doug Petno guided third-quarter investment banking fees and markets revenue up by a mid-to-high-teens percentage year on year.",
    "u": "https://pulse2.com/jpmorgan-expects-q3-investment-banking-fees-and-markets-revenue-to-rise-mid-to-high-teens/"
@@ -556,12 +663,22 @@ NEWS = {
  ],
  "V": [
   {
+   "d": "2026-10-27",
+   "h": "Fiscal Q4 net revenue $12.1bn, up 13%; fiscal 2026 revenue $45.9bn, up 15%; dividend raised 16% and $4bn of shares bought back in the quarter",
+   "u": "https://www.heygotrade.com/en/news/visa-fiscal-q4-2026-earnings-results/"
+  },
+  {
    "d": "2026-09-19",
    "h": "Nearly 978 merchants and trade groups asked a Brooklyn federal judge to withhold final approval of the Visa-Mastercard interchange settlement.",
    "u": "https://www.crowdfundinsider.com/2026/09/310317-visa-mastercard-settlement-faces-merchant-pushback-in-court/"
   }
  ],
  "MA": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 net revenue $9.8bn, up 14%; adjusted EPS $5.31, up 21%; value-added services up 19%",
+   "u": "https://www.stocktitan.net/articles/mastercard-q3-2026-earnings-us-credit-cards-travel"
+  },
   {
    "d": "2026-09-30",
    "h": "A consortium backed by Mastercard, Visa and Stripe entered the US dollar stablecoin market.",
@@ -575,12 +692,22 @@ NEWS = {
  ],
  "BAC": [
   {
+   "d": "2026-10-14",
+   "h": "Q3 revenue $30bn, up 3%, and net interest income up 8%, but net income fell 17% to $6.9bn after a $1.2bn regulatory settlement charge",
+   "u": "https://vestedfinance.com/blog/us-stocks/bank-of-america-q3-earnings-2026/"
+  },
+  {
    "d": "2026-09-14",
    "h": "Moynihan said third-quarter investment banking fees would fall at least 10% year on year; shares fell 5.1% to $59.47.",
    "u": "https://www.fool.com/coverage/stock-market-today/2026/09/14/stock-market-today-sept-14-bank-of-america-slides-on-investment-banking-fee-surprise/"
   }
  ],
  "GS": [
+  {
+   "d": "2026-10-13",
+   "h": "Q3 net revenues $18.7bn, up 23%; earnings $5.3bn, up 29%; investment banking fees up 21%",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000886982/000088698226000529/a3q26gsearningsresults.htm"
+  },
   {
    "d": "2026-09-16",
    "h": "Goldman said fixed income, currencies and commodities revenue would be slightly softer in the third quarter, with higher costs; shares fell about 4%.",
@@ -594,12 +721,36 @@ NEWS = {
  ],
  "MS": [
   {
+   "d": "2026-10-14",
+   "h": "Q3 revenue $20.3bn, up about 12%; net income $4.9bn, EPS $3.03 against $2.91 expected; equities trading revenue up 41% to $5.8bn",
+   "u": "https://www.kaohooninternational.com/?p=592720"
+  },
+  {
    "d": "2026-09-29",
    "h": "Morgan Stanley set up a Digital Asset Lab to test stablecoins, tokenisation and DeFi applications, extending its crypto push through E*TRADE and ETFs",
    "u": "https://finance.yahoo.com/markets/crypto/articles/breaking-morgan-stanley-expands-deeper-123152711.html"
   }
  ],
+ "AXP": [
+  {
+   "d": "2026-10-23",
+   "h": "Record Q3 revenue of $20.1bn, up about 9%; adjusted EPS $4.68; full-year EPS guidance raised to $17.60-17.90",
+   "u": "https://247wallst.com/cards/american-express-q3-2026-earnings-axp-01m5m6zq01vcns9g97a051hrxm"
+  }
+ ],
+ "BLK": [
+  {
+   "d": "2026-10-14",
+   "h": "Q3 revenue $7.75bn, up 19%; record AUM of about $15.5tn after $205bn of net inflows",
+   "u": "https://pulse2.com/blackrock-q3-2026-results"
+  }
+ ],
  "HSBC": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 pre-tax profit up 32% to $9.63bn and a new buyback of up to $1bn, but shares fell 5.5% as revenue and wealth income missed estimates",
+   "u": "https://finews.com/news/english-news/74169-hsbc-reports-significantly-higher-third-quarter-earnings-share-buyback-stock-falls-5-5-percent"
+  },
   {
    "d": "2026-09-29",
    "h": "HSBC completed its $1 billion buyback launched on 5 August, repurchasing 48.657 million shares in London and Hong Kong",
@@ -671,6 +822,16 @@ NEWS = {
  ],
  "PG": [
   {
+   "d": "2026-10-22",
+   "h": "Fiscal Q1 organic sales up 4% led by 2.4 points of volume; core EPS up 1% to $2.00 as the commodity headwind rises to about $1.4bn",
+   "u": "https://www.globalbrandsmagazine.com/pg-q1-fy2027-results-brand-breakdown"
+  },
+  {
+   "d": "2026-10-01",
+   "h": "Completes the $3.9bn all-cash acquisition of supplements brand Thorne, folded into Personal Health Care",
+   "u": "https://www.globalbrandsmagazine.com/pg-q1-fy2027-results-brand-breakdown"
+  },
+  {
    "d": "2026-09-24",
    "h": "P&G will report first-quarter fiscal 2026/27 results on 22 October",
    "u": "https://www.pginvestor.com/news/news-details/2026/PG-to-Webcast-Discussion-of-First-Quarter-2627-Earnings-Results-on-October-22/default.aspx"
@@ -682,6 +843,16 @@ NEWS = {
   }
  ],
  "KO": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 organic revenue up 7% with volume up 5%; full-year EPS growth guidance raised to 11%",
+   "u": "https://finance.biggo.com/news/US_KO_2026-10-27"
+  },
+  {
+   "d": "2026-10-27",
+   "h": "Flags an 8-point revenue headwind in 2027 from refranchising Coca-Cola Beverages Africa",
+   "u": "https://finance.biggo.com/news/US_KO_2026-10-27"
+  },
   {
    "d": "2026-09-29",
    "h": "Coca-Cola will release third-quarter 2026 results on 27 October",
@@ -717,7 +888,40 @@ NEWS = {
    "u": "https://ir.homedepot.com/news-releases/2026/08-12-2026-140442024"
   }
  ],
+ "PEP": [
+  {
+   "d": "2026-10-08",
+   "h": "Q3 revenue of $25.3bn and EPS of $2.23 beat; fiscal 2026 outlook raised",
+   "u": "https://www.tradingview.com/news/tradingview:e2b99d5da04e4:0-pepsico-posts-q3-2026-revenue-25-27b-eps-2-23-raises-fiscal-2026-outlook/"
+  }
+ ],
+ "MC": [
+  {
+   "d": "2026-10-13",
+   "h": "Q3 revenue of EUR18.5bn with organic growth slowing to 1%; Fashion & Leather Goods falls 5% organically on weak Chinese demand",
+   "u": "https://www.indexbox.io/blog/lvmh-q3-2026-revenue-rises-12-to-eur185-billion-as-china-weakness-hits-fashion-and-leather-goods/"
+  }
+ ],
+ "NESN": [
+  {
+   "d": "2026-10-22",
+   "h": "Q3 organic growth picks up to 4% and the 2026 organic sales growth outlook of 3% to 4% is maintained",
+   "u": "https://www.tradingview.com/news/seekingalpha:d84c2caad094b:0-nestl-q3-organic-growth-picks-up-to-4-maintains-2026-guidance/"
+  }
+ ],
+ "PM": [
+  {
+   "d": "2026-10-21",
+   "h": "Adjusted operating income tops $5bn for the first time as smoke-free growth accelerates, but a $370m US ZYN investment pushes full-year guidance to the midpoint or lower",
+   "u": "https://finance.biggo.com/news/US_PM_2026-10-21"
+  }
+ ],
  "OR": [
+  {
+   "d": "2026-10-22",
+   "h": "Q3 sales beat forecasts as premium haircare and dermatological beauty accelerate; nine-month sales up 7.7%",
+   "u": "https://www.ad-hoc-news.de/boerse/news/corporate-news/l-oreal-stock-nine-month-sales-rise-7-7-prozent-on-strong-third-quarter/70433321"
+  },
   {
    "d": "2026-09-23",
    "h": "HSBC reiterated Buy with a EUR450 target while Deutsche Bank kept Sell at EUR340, citing warning signs in Chinese cosmetics imports",
@@ -725,6 +929,11 @@ NEWS = {
   }
  ],
  "XOM": [
+  {
+   "d": "2026-10-30",
+   "h": "Q3 profit of $15.4bn as refining hits record utilisation; dividend raised 4% and $20bn buyback pace reaffirmed",
+   "u": "https://finance.biggo.com/news/US_XOM_2026-10-30"
+  },
   {
    "d": "2026-09-09",
    "h": "Exxon shares up about 40% year to date at $164.83, trailing Chevron (44%) and the XLE energy ETF (48%)",
@@ -738,6 +947,16 @@ NEWS = {
  ],
  "CVX": [
   {
+   "d": "2026-10-30",
+   "h": "Q3 adjusted profit of $10.4bn and free cash flow of $14.2bn on record production and refining margins",
+   "u": "https://finance.biggo.com/news/US_CVX_2026-10-30"
+  },
+  {
+   "d": "2026-10-30",
+   "h": "Unveils a plan to double Venezuela output to 600,000 barrels a day by 2031",
+   "u": "https://finance.biggo.com/news/US_CVX_2026-10-30"
+  },
+  {
    "d": "2026-09-02",
    "h": "Chevron to invest over $7 billion in Venezuelan joint ventures over five years, aiming to roughly double output there to about 600,000 bpd",
    "u": "https://www.aljazeera.com/economy/2026/9/2/us-oil-giant-chevron-to-expand-venezuela-operations"
@@ -745,12 +964,22 @@ NEWS = {
  ],
  "SHEL": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 adjusted earnings of $10.8bn beat with cash flow of $21bn; another $5bn buyback announced and LNG Canada Phase 2 approved",
+   "u": "https://www.tradingpedia.com/2026/10/29/shell-beats-q3-estimates-and-expands-share-buybacks/"
+  },
+  {
    "d": "2026-08-25",
    "h": "Shell weighing sale of its US chemicals business for up to $8 billion; Exxon, LyondellBasell, Apollo and KPC submitted non-binding bids, FT reported",
    "u": "https://www.thestar.com.my/business/business-news/2026/08/25/shell-us-assets-draw-exxon-lyondell-interest"
   }
  ],
  "TTE": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 adjusted profit up 51% to $9.1bn on a record $33 refining margin; 2026 cash flow guidance raised to $43bn",
+   "u": "https://finance.biggo.com/news/US_TTE_2026-10-29"
+  },
   {
    "d": "2026-09-28",
    "h": "Strategy update: 4% a year energy production growth to 2030, dividend growth above 5% a year, $2.5bn Q4 buyback, $14-17bn annual net capex 2027-32",
@@ -764,7 +993,19 @@ NEWS = {
    "u": "https://worldoil.com/news/2026/8/6/conocophillips-announces-ceo-succession-names-andy-o-brien"
   }
  ],
+ "LIN": [
+  {
+   "d": "2026-10-29",
+   "h": "Record Q3 sales of $9.4bn and adjusted EPS up 9% to $4.59; $425m restructuring charge and Lincare moved to Global Other",
+   "u": "https://finance.biggo.com/news/US_LIN_2026-10-29"
+  }
+ ],
  "BHP": [
+  {
+   "d": "2026-10-20",
+   "h": "September-quarter copper output falls 19% while WAIO iron ore sets records and Jansen potash is 87% complete; FY27 guidance unchanged",
+   "u": "https://kalkine.com.au/news/announcements/bhp-q1-fy27-operational-review-copper-output-falls-19-waio-sets-records-jansen-87-complete"
+  },
   {
    "d": "2026-09-01",
    "h": "Shares hit a record A$68.77 before pulling back; of 14 analysts, 1 rates Buy, 12 Hold and 1 Sell",
@@ -778,12 +1019,22 @@ NEWS = {
  ],
  "NEE": [
   {
+   "d": "2026-10-21",
+   "h": "Q3 adjusted EPS up 9.7% with the renewables backlog at 36.7 GW; guidance reaffirmed at the high end",
+   "u": "https://energynewsbeat.co/earnings/nextera-energy-delivers-solid-q3-2026-adjusted-earnings-beat-reaffirms-high-end-guidance-amid-strong-renewables-backlog-growth/"
+  },
+  {
    "d": "2026-09-14",
    "h": "Reaffirmed 2026 adjusted EPS guidance of $3.92-4.02, targeting the top end; expanded Virginia customer benefits package for the Dominion deal",
    "u": "https://www.marketscreener.com/news/nextera-energy-reaffirms-2026-guidance-at-top-end-of-range-as-67-billion-dominion-merger-progresses-ce785bdcdc81f622"
   }
  ],
  "RIO": [
+  {
+   "d": "2026-10-14",
+   "h": "Q3 update: Oyu Tolgoi copper up 29% year to date and Simandou reaches a 10 Mtpa run-rate; guidance unchanged",
+   "u": "https://kalkinemedia.com/uk/news/announcements/rio-tinto-rio-q3-2026-production-update-oyu-tolgoi-copper-surges-29-ytd-simandou-reaches-10-mtpa-run-rate"
+  },
   {
    "d": "2026-09-30",
    "h": "Bell Bay aluminium smelter secured to December 2031 with Hydro Tasmania power and Australian and Tasmanian government support",
@@ -798,21 +1049,33 @@ NEWS = {
    "d": "2026-09-08",
    "h": "China's state buyer told some steel mills to hold off purchases of Rio's Pilbara Blend iron ore, Bloomberg reported",
    "u": "https://www.bloomberg.com/news/articles/2026-09-08/china-tells-steel-mills-to-hold-off-on-buying-rio-tinto-s-ore"
-  },
-  {
-   "d": "2026-08-06",
-   "h": "CMRG directed some Chinese steel mills to halt talks with Rio on September iron ore shipments during annual contract negotiations, Reuters reported",
-   "u": "https://www.mining.com/web/cmrg-tells-some-steel-mills-to-halt-talks-with-rio-tinto-sources-say/"
   }
  ],
  "GE": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue of $14.1bn and adjusted EPS of $2.25 beat as orders rise 49%; 2026 guidance raised again",
+   "u": "https://airpronews.com/2026/10/21/ge-aerospace-q3-2026-results-orders-up-49-percent/"
+  },
   {
    "d": "2026-09-08",
    "h": "Agreed to buy castings maker Consolidated Precision Products from Warburg Pincus and Berkshire Partners for $11.75bn, funded with $7bn cash plus new debt",
    "u": "https://www.cnbc.com/2026/09/08/ge-aerospace-to-buy-castings-maker-cpp-for-nearly-12-billion.html"
   }
  ],
+ "CAT": [
+  {
+   "d": "2026-10-29",
+   "h": "Record Q3 sales up 17% to $20.7bn as data-centre power generation sales rise 30%; backlog nearly doubles to $78bn",
+   "u": "https://www.manufacturingdive.com/news/caterpillar-posts-highest-sales-quarter-ever-data-centers-q3-2026/873176/"
+  }
+ ],
  "RTX": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 adjusted EPS up 33% to $2.26 and backlog reaches a record $340bn; full-year guidance raised for a second straight quarter",
+   "u": "https://finance.biggo.com/news/US_RTX_2026-10-20"
+  },
   {
    "d": "2026-10-01",
    "h": "Raytheon awarded multi-year US Navy contract worth up to $24.4bn for SM-6 interceptors, five years plus two option years",
@@ -831,6 +1094,11 @@ NEWS = {
  ],
  "GEV": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 orders surge 96% and backlog nears $200bn as gas power backlog and reservations reach 122 GW; buyback doubled to $20bn alongside a $9bn Trench deal",
+   "u": "https://www.turbomachinerymag.com/view/ge-vernova-q3-2026-gas-power-backlog-122-gw-trench-acquisition"
+  },
+  {
    "d": "2026-09-03",
    "h": "GE Vernova Hitachi, Studsvik and Samsung C&T agreed to advance a four-unit, 1.2 GW BWRX-300 project in Sweden; not a final investment decision",
    "u": "https://www.tmcnet.com/usubmit/2026/09/03/10439758.htm"
@@ -848,6 +1116,11 @@ NEWS = {
  ],
  "BA": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 revenue up 4% to $24.2bn on 161 deliveries and the net loss narrows to $116m; 737-7 and 737-10 certified and backlog hits a record $745bn",
+   "u": "https://www.aerotime.aero/articles/boeing-q3-2026-results-record-backlog-737-7-and-737-10-certified-loss-narrows"
+  },
+  {
    "d": "2026-10-02",
    "h": "SPEEA engineers ratified a contract with an average 32% pay rise over four years, averting a strike after rejecting an August offer",
    "u": "https://spokesman.com/stories/2026/oct/02/boeing-white-collar-workers-ratify-new-offer-avert"
@@ -861,14 +1134,19 @@ NEWS = {
    "d": "2026-09-28",
    "h": "Shares fell 6.9% after the FAA halted 737 MAX 10 certification over a cockpit software flaw affecting autopilot functions on landing",
    "u": "https://finance.yahoo.com/markets/stocks/articles/driving-move-boeing-stock-123305824.html"
-  },
-  {
-   "d": "2026-09-09",
-   "h": "Boeing delivered 49 aircraft in August 2026, including 34 737 MAX and 10 787s, and booked 15 gross orders",
-   "u": "https://centreforaviation.com/news/boeing-reports-15-commercial-aircraft-orders-and-49-deliveries-for-aug-2026-1371988"
   }
  ],
  "HON": [
+  {
+   "d": "2026-10-22",
+   "h": "First quarter as a pure-play automation company after the aerospace spin-off: sales $5.0bn with 7% organic growth and adjusted EPS up 34% to $2.27",
+   "u": "https://www.honeywell.com/us/en/news/press-releases/2026/10/honeywell-technologies-reports-third-quarter-results-raises-full-year-2026-outlook"
+  },
+  {
+   "d": "2026-10-22",
+   "h": "2026 outlook raised to $20.0bn-$20.1bn of sales and $8.40-$8.45 adjusted EPS for the remaining automation business",
+   "u": "https://www.honeywell.com/us/en/news/press-releases/2026/10/honeywell-technologies-reports-third-quarter-results-raises-full-year-2026-outlook"
+  },
   {
    "d": "2026-08-01",
    "h": "Vimal Kapur, chairman and CEO of Honeywell Technologies, presents it as the only large pure-play automation company in public markets (T. Rowe Price interview, August 2026)",
@@ -876,6 +1154,11 @@ NEWS = {
   }
  ],
  "LMT": [
+  {
+   "d": "2026-10-22",
+   "h": "Q3 beat drives a guidance raise as backlog reaches a record $292bn; shares jump",
+   "u": "https://pomegra.io/news/lockheed-martin-q3-2026-stock-jumps-on-292b-backlog"
+  },
   {
    "d": "2026-09-21",
    "h": "General Motors began supplying missile-housing components for Lockheed's PAC-3 MSE as the Pentagon pushes Patriot output above 2,000 a year by 2030",
@@ -900,6 +1183,16 @@ NEWS = {
   }
  ],
  "TSLA": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue flat at $28.1bn on 486,532 deliveries and profit falls 43%, though EPS edges past estimates and FSD subscriptions rise 67%",
+   "u": "https://www.basenor.com/blogs/news/tesla-q3-2026-earnings-28-05b-revenue-486-532-deliveries-fsd-subs-up-67"
+  },
+  {
+   "d": "2026-10-21",
+   "h": "Cybercab robotaxi rides begin and 2026 capital spending is cut to about $20bn",
+   "u": "https://driveteslacanada.ca/news/tesla-q3-2026-earnings-results/"
+  },
   {
    "d": "2026-10-02",
    "h": "Q3 deliveries of 486,532, down 2.1% year on year but well above the 461,974 consensus; shares rose about 5%",
@@ -954,6 +1247,11 @@ NEWS = {
  ],
  "GM": [
   {
+   "d": "2026-10-20",
+   "h": "Q3 beats for a sixth straight quarter on North America; cash-flow guidance raised and a new $20bn buyback authorised",
+   "u": "https://www.cnbc.com/2026/10/20/general-motors-gm-earnings-q3-2026.html"
+  },
+  {
    "d": "2026-10-01",
    "h": "GM's US sales fell 5.5% in Q3 2026 to 670,974 vehicles, with Silverado EV sales down 92% after tax credits expired",
    "u": "https://www.freep.com/story/money/cars/general-motors/2026/10/01/general-motors-us-sales-third-quarter/92037188007/"
@@ -970,6 +1268,11 @@ NEWS = {
   }
  ],
  "STLA": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 revenue edges up 1% and beats as the turnaround gains traction; European BEV sales up 65% and shares jump",
+   "u": "https://theevreport.com/stellantis-q3-2026-results-bev-sales"
+  },
   {
    "d": "2026-10-01",
    "h": "FaSTLAne 2030 plan targets €3bn industrial free cash flow in 2028, €6bn a year by 2030 and a 7% adjusted operating margin by 2030",
@@ -1017,6 +1320,11 @@ NEWS = {
  ],
  "005930": [
   {
+   "d": "2026-10-29",
+   "h": "Record Q3 operating profit of KRW107.4tn, the first ever above KRW100tn, as AI memory demand sells out 2027 HBM supply",
+   "u": "https://finance.biggo.com/news/KR_005930.KS_2026-10-29"
+  },
+  {
    "d": "2026-09-30",
    "h": "TrendForce: Samsung expects HBM4 revenue to more than triple in Q3; foundry and LSI losses seen narrowing about 42% in 2026",
    "u": "https://www.trendforce.com/news/2026/09/30/news-samsung-foundry-loss-reportedly-seen-shrinking-42-yoy-in-2026-as-hbm4-base-die-4nm-demand-rises/"
@@ -1034,6 +1342,16 @@ NEWS = {
  ],
  "RELIANCE": [
   {
+   "d": "2026-10-30",
+   "h": "Q2 FY27 net profit up 27% to Rs29,250 crore on revenue up 28% as O2C EBITDA jumps 68%; retail EBITDA falls 8.6%",
+   "u": "https://apacnewsnetwork.com/2026/10/reliance-q2-results-fy27-profit-revenue/"
+  },
+  {
+   "d": "2026-10-30",
+   "h": "Jio Platforms listing drew more than 22x subscription, making it India's second largest company",
+   "u": "https://apacnewsnetwork.com/2026/10/reliance-q2-results-fy27-profit-revenue/"
+  },
+  {
    "d": "2026-10-05",
    "h": "Jio Platforms plans to open its roughly $3.8bn IPO, India's largest, on 21 October with listing expected on 28 October (Reuters)",
    "u": "https://www.financialexpress.com/market/ipo-news-mukesh-ambani-led-jio-platforms-ipo-likely-by-october-21-reuters-4353920/"
@@ -1042,11 +1360,13 @@ NEWS = {
    "d": "2026-10-04",
    "h": "Price band reported at ₹1,300–1,450 a share, implying a valuation of around ₹15 lakh crore",
    "u": "https://www.fortuneindia.com/markets/ipo/jio-platforms-ipo-from-15-lakh-crore-valuation-to-october-listing-10-things-to-know/162707"
-  },
+  }
+ ],
+ "INFY": [
   {
-   "d": "2026-10-01",
-   "h": "SEBI issued its observation letter on 28 August; the issue is a 100% fresh issue of about ₹37,700 crore, roughly 2.9% of post-issue capital",
-   "u": "https://yourstory.com/2026/10/jio-ipo-nears-launch-drhp-filed-sebi-clears-path"
+   "d": "2026-10-27",
+   "h": "Cuts FY27 constant-currency revenue guidance to 1%-2% from 1.5%-3% after Q2 growth of 1.5%; operating margin target of 20%-22% kept",
+   "u": "https://www.itechguides.com/infosys-q2-results-profit-rises-6-yoy-to-rs-7823-crore-company-cuts-fy27-revenue-guidance/"
   }
  ],
  "PDD": [
@@ -1085,6 +1405,11 @@ NEWS = {
  ],
  "COIN": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue falls 34% to $1.16bn and adjusted EBITDA drops 58% as trading cools; prediction markets pass $200m of annualised revenue",
+   "u": "https://www.cryptotimes.io/2026/10/30/coinbase-q3-report-shows-719m-profit-but-adjusted-ebitda-falls-58/"
+  },
+  {
    "d": "2026-10-05",
    "h": "Bank of America raised its target to $203 from $174, Buy, citing stablecoin revenue after the Fed's September 2026 rate hike",
    "u": "https://cryptobriefing.com/bank-of-america-coinbase-price-target-203"
@@ -1113,6 +1438,11 @@ NEWS = {
   }
  ],
  "VRT": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 sales up 61% and organic orders more than double; guidance raised and customers have prepaid $4.1bn",
+   "u": "https://www.stocktitan.net/articles/vertiv-q3-2026-earnings-customers-prepaid-4-billion"
+  },
   {
    "d": "2026-10-05",
    "h": "BMO initiated at Outperform with a $329 target, with shares at $252.18, saying the market has absorbed much of the bad news",
@@ -1151,6 +1481,11 @@ NEWS = {
   }
  ],
  "MSTR": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 net income of about $19bn on bitcoin gains as holdings reach 848,517 BTC",
+   "u": "https://www.gurufocus.com/news/9158307/strategy-inc-mstr-q3-2026-earnings-call-highlights-record-191-billion-net-income-as-bitcoin-holdings-reach-848517-btc"
+  },
   {
    "d": "2026-10-05",
    "h": "Holdings reached 848,000 BTC after buying 334 BTC; company expects a $20.91bn unrealised Q3 gain on digital assets; USD reserve $4.88bn",
@@ -1200,6 +1535,11 @@ NEWS = {
  ],
  "CDNS": [
   {
+   "d": "2026-10-26",
+   "h": "Q3 revenue $1.63bn, up 22%; record $8.2bn backlog; 2026 outlook raised for the third time, to about 21% growth",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000813672/000081367226000116/cdns10262026ex9901.htm"
+  },
+  {
    "d": "2026-09-24",
    "h": "Expanded TSMC partnership covering A14 certification, N3P/N2P IP and wafer-scale 3D-IC flows",
    "u": "https://www.hpcwire.com/aiwire/2026/09/24/cadence-expands-tsmc-partnership-for-ai-and-hpc-chip-design/"
@@ -1207,12 +1547,22 @@ NEWS = {
  ],
  "NXPI": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 revenue $3.79bn, up 19%; automotive $2.07bn, up 13%; Q4 guided to $3.75-3.95bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001413447/000141344726000057/nxp3q26exhibit991.htm"
+  },
+  {
    "d": "2026-08-04",
    "h": "CEO Rafael Sotomayor said Q2 revenue rose 19.5% to $3.50bn, above estimates; Q3 guided to $3.75bn midpoint, also above consensus",
    "u": "https://markets.financialcontent.com/startribune/article/stockstory-2026-8-4-5-insightful-analyst-questions-from-nxp-semiconductorss-q2-earnings-call"
   }
  ],
  "IBM": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue $17.1bn, up 5%; software up 8% to $7.8bn; free cash flow outlook raised",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000051143/000005114326000093/ibm-20261021xex991.htm"
+  },
   {
    "d": "2026-10-01",
    "h": "Hagens Berman opened a securities investigation into IBM's Z mainframe disclosures after the July 2026 shortfall erased over $68bn of market value in one day.",
@@ -1288,6 +1638,11 @@ NEWS = {
  ],
  "TMO": [
   {
+   "d": "2026-10-21",
+   "h": "Q3 revenue up 9% to $12.14bn with 6% organic growth; adjusted EPS of $6.68 beats the $6.40 consensus",
+   "u": "https://finviz.com/news/405542/thermo-fisher-scientific-reports-9-revenue-growth-as-third-quarter-earnings-beat-estimates"
+  },
+  {
    "d": "2026-10-05",
    "h": "JPMorgan added Thermo Fisher to its October picks, citing AI in medical tools, a Mayo Clinic joint venture and US drug-manufacturing reshoring; shares up 25% in three months.",
    "u": "https://www.tipranks.com/news/jpmorgan-adds-american-express-liberty-energy-and-thermo-fisher-to-october-stock-picks-list-heres-why"
@@ -1299,6 +1654,11 @@ NEWS = {
   }
  ],
  "ABT": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 sales up 14.5% to $13.0bn with Exact Sciences added, 7% comparable; 2026 adjusted EPS narrowed to $5.50-$5.55",
+   "u": "https://stockhub.kr/en/insights/20261021-abt-cy26q3-earnings"
+  },
   {
    "d": "2026-10-02",
    "h": "Rothschild & Co Redburn upgraded Abbott to Buy with a $127 target, saying Exact Sciences strengthens diagnostics growth and margins.",
@@ -1313,14 +1673,14 @@ NEWS = {
    "d": "2026-09-14",
    "h": "Abbott agreed to pay $385m to resolve DOJ, whistleblower and state claims over the 2022 Sturgis infant formula recall; criminal investigation closed.",
    "u": "https://abbott.mediaroom.com/2026-09-14-Abbott-reaches-agreement-with-Department-of-Justice-to-resolve-claims-relating-to-2022-infant-formula-recall"
-  },
-  {
-   "d": "2026-08-25",
-   "h": "FDA authorised Libre Duo 10 Day, the first combined glucose-ketone sensor, with US launch planned later in 2026.",
-   "u": "https://abbott.mediaroom.com/2026-08-25-Abbott-receives-FDA-authorization-for-worlds-first-dual-glucose-ketone-sensing-technology-for-people-with-diabetes"
   }
  ],
  "DHR": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue up 8.5% to $6.55bn with core growth of 5.5% excluding respiratory; 2026 adjusted EPS guide raised to $8.57-$8.62",
+   "u": "https://grafa.com/en/news/united-states/danaher-q3-2026-revenue-6-55-billion-raises-guidance"
+  },
   {
    "d": "2026-10-01",
    "h": "Julie Sawyer Montgomery became Danaher president and CEO, succeeding Rainer Blair, who stays as senior adviser to 31 March 2027; succession was announced 3 August 2026.",
@@ -1328,6 +1688,11 @@ NEWS = {
   }
  ],
  "BMY": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 6.9% to $13.07bn beats; 2026 revenue guide lifted to about $50bn while the EPS guide is cut on an in-process R&D charge",
+   "u": "https://stockstory.org/us/stocks/nyse/bmy/news/earnings/bristol-myers-squibbs-nysebmy-q3-2026-sales-top-estimates"
+  },
   {
    "d": "2026-10-05",
    "h": "Leerink downgraded BMS to Market Perform and cut its target to $59 from $73, doubting milvexian, admilparant and Cobenfy in Alzheimer's psychosis; shares fell about 4%.",
@@ -1342,11 +1707,6 @@ NEWS = {
    "d": "2026-09-25",
    "h": "Phase 3 EXCALIBER-RRMM: Zenbexus (iberdomide) with daratumumab met its MRD-negative complete response primary endpoint in relapsed multiple myeloma.",
    "u": "https://www.tipranks.com/news/the-fly/bristol-myers-reports-results-from-prespecified-analysis-of-excaliber-rrmm-trial-thefly-news"
-  },
-  {
-   "d": "2026-09-16",
-   "h": "Piper Sandler raised its target to $82 from $75, naming milvexian, Cobenfy in Alzheimer's psychosis and admilparant as the key milestones.",
-   "u": "https://www.tipranks.com/news/the-fly/bristol-myers-price-target-raised-to-82-from-75-at-piper-sandler-thefly-news"
   }
  ],
  "GILD": [
@@ -1359,6 +1719,13 @@ NEWS = {
    "d": "2026-08-28",
    "h": "FDA approved Bixlenvo, a once-daily bictegravir and lenacapavir tablet for virologically suppressed adults with HIV; shares slipped 2.3%.",
    "u": "https://www.tipranks.com/news/gilead-sciences-stock-gild-slips-2-despite-fda-approval-of-bixlenvo"
+  }
+ ],
+ "ELV": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 adjusted EPS up 16% to $6.99 as the benefit expense ratio improves 70bp to 90.6%; 2026 adjusted EPS outlook raised to at least $29.00",
+   "u": "https://beancount.io/blog/2026/10/22/elevance-health-fy2026-q3-earnings-analysis"
   }
  ],
  "MDT": [
@@ -1380,6 +1747,11 @@ NEWS = {
  ],
  "WFC": [
   {
+   "d": "2026-10-13",
+   "h": "Q3 net income about $5.95bn, up 6%; EPS up 13%; average loans and deposits each up 11%; credit loss provisions up about 51%",
+   "u": "https://www.vermoegenszentrum.ch/en/stock-exchange-and-markets/news/wells-fargo-q3-2026-net-income-rises-6-usd-595-billion-eps-climbs"
+  },
+  {
    "d": "2026-10-05",
    "h": "Morgan Stanley upgraded Wells Fargo to Overweight and a top pick with a $102 target, forecasting 17% ROTCE in the second half of 2027 and 18% in 2028.",
    "u": "https://www.tipranks.com/news/the-fly/wells-fargo-upgraded-to-overweight-from-equal-weight-at-morgan-stanley-thefly-news"
@@ -1391,6 +1763,11 @@ NEWS = {
   }
  ],
  "C": [
+  {
+   "d": "2026-10-13",
+   "h": "Q3 revenue $23.8bn, up 8%; net income about $5.2bn, up roughly 40%; Services and Wealth revenue each up 15%",
+   "u": "https://vestedfinance.com/blog/us-stocks/citigroup-q3-earnings-2026/"
+  },
   {
    "d": "2026-10-05",
    "h": "Citi shares fell as much as 4.6% on 1 October with bank stocks as Treasury yields rose; Q3 results due 13 October",
@@ -1409,6 +1786,11 @@ NEWS = {
  ],
  "SCHW": [
   {
+   "d": "2026-10-15",
+   "h": "Record Q3: revenue $7.2bn, up 17%; EPS $1.62, up 29%; core net new assets $190.4bn, up 38%",
+   "u": "https://www.securities.io/schwab-posts-record-q3-eps-as-net-new-assets-reach-190-4-billion/"
+  },
+  {
    "d": "2026-10-01",
    "h": "Schwab initiated a secondary listing of its shares on the Texas Stock Exchange",
    "u": "https://www.stocktitan.net/news/SCHW/"
@@ -1422,14 +1804,14 @@ NEWS = {
    "d": "2026-09-15",
    "h": "August core net new assets a record $64.8bn, up 46%; client assets $13.41tn; client cash fell to 8.8% of assets",
    "u": "https://www.stocktitan.net/news/SCHW/schwab-reports-monthly-activity-504uwj5m7w59.html"
-  },
-  {
-   "d": "2026-09-14",
-   "h": "Schwab and Anthropic agreed to bring Claude to independent registered investment advisers on Schwab's platform",
-   "u": "https://www.stocktitan.net/news/SCHW/"
   }
  ],
  "SPGI": [
+  {
+   "d": "2026-10-27",
+   "h": "Reported Q3 results and announced a strategic review of Capital IQ and its associated data businesses",
+   "u": "https://press.spglobal.com/2026-10-27-S-P-Global-Reports-Third-Quarter-Results-Announces-Strategic-Review-for-Capital-IQ-and-Associated-Data-Businesses"
+  },
   {
    "d": "2026-09-26",
    "h": "S&P Global shares down 21.3% year to date at about $403 amid concern AI could erode its data and analytics business",
@@ -1443,12 +1825,22 @@ NEWS = {
  ],
  "PGR": [
   {
+   "d": "2026-10-14",
+   "h": "Q3 EPS of $4.60 beats estimates as net premiums written rise 4% to $22.3bn and the combined ratio improves to 88.7",
+   "u": "https://www.nasdaq.com/articles/progressives-q3-earnings-top-estimates-higher-premiums"
+  },
+  {
    "d": "2026-09-18",
    "h": "August net income fell 22% to $951m and combined ratio rose to 89.3 from 83.1; premiums written up 6%, policies in force up 7%",
    "u": "https://www.stocktitan.net/news/PGR/progressive-reports-august-2026-apnijbnjsyx7.html"
   }
  ],
  "CB": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 core operating income $2.98bn, or $7.66 a share; combined ratio 84.1%; net premiums written up 1.9%",
+   "u": "https://www.reinsurancene.ws/chubb-posts-record-5-79bn-pc-underwriting-income-for-first-nine-months-of-2026/"
+  },
   {
    "d": "2026-09-30",
    "h": "Chubb will hold its third-quarter earnings call on 21 October 2026",
@@ -1461,6 +1853,11 @@ NEWS = {
   }
  ],
  "PYPL": [
+  {
+   "d": "2026-10-27",
+   "h": "Raises 2026 adjusted EPS guidance to $5.60 after Q3 EPS of $1.45 beats; revenue up 2% to $8.58bn, TPV up 6% to $487bn",
+   "u": "https://finviz.com/news/408888/paypal-raises-2026-earnings-guidance-after-q3-profit-beats-forecasts-shares-rise-12"
+  },
   {
    "d": "2026-08-28",
    "h": "Shares fell 12.7% to $53.66 after Bloomberg reported the Stripe and Advent International consortium abandoned its pursuit of PayPal",
@@ -1490,6 +1887,11 @@ NEWS = {
   }
  ],
  "SBUX": [
+  {
+   "d": "2026-10-29",
+   "h": "Fiscal Q4 global comparable sales up 7.2% with US comps up 7.7% and EPS up 54% as Back to Starbucks shifts from turnaround to growth",
+   "u": "https://finance.biggo.com/news/US_SBUX_2026-10-29"
+  },
   {
    "d": "2026-09-24",
    "h": "Board approved closing about 250 North America coffeehouses with about $300m of restructuring charges; FY26 net new stores cut to about 440 from 600-650",
@@ -1539,6 +1941,11 @@ NEWS = {
  ],
  "MO": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 EPS of $1.51 and revenue of $6.13bn beat as pricing offsets falling cigarette volumes; 2026 guidance raised and buyback expanded",
+   "u": "https://stockstory.org/us/stocks/nyse/mo/news/earnings/altrias-nysemo-q3-2026-beats-on-revenue"
+  },
+  {
    "d": "2026-08-27",
    "h": "Altria raised its quarterly dividend 4.7% to $1.11 a share, a 6.4% yield, its 61st increase in 57 years",
    "u": "https://investor.altria.com/press-releases/news-details/2026/Altria-Increases-Quarterly-Dividend-to-1-11-Per-Share/default.aspx"
@@ -1551,12 +1958,22 @@ NEWS = {
  ],
  "MDLZ": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 2.3% to $9.97bn misses while adjusted EPS of $1.02 beats",
+   "u": "https://www.stocktitan.net/news/MDLZ/mondelez-international-reports-q3-2026-148t1vrp1t4s.html"
+  },
+  {
    "d": "2026-09-09",
    "h": "At the Barclays conference Mondelez raised its 2026 revenue outlook but held EPS guidance, planning to reinvest the extra profit",
    "u": "https://in.investing.com/news/stock-market-news/mondelez-at-barclays-global-consumer-conference-growth-bets-widen-93CH-5586475"
   }
  ],
  "SLB": [
+  {
+   "d": "2026-10-23",
+   "h": "Q3 revenue of $9.45bn beats as Data Center Solutions jumps 23% sequentially; Q4 revenue guided near $10bn",
+   "u": "https://marketchameleon.com/articles/b/2026/10/23/slb-q3-2026-results-data-center-solutions-growth"
+  },
   {
    "d": "2026-09-24",
    "h": "Aramco awarded SLB four integrated well construction contracts covering more than 450 wells in Saudi Arabia; value undisclosed",
@@ -1571,6 +1988,11 @@ NEWS = {
   }
  ],
  "PSX": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 earnings of $5.6bn as record refining margins and 98% utilisation drive a beat",
+   "u": "https://www.tradingkey.com/news/earnings/262246590-tradingkey"
+  },
   {
    "d": "2026-10-05",
    "h": "Refining EVP Rich Harbison to retire 31 December 2026; former Plains All American COO Chris Chandler to take over Refining on 1 January 2027",
@@ -1588,6 +2010,11 @@ NEWS = {
   }
  ],
  "OXY": [
+  {
+   "d": "2026-10-13",
+   "h": "Q3 operating update: production within guidance despite Gulf of America downtime, with a $94m hit from oil collars",
+   "u": "https://www.minichart.com.sg/2026/10/13/occidental-q3-2026-production-in-line-94m-collar-hit-gulf-curbs/"
+  },
   {
    "d": "2026-10-01",
    "h": "Occidental will report third-quarter 2026 results on 9 November, with the call on 10 November",
@@ -1630,6 +2057,11 @@ NEWS = {
  ],
  "UNP": [
   {
+   "d": "2026-10-22",
+   "h": "Q3 revenue up 15% to $7.2bn and adjusted EPS up 15% to $3.53 on record net income; Norfolk Southern merger expected to close in the second half of 2027",
+   "u": "https://www.tradingkey.com/news/transcripts/262233508-tradingkey"
+  },
+  {
    "d": "2026-09-24",
    "h": "Union Pacific will report third-quarter 2026 results on 22 October",
    "u": "https://www.stocktitan.net/news/UNP/union-pacific-corporation-announces-third-quarter-2026-earnings-pvvjhjyey49b.html"
@@ -1643,14 +2075,14 @@ NEWS = {
    "d": "2026-09-16",
    "h": "More than 500 customers backed the Norfolk Southern combination; companies cite about $3.5bn of annual customer savings and 2.1m truckloads shifted to rail",
    "u": "https://www.stocktitan.net/news/NSC/more-than-500-customers-back-union-pacific-norfolk-southern-phmdp9xvyap9.html"
-  },
-  {
-   "d": "2026-08-26",
-   "h": "STB issued a procedural schedule for the merger review on 18 August; companies project about $1bn of annual operating savings",
-   "u": "https://www.stocktitan.net/news/NSC/stb-should-reject-opponents-baseless-prima-facie-challenges-union-1cnqrx8hh2dn.html"
   }
  ],
  "UPS": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 revenue up 6.9% to $22.9bn and adjusted EPS of $1.69 beat despite lower volumes; full-year guidance raised and shares up 2%",
+   "u": "https://markets.financialcontent.com/stocks/article/stockstory-2026-10-27-united-parcel-services-nyseups-q3-2026-beats-on-revenue-full-year-outlook-slightly-exceeds-expectations"
+  },
   {
    "d": "2026-10-07",
    "h": "UPS plans to hire 100,000 seasonal workers for the 2026 peak season",
@@ -1703,6 +2135,11 @@ NEWS = {
  ],
  "GD": [
   {
+   "d": "2026-10-30",
+   "h": "Q3 revenue up nearly 13% to $14.6bn and EPS of $4.49 beat on Gulfstream and shipbuilding; backlog jumps to a record $220bn",
+   "u": "https://www.indexbox.io/blog/general-dynamics-q3-profit-and-revenue-beat-estimates-on-gulfstream-and-shipbuilding-strength/"
+  },
+  {
    "d": "2026-10-07",
    "h": "Board elected president Danny Deep CEO effective 1 January 2027; Phebe Novakovic, CEO since 2013, becomes executive chairman",
    "u": "https://www.stocktitan.net/news/GD/deep-elected-ceo-of-general-dynamics-novakovic-to-executive-msel380g4k4y.html"
@@ -1719,6 +2156,11 @@ NEWS = {
   }
  ],
  "NOC": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 profit beats and backlog reaches a record $109.6bn; full-year guidance raised",
+   "u": "https://www.stocktitan.net/articles/northrop-grumman-q3-2026-earnings-record-backlog"
+  },
   {
    "d": "2026-09-17",
    "h": "Northrop will report third-quarter 2026 results on 20 October",
@@ -1737,6 +2179,11 @@ NEWS = {
  ],
  "T": [
   {
+   "d": "2026-10-21",
+   "h": "Q3 brings a record 769,000 internet net adds and the best service revenue growth in more than four years; EPS outlook raised",
+   "u": "https://marketchameleon.com/articles/b/2026/10/21/t-q3-2026-advanced-connectivity-record-internet-net-adds"
+  },
+  {
    "d": "2026-10-06",
    "h": "AT&T to form a 50/50 wholesale fibre JV with GIP and CPP Investments combining Lumen-acquired fibre assets and Gigapower; proceeds at close in H1 2027",
    "u": "https://www.stocktitan.net/news/T/at-t-global-infrastructure-partners-and-cpp-investments-to-form-new-w20o7168um5y.html"
@@ -1750,14 +2197,14 @@ NEWS = {
    "d": "2026-09-29",
    "h": "Multi-year fibre supply agreement with Corning worth more than $3bn; AT&T reiterated its outlook",
    "u": "https://www.stocktitan.net/news/T/at-t-and-corning-team-up-to-engineer-the-connected-world-with-wt7i3ixldcbm.html"
-  },
-  {
-   "d": "2026-09-22",
-   "h": "CFO Pascal Desroches plans to retire on 31 December 2026",
-   "u": "https://www.stocktitan.net/news/T/ge-health-care-appoints-veteran-finance-executive-pascal-desroches-cj1jzrw2adha.html"
   }
  ],
  "VZ": [
+  {
+   "d": "2026-10-26",
+   "h": "Record Q3 postpaid phone and account additions and a $2bn AWS fiber deal; full-year guidance raised despite a revenue miss",
+   "u": "https://www.gurufocus.com/news/9142843/verizon-vz-reports-strong-q3-2026-with-postpaid-growth-and-2b-aws-fiber-deal"
+  },
   {
    "d": "2026-10-01",
    "h": "Verizon, AT&T and T-Mobile formed a joint venture pooling spectrum to extend satellite and rural coverage",
@@ -1770,6 +2217,11 @@ NEWS = {
   }
  ],
  "TMUS": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 7% to $23.6bn and EPS of $3.22 beat as postpaid revenue grows 9%; outlook raised",
+   "u": "https://telecomlead.com/5g/t-mobile-q3-2026-revenue-rises-7-to-23-6-billion-profit-jumps-27-as-5g-broadband-and-fiber-drive-growth-128443"
+  },
   {
    "d": "2026-10-01",
    "h": "T-Mobile, AT&T and Verizon formed a joint venture pooling spectrum to extend satellite and rural coverage",
@@ -1784,14 +2236,14 @@ NEWS = {
    "d": "2026-09-17",
    "h": "Shares fell 5.6% to about $166, a one-year low and 17% down year to date, amid slower account growth and legacy plan migration",
    "u": "https://www.trefis.com/stock/tmus/articles/615852/how-much-further-can-t-mobile-stock-fall-from-here/2026-09-18"
-  },
-  {
-   "d": "2026-09-03",
-   "h": "Jessica Uhl named CFO designate; Peter Osvaldik stays CFO through February 2027; 2026 guidance reaffirmed",
-   "u": "https://www.stocktitan.net/news/TMUS/t-mobile-announces-planned-chief-financial-officer-ocasik76f1w8.html"
   }
  ],
  "CMCSA": [
+  {
+   "d": "2026-10-22",
+   "h": "Q3 revenue of $29.3bn and adjusted EPS of $1.07 beat as Peacock turns profitable and the World Cup helps, while broadband revenue keeps falling",
+   "u": "https://variety.com/2026/tv/news/comcast-q3-boosted-fifa-world-cup-odyssey-revenue-downturn-1236919567/"
+  },
   {
    "d": "2026-09-23",
    "h": "Comcast's network footprint passed more than 65 million homes and businesses after a New Hampshire expansion",
@@ -1829,12 +2281,22 @@ NEWS = {
  ],
  "MPWR": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue $1.20bn, up 63%; Q4 guided to $1.315-1.385bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001280452/000162828026068202/mpwr-20260930xexx991.htm"
+  },
+  {
    "d": "2026-09-09",
    "h": "Signed a long-term manufacturing agreement to run its proprietary process at GlobalFoundries' 300mm Singapore fab, adding capacity from early 2027.",
    "u": "https://markets.financialcontent.com/lethbridgeherald.com/article/gnwcq-2026-9-9-globalfoundries-and-monolithic-power-systems-form-manufacturing-partnership-to-scale-high-performance-power-solutions"
   }
  ],
  "TER": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 revenue $1.31bn, up 70% on AI test demand; Q4 guided to $1.25-1.35bn, roughly flat",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000097210/000119312526434981/ter-ex99_1.htm"
+  },
   {
    "d": "2026-10-06",
    "h": "Launched the Titan HP platform with burn-in capabilities for advanced AI data-centre devices.",
@@ -1969,7 +2431,24 @@ NEWS = {
    "u": "https://www.investing.com/news/transcripts/earnings-call-transcript-autodesk-beats-q2-2026-estimates-shares-reverse-after-hours-93CH-4880303"
   }
  ],
+ "SYK": [
+  {
+   "d": "2026-10-30",
+   "h": "Shares fall about 10% as Q3 revenue of $6.52bn misses despite 7.7% organic growth; 2026 adjusted EPS guided to $14.80-$14.90",
+   "u": "https://finance.biggo.com/news/e56206d7-fe10-401e-a985-bb738b7a8d83"
+  }
+ ],
  "BSX": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 organic growth slows to 1.5% after an eight-day cyber incident and share losses in EP and WATCHMAN; Q4 organic sales guided down 1% to 3%",
+   "u": "https://finance.biggo.com/news/US_BSX_2026-10-28"
+  },
+  {
+   "d": "2026-10-28",
+   "h": "Management warns it will be challenged to grow sales and adjusted EPS in 2027 and expects a return to growth in 2028",
+   "u": "https://finance.biggo.com/news/US_BSX_2026-10-28"
+  },
   {
    "d": "2026-10-08",
    "h": "Barclays upgraded the shares to hold after they hit a 52-week low near $41.50; CEO Michael Mahoney bought about $9 million of stock.",
@@ -1979,16 +2458,6 @@ NEWS = {
    "d": "2026-09-17",
    "h": "Shares down about 54% since late December 2025 on US electrophysiology share loss and a Watchman slowdown; US EP sales grew 3% in Q2 vs 23% internationally.",
    "u": "https://www.trefis.com/articles/615706/why-bsx-stock-lost-more-than-half-its-value-while-sales-kept-rising/2026-09-17"
-  },
-  {
-   "d": "2026-09-08",
-   "h": "Said it no longer expects to meet Q3 and full-year 2026 sales and adjusted profit guidance after an August cyberattack disrupted manufacturing and shipping.",
-   "u": "https://amp.insurancejournal.com/news/east/2026/09/08/884346.htm"
-  },
-  {
-   "d": "2026-08-25",
-   "h": "Identified unauthorised activity on IT systems, causing a network outage that disrupted manufacturing and order processing globally.",
-   "u": "https://www.mddionline.com/business/pressures-mount-from-cyberattack-boston-scientific-cuts-guidance-again"
   }
  ],
  "CI": [
@@ -2022,6 +2491,13 @@ NEWS = {
    "u": "https://www.mckesson.com/about-us/newsroom/press-releases/2026/mckesson-reports-fiscal-2027-first-quarter-results-and-raises-full-year-adjusted-eps-guidance/"
   }
  ],
+ "HCA": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 revenue up 3.6% to $19.85bn and EPS up 4.5% to $7.27, though more uninsured patients cut pretax income by about $400m; 2026 seen in upper half of guidance",
+   "u": "https://marketchameleon.com/articles/b/2026/10/27/hca-q3-2026-results-uninsured-payer-mix-hit"
+  }
+ ],
  "ZTS": [
   {
    "d": "2026-08-06",
@@ -2030,6 +2506,11 @@ NEWS = {
   }
  ],
  "MMC": [
+  {
+   "d": "2026-10-15",
+   "h": "Q3 revenue $6.9bn, up 8% (5% underlying); adjusted EPS up 10% to $2.03. The company now trades as Marsh (MRSH)",
+   "u": "https://insurancenewsnet.com/oarticle/marsh-reports-third-quarter-2026-results"
+  },
   {
    "d": "2026-10-02",
    "h": "Marsh completed its acquisition of Accel Holdings, an Iowa insurance and advisory firm; terms not disclosed",
@@ -2055,6 +2536,11 @@ NEWS = {
  ],
  "CME": [
   {
+   "d": "2026-10-21",
+   "h": "Record Q3 revenue of $1.74bn, up 13%; net income $1.04bn, up 14%; record Q3 average daily volume of 29.4m contracts",
+   "u": "https://mondovisione.com/media-and-resources/news/cme-group-inc-reports-highest-q3-revenue-on-record-for-q3-2026-20261021/"
+  },
+  {
    "d": "2026-10-02",
    "h": "CME suspended plans to launch a 24/7 10-barrel crude oil contract and withdrew its filing",
    "u": "https://www.stocktitan.net/news/CME/"
@@ -2066,6 +2552,11 @@ NEWS = {
   }
  ],
  "COF": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 net income $3.5bn, or $5.61 a share, against $4.83 a year earlier; revenue $16.3bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000927628/000092762826000142/ex991q32026earningsrelease.htm"
+  },
   {
    "d": "2026-09-24",
    "h": "Capital One will report third-quarter 2026 results on 20 October 2026",
@@ -2079,6 +2570,11 @@ NEWS = {
  ],
  "BX": [
   {
+   "d": "2026-10-22",
+   "h": "Q3 distributable earnings $1.7bn, down from $1.9bn; AUM $1.37tn, up 10%, on $63bn of inflows",
+   "u": "https://www.rttnews.com/3701819/blackstone-q3-net-income-rises-total-aum-up-10.aspx"
+  },
+  {
    "d": "2026-09-24",
    "h": "Blackstone launched BXPM, a perpetual multi-strategy private markets fund for eligible non-US investors",
    "u": "https://www.stocktitan.net/news/BX/"
@@ -2090,6 +2586,11 @@ NEWS = {
   }
  ],
  "MCO": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue up 1% to $2.02bn and adjusted EPS of $4.14 misses as leveraged-finance issuance weakens; 2026 EPS outlook of $16.50 to $17.00 kept",
+   "u": "https://grafa.com/en/news/united-states/moodys-q3-2026-revenue-2-02-billion-earnings-miss"
+  },
   {
    "d": "2026-09-14",
    "h": "Moody's agreed to acquire a minority stake in Philippine Rating Services Corporation (PhilRatings); terms not disclosed",
@@ -2110,6 +2611,11 @@ NEWS = {
  ],
  "CL": [
   {
+   "d": "2026-10-30",
+   "h": "Q3 sales up 4.6% to $5.37bn with organic growth accelerating to 1.8% and Hill's up 6.5%; gross margin guidance raised",
+   "u": "https://finance.biggo.com/news/US_CL_2026-10-30"
+  },
+  {
    "d": "2026-09-17",
    "h": "Colgate-Palmolive declared a regular quarterly dividend of $0.53 per share",
    "u": "https://www.stocktitan.net/news/CL/"
@@ -2122,6 +2628,11 @@ NEWS = {
  ],
  "CMG": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 revenue up 9.6% with comparable sales up 2.1% as traffic grows; margins narrow and Q4 comps are guided near 2%",
+   "u": "https://www.tradingkey.com/news/presentation/262252094-tradingkey"
+  },
+  {
    "d": "2026-09-14",
    "h": "Former KFC CEO Sabir Sami joined Chipotle's board, expanding it to 11 members",
    "u": "https://www.stocktitan.net/news/CMG/"
@@ -2133,6 +2644,11 @@ NEWS = {
   }
  ],
  "ORLY": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 sales up 9% with comparable store sales up 7.2% and EPS up 14%; full-year guidance raised",
+   "u": "https://scanx.trade/stock-market-news/companies/o-reilly-automotive-q3fy26-results-eps-up-14-comps-rise-7-2/54836934"
+  },
   {
    "d": "2026-10-01",
    "h": "O'Reilly will report third-quarter 2026 results on 28 October 2026",
@@ -2216,6 +2732,11 @@ NEWS = {
  ],
  "FCX": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 copper production of 830m lb as the Grasberg recovery advances; earnings up sharply on higher copper and gold prices",
+   "u": "https://news.metal.com/newscontent/104143740-freeport-reports-q3-copper-production-of-830-million-lb-as-grasberg-recovery-advances"
+  },
+  {
    "d": "2026-10-02",
    "h": "Q3 2026 copper output about 830 m lb, in line; Grasberg mill at about 67% of pre-incident rates; unit costs about 5% above $2.00/lb estimate",
    "u": "https://www.stocktitan.net/news/FCX/freeport-provides-third-quarter-2026-operational-vkuik38lgh0h.html"
@@ -2245,6 +2766,11 @@ NEWS = {
  ],
  "SHW": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 sales up 7.9% to $6.86bn beat estimates while margins narrow and profit slips",
+   "u": "https://kalkinemedia.com/us/news/announcements/sherwin-williams-q3-2026-earnings-sales-increase-79-to-686-billion"
+  },
+  {
    "d": "2026-10-01",
    "h": "Sherwin-Williams will report third-quarter 2026 results on 27 October 2026",
    "u": "https://www.stocktitan.net/news/SHW/sherwin-williams-to-announce-third-quarter-2026-financial-results-on-3auruezx2m2n.html"
@@ -2256,6 +2782,16 @@ NEWS = {
   }
  ],
  "MMM": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 organic sales up 3.3% and adjusted EPS up 12% to $2.50; 2026 EPS guide raised to $9.10-$9.15",
+   "u": "https://finance.biggo.com/news/US_MMM_2026-10-20"
+  },
+  {
+   "d": "2026-10-20",
+   "h": "Grants Amazon a warrant for up to 3.2 million shares tied to $6bn of optical connectivity and data-centre product sales over seven years",
+   "u": "https://finance.biggo.com/news/US_MMM_2026-10-20"
+  },
   {
    "d": "2026-10-06",
    "h": "3M will hold its third-quarter 2026 earnings call on 20 October 2026",
@@ -2269,6 +2805,11 @@ NEWS = {
  ],
  "ITW": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 EPS of $3.00 on revenue of $4.24bn as record margins offset a sales miss",
+   "u": "https://stockstory.org/us/stocks/nyse/itw/news/earnings/illinois-tool-works-nyseitw-misses-q3-2026-sales-expectations"
+  },
+  {
    "d": "2026-08-27",
    "h": "Miller welding unit launched the Copilot Builder adaptive automation system for fabrication shops",
    "u": "https://www.stocktitan.net/news/ITW/the-new-miller-copilot-tm-builder-tm-with-blue-i-qtm-brings-adaptive-p92s7f2rfkyr.html"
@@ -2281,12 +2822,27 @@ NEWS = {
  ],
  "CSX": [
   {
+   "d": "2026-10-22",
+   "h": "Q3 net income up 52% to $1.05bn as margins expand and intermodal grows; revenue outlook raised",
+   "u": "https://www.stocktitan.net/sec-filings/CSX/8-k-csx-corp-reports-material-event-6e3da125001f.html"
+  },
+  {
    "d": "2026-09-21",
    "h": "CSX will report third-quarter 2026 results after the close on 21 October 2026",
    "u": "https://www.stocktitan.net/news/CSX/csx-corp-announces-date-for-third-quarter-earnings-release-and-ix2y55l8v949.html"
   }
  ],
  "WM": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 revenue up 6.3% as Healthcare Solutions posts its first revenue gain; full-year revenue and free cash flow seen at the high end of guidance",
+   "u": "https://finance.biggo.com/news/US_WM_2026-10-28"
+  },
+  {
+   "d": "2026-10-28",
+   "h": "CEO Jim Fish to retire in early January 2027, with President John Morris succeeding him",
+   "u": "https://finance.biggo.com/news/US_WM_2026-10-28"
+  },
   {
    "d": "2026-09-24",
    "h": "WM will report third-quarter 2026 results after the close on 27 October 2026, with a call on 28 October",
@@ -2334,6 +2890,11 @@ NEWS = {
  ],
  "LHX": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 revenue of $6.1bn and EPS of $3.28 beat as $11bn of PAC-3 and THAAD orders lift backlog to a record $53.2bn; guidance raised",
+   "u": "https://finance.biggo.com/news/US_LHX_2026-10-29"
+  },
+  {
    "d": "2026-09-29",
    "h": "Lockheed Martin awarded L3Harris a seven-year undefinitized THAAD propulsion contract worth more than $6 bn, including a new solid rocket motor facility",
    "u": "https://www.stocktitan.net/news/LHX/l3harris-receives-thaad-propulsion-contract-valued-at-6-2rnijwps4rxh.html"
@@ -2351,6 +2912,11 @@ NEWS = {
  ],
  "F": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 adjusted EPS of $0.50 and revenue of $49.5bn beat; full-year profit outlook raised on record software revenue",
+   "u": "https://www.investing.com/news/transcripts/earnings-call-transcript-ford-beats-q3-2026-estimates-lifts-profit-outlook-93CH-4981118"
+  },
+  {
    "d": "2026-10-06",
    "h": "Ford Authority: September F-150 production fell sharply on the supplier issue, just after recovering from a months-long aluminium supply problem.",
    "u": "https://fordauthority.com/2026/10/ford-f-150-production-in-september-nosedived-due-to-supplier-issue/"
@@ -2364,11 +2930,6 @@ NEWS = {
    "d": "2026-09-29",
    "h": "Ford restarted F-150 production at two plants after Dearborn Truck stopped output from 24 September because of an undisclosed supplier problem.",
    "u": "https://www.usatoday.com/story/money/cars/ford/2026/09/29/ford-f-150-production-restarts-at-2-plants-after-temporary-halt/92009085007/"
-  },
-  {
-   "d": "2026-09-08",
-   "h": "Ford sold 170,681 US vehicles in August 2026, down 10.3% from 190,206 a year earlier; year-to-date sales were 9.8% lower.",
-   "u": "https://www.msn.com/en-us/news/other/ford-august-2026-sales-down-103-what-the-numbers-actually-show/ar-AA2bP7D7"
   }
  ],
  "RIVN": [
@@ -2407,6 +2968,11 @@ NEWS = {
  ],
  "HOOD": [
   {
+   "d": "2026-10-27",
+   "h": "Record Q3 revenue up 9% to $1.42bn and event contracts up sixfold, but crypto revenue falls 55% and diluted EPS drops 16%",
+   "u": "https://fxnewsgroup.com/forex-news/retail-forex/robinhood-revenues-tick-up-9-to-record-1-42-billion-in-q3-2026-profits-fall/"
+  },
+  {
    "d": "2026-10-01",
    "h": "Robinhood will report third-quarter 2026 results on 27 October 2026.",
    "u": "https://www.stocktitan.net/news/HOOD/robinhood-markets-inc-to-announce-third-quarter-2026-results-on-xxwmx7vb7has.html"
@@ -2420,14 +2986,14 @@ NEWS = {
    "d": "2026-09-08",
    "h": "Robinhood picked OG.com as infrastructure partner for its prediction markets platform and holds an equity stake in the exchange engine.",
    "u": "https://www.stocktitan.net/news/HOOD/robinhood-selects-og-com-as-infrastructure-partner-for-prediction-x1a6o98wzhnf.html"
-  },
-  {
-   "d": "2026-08-13",
-   "h": "Robinhood Ventures Fund II (RVII) priced its initial public offering.",
-   "u": "https://www.stocktitan.net/news/HOOD/robinhood-ventures-fund-ii-rvii-announces-pricing-of-initial-public-iw07si8yto9d.html"
   }
  ],
  "AMKR": [
+  {
+   "d": "2026-10-26",
+   "h": "Q3 net sales $1.99bn, flat year on year; Q4 guided to $1.9-2.0bn, and the shares fell on the outlook",
+   "u": "https://finviz.com/news/408080/amkor-technology-reports-financial-results-for-the-third-quarter-2026"
+  },
   {
    "d": "2026-10-05",
    "h": "Amkor will report third-quarter 2026 results on 26 October 2026.",
@@ -2475,6 +3041,11 @@ NEWS = {
  ],
  "ENTG": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 net sales $1.01bn, up about 25%; Q4 guided to $1.025-1.055bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001101302/000110130226000159/entgq32026ex991.htm"
+  },
+  {
    "d": "2026-10-01",
    "h": "Entegris will report third-quarter 2026 results on 29 October 2026.",
    "u": "https://www.stocktitan.net/news/ENTG/entegris-to-report-results-for-third-quarter-of-2026-on-thursday-48stl4p1s6xy.html"
@@ -2488,14 +3059,14 @@ NEWS = {
    "d": "2026-08-18",
    "h": "Entegris reported further success defending its CMP slurry patent portfolio.",
    "u": "https://www.stocktitan.net/news/ENTG/entegris-achieves-further-success-in-defending-its-cmp-slurry-patent-t3pao1d1hwek.html"
-  },
-  {
-   "d": "2026-08-04",
-   "h": "Q2 2026 revenue $883.2 million, up about 11%; non-GAAP EPS $0.93; $200 million of debt repaid; Q3 guided to $905–935 million revenue.",
-   "u": "https://www.stocktitan.net/news/ENTG/entegris-reports-results-for-second-quarter-of-qlogkalvl76q.html"
   }
  ],
  "STX": [
+  {
+   "d": "2026-10-28",
+   "h": "September-quarter revenue $4.23bn, up about 61%; 57.3% gross margin; December quarter guided to $4.8bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001137789/000113778926000300/stxq12027pressreleasefinan.htm"
+  },
   {
    "d": "2026-09-14",
    "h": "Seagate published survey research finding nearly all organisations expect AI to increase storage requirements.",
@@ -2508,6 +3079,11 @@ NEWS = {
   }
  ],
  "WDC": [
+  {
+   "d": "2026-10-22",
+   "h": "September-quarter revenue $4.38bn, up 55%; 57.8% gross margin; December quarter guided to $5.1bn, up 66-72%",
+   "u": "https://westerndigital.com/company/newsroom/press-releases/2026/2026-10-22-wd-reports-fiscal-first-quarter-2027-financial-results"
+  },
   {
    "d": "2026-09-14",
    "h": "Western Digital announced the redemption of its 3.00% convertible senior notes due 2028.",
@@ -2593,6 +3169,11 @@ NEWS = {
  ],
  "ROP": [
   {
+   "d": "2026-10-22",
+   "h": "Q3 revenue $2.17bn, up 8% (7% organic); full-year adjusted EPS guidance raised to $22.35-22.40; share count down to 99m after $2.7bn of buybacks this year",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000882835/000088283526000042/a2026q3earningsrelease.htm"
+  },
+  {
    "d": "2026-10-01",
    "h": "Roper scheduled third-quarter 2026 results for 22 October 2026, before the market opens.",
    "u": "https://www.stocktitan.net/news/ROP/roper-technologies-schedules-third-quarter-2026-financial-results-oa4farf3c2bu.html"
@@ -2604,6 +3185,11 @@ NEWS = {
   }
  ],
  "SNY": [
+  {
+   "d": "2026-10-30",
+   "h": "Q3 sales up 14.3% at constant currency to EUR14.4bn and business EPS up 22%; Dupixent up 35% to EUR5.7bn and 2026 guidance upgraded",
+   "u": "https://grafa.com/en/news/united-states/sanofi-q3-2026-sales-rise-16-percent-to-eur14-44-billion"
+  },
   {
    "d": "2026-10-06",
    "h": "Sanofi will publish third-quarter 2026 results on 30 October 2026.",
@@ -2618,14 +3204,14 @@ NEWS = {
    "d": "2026-09-14",
    "h": "Sanofi agreed to transfer 20 mature medicines and three plants to Cheplapharm in exchange for a 26.4% equity stake; completion expected by Q3 2027.",
    "u": "https://www.sanofi.com/en/media-room/press-releases/2026/2026-09-14-13-03-56-3361178"
-  },
-  {
-   "d": "2026-08-04",
-   "h": "MenQuadfi meningococcal vaccine approved in the EU for infants from six weeks of age.",
-   "u": "https://www.sanofi.com/en/media-room/press-releases/2026/2026-08-04-05-00-00-3338016"
   }
  ],
  "GSK": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 sales up 5% to GBP8.9bn as specialty medicines grow 15% while vaccines soften; 2026 guidance reaffirmed",
+   "u": "https://kalkine.com/news/announcements/gsk-q3-2026-sales-89bn-core-eps-up-1"
+  },
   {
    "d": "2026-10-06",
    "h": "ViiV's long-acting Cabenuva beat daily oral therapy on viral suppression at six months in people with viremia in the Phase IIIb CROWN trial.",
@@ -2640,11 +3226,6 @@ NEWS = {
    "d": "2026-09-01",
    "h": "GSK will advance its mRNA seasonal flu vaccine candidate to Phase III after positive Phase II data.",
    "u": "https://www.gsk.com/en-gb/media/press-releases/gsk-to-advance-mrna-seasonal-flu-vaccine-candidate-to-phase-iii-following-positive-phase-ii-data/"
-  },
-  {
-   "d": "2026-08-24",
-   "h": "FDA accepted Jemperli for priority review in dMMR/MSI-H locally advanced rectal cancer; Hibsago (bepirovirsen) approved in Japan for chronic hepatitis B.",
-   "u": "https://www.gsk.com/en-gb/media/press-releases/jemperli-dostarlimab-accepted-for-priority-review-by-the-us-fda/"
   }
  ],
  "MRNA": [
@@ -2670,6 +3251,11 @@ NEWS = {
   }
  ],
  "BIIB": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 revenue of $2.8bn beats as the growth portfolio (Leqembi, Skyclarys, Zurzuvae) overtakes the legacy MS franchise",
+   "u": "https://www.investing.com/news/company-news/biogen-q3-2026-slides-growth-portfolio-surpasses-legacy-ms-business-93CH-4979691"
+  },
   {
    "d": "2026-10-02",
    "h": "Biogen reported 52-week Phase 2 data showing rapid and durable efficacy for litifilimab in cutaneous lupus erythematosus.",
@@ -2739,6 +3325,11 @@ NEWS = {
  ],
  "CNC": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 health benefits ratio of 92.7% beats expectations and the 2026 adjusted EPS floor is lifted above $5.20; Medicare Advantage nears breakeven",
+   "u": "https://marketchameleon.com/articles/b/2026/10/27/cnc-q3-2026-results-adjusted-eps-guidance-hbr-92-7"
+  },
+  {
    "d": "2026-10-01",
    "h": "Wellcare unveiled its 2027 Medicare Advantage and prescription drug plan offerings.",
    "u": "https://www.stocktitan.net/news/CNC/wellcare-unveils-2027-medicare-offerings-focused-on-affordability-dmwhs1qraw3b.html"
@@ -2751,6 +3342,11 @@ NEWS = {
  ],
  "IQV": [
   {
+   "d": "2026-10-27",
+   "h": "Q3 revenue up 8% to $4.43bn with record R&D Solutions bookings; full-year 2026 guidance raised",
+   "u": "https://www.biotechreality.com/2026/10/iqvia-q3-2026-results-revenue-guidance-raised.html"
+  },
+  {
    "d": "2026-09-29",
    "h": "IQVIA will report third-quarter 2026 results on 27 October 2026.",
    "u": "https://www.stocktitan.net/news/IQV/iqvia-to-announce-third-quarter-2026-results-on-october-27-silyer6ni2zd.html"
@@ -2762,6 +3358,11 @@ NEWS = {
   }
  ],
  "DXCM": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue of $1.344bn and EPS of $0.72 beat estimates as margins hit a multi-year high; full-year guidance raised",
+   "u": "https://www.investing.com/news/company-news/dexcom-q3-2026-slides-margins-hit-multiyear-high-guidance-raised-93CH-4985422"
+  },
   {
    "d": "2026-10-07",
    "h": "DexCom will report third-quarter 2026 results after the market closes on 29 October 2026.",
@@ -2802,6 +3403,11 @@ NEWS = {
  ],
  "AON": [
   {
+   "d": "2026-10-28",
+   "h": "Q3 beat: organic revenue up 6%, adjusted margin widens 70bp to 27.0% and adjusted EPS rises 10% to $3.36; shares gain 5%",
+   "u": "https://www.tikr.com/blog/aon-soars-5-on-third-quarter-beat-with-6-organic-growth-and-wider-margins"
+  },
+  {
    "d": "2026-09-04",
    "h": "Aon expects leverage of about 4.8 times at USI closing, targeting a return to 2.8–3.0 times within roughly 24 months, with buybacks paused",
    "u": "https://finance.yahoo.com/markets/stocks/articles/aon-aon-paying-17b-usi-162842766.html"
@@ -2819,6 +3425,11 @@ NEWS = {
  ],
  "USB": [
   {
+   "d": "2026-10-15",
+   "h": "Q3 net income $2.2bn, up 10%; EPS $1.34; revenue $7.97bn, up about 9%",
+   "u": "https://finviz.com/news/403171/us-bancorp-reports-10-rise-in-q3-net-income-to-22-billion-as-earnings-beat-forecasts"
+  },
+  {
    "d": "2026-10-01",
    "h": "U.S. Bancorp will report third-quarter 2026 results before the market opens on 15 October 2026",
    "u": "https://www.stocktitan.net/news/USB/u-s-bancorp-announces-third-quarter-earnings-conference-call-7cswsucce166.html"
@@ -2831,6 +3442,11 @@ NEWS = {
  ],
  "PNC": [
   {
+   "d": "2026-10-15",
+   "h": "Q3 net income $2.1bn, EPS $4.97 against $4.35 a year earlier; revenue $6.56bn, up 11% year on year",
+   "u": "https://www.stocktitan.net/news/PNC/pnc-reports-third-quarter-2026-net-income-of-2-1-billion-4-97-jq3ahvudfbhi.html"
+  },
+  {
    "d": "2026-10-02",
    "h": "PNC declared a $2.00 quarterly common dividend, payable 5 November 2026; Q3 results due 15 October",
    "u": "https://www.stocktitan.net/news/PNC/pnc-declares-dividend-of-2-00-on-common-znmlnumpn89y.html"
@@ -2842,6 +3458,11 @@ NEWS = {
   }
  ],
  "TFC": [
+  {
+   "d": "2026-10-16",
+   "h": "Q3 net income fell 45% to $799m after $1.45bn of securities losses from repositioning the balance sheet; revenue $3.75bn",
+   "u": "https://capital.com/en-ae/news/truist-3q26-net-income-falls-45-year-over-year-to"
+  },
   {
    "d": "2026-09-18",
    "h": "Truist set third-quarter 2026 results for 16 October 2026, with CEO Mike Lyons and CFO Mike Maguire hosting the call",
@@ -2901,6 +3522,11 @@ NEWS = {
  ],
  "AJG": [
   {
+   "d": "2026-10-29",
+   "h": "Q3 brokerage and risk management revenue up 18% with 5% organic growth; adjusted EPS $3.00 vs $2.31",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000354190/000162828026068263/a3rdquarter2026earningsrel.htm"
+  },
+  {
    "d": "2026-10-01",
    "h": "Gallagher acquired Albany Insurance Services, a New Zealand retail broker; terms not disclosed",
    "u": "https://www.stocktitan.net/news/AJG/arthur-j-gallagher-co-acquires-albany-insurance-services-7a7fm4zj2xiy.html"
@@ -2909,6 +3535,193 @@ NEWS = {
    "d": "2026-09-15",
    "h": "Gallagher acquired Colorado-based Innovise Business Consultants (McMillan Insurance & Bonding); terms not disclosed",
    "u": "https://www.stocktitan.net/news/AJG/arthur-j-gallagher-co-acquires-innovise-business-faiblzmbqw5k.html"
+  }
+ ],
+ "HDB": [
+  {
+   "d": "2026-10-17",
+   "h": "Q2 FY27 net profit up 4.7% to Rs19,510 crore as NII rises 9.7% and deposits grow 19%; a treasury loss weighs on profit",
+   "u": "https://www.business-standard.com/companies/quarterly-results/hdfc-bank-q2fy27-result-net-profit-rises-4-7-to-19-510-cr-nii-up-9-7-126101700465_1.html"
+  }
+ ],
+ "IBN": [
+  {
+   "d": "2026-10-17",
+   "h": "Q2 FY27 consolidated profit up 22% to Rs16,333 crore as provisions fall and loans grow 24% excluding FCNR(B)",
+   "u": "https://www.business-standard.com/companies/quarterly-results/icici-bank-q2-fy27-result-net-profit-rises-22-3-to-16-333-crore-126101700550_1.html"
+  }
+ ],
+ "CVNA": [
+  {
+   "d": "2026-10-29",
+   "h": "Record Q3 revenue up 42% to $8.04bn on 217,385 retail units, up 39%, with record profitability",
+   "u": "https://www.stocktitan.net/sec-filings/CVNA/8-k-carvana-co-reports-material-event-e896c89a119e.html"
+  }
+ ],
+ "MBLY": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue slips 2% to $492m but beats as EyeQ shipments outpace global production by 11%; 2026 revenue outlook lifted to $2.01bn",
+   "u": "https://finance.biggo.com/news/US_MBLY_2026-10-29"
+  }
+ ],
+ "AMX": [
+  {
+   "d": "2026-10-21",
+   "h": "Q3 revenue up 7.6% to MXN251bn and profit up 7% to about $1.3bn, topping estimates; cash flow cuts net debt and shares jump 6%",
+   "u": "https://www.tikr.com/blog/america-movil-jumps-6-as-third-quarter-profit-rises-7-topping-earnings-and-revenue-estimates"
+  }
+ ],
+ "RBLX": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 bookings fall 12% to $1.7bn and daily active users drop 9% to 138 million against a record 2025; Q4 bookings guided down 10% to 15%",
+   "u": "https://www.gaming.net/roblox-q3-revenue-rises-16-as-bookings-fall-12-to-1-7-billion/"
+  }
+ ],
+ "OMC": [
+  {
+   "d": "2026-10-22",
+   "h": "Q3 organic growth accelerates to 7.2% and EPS jumps 22% to $2.73 as Interpublic synergies add 200bp of margin",
+   "u": "https://finance.biggo.com/news/US_OMC_2026-10-22"
+  }
+ ],
+ "SOFI": [
+  {
+   "d": "2026-10-27",
+   "h": "Record Q3 net revenue of $1.4bn and net income of $241m; full-year guidance raised and shares jump 11%",
+   "u": "https://investors.sofi.com/news/news-details/2026/SoFi-Reports-Third-Quarter-2026-with-Record-Net-Revenue-of-1-4-Billion-Net-Income-of-241-Million-and-Raises-Full-Year-Guidance/default.aspx"
+  }
+ ],
+ "APH": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 sales $10.2bn, up 65% (37% organic); record $12.2bn of orders; dividend raised 20% and a new $4bn buyback",
+   "u": "https://www.sec.gov/Archives/edgar/data/0000820313/000110465926119421/aph-ex99d1.htm"
+  }
+ ],
+ "ALNY": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 product revenue up 52% on AMVUTTRA demand in ATTR cardiomyopathy; EPS boosted by a $1.9bn tax benefit",
+   "u": "https://www.tradingkey.com/news/earnings/262252849-tradingkey"
+  }
+ ],
+ "GEHC": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 beats with strong organic growth and wider margins as adjusted EPS rises; full-year guidance raised",
+   "u": "https://www.chartmill.com/news/GEHC/Chartmill-57026-GE-HealthCare-NASDAQGEHC-Q3-Earnings-Beat-and-Raised-Guidance-Drive-Premarket-Gains"
+  }
+ ],
+ "IBKR": [
+  {
+   "d": "2026-10-15",
+   "h": "Q3 net revenues up 16% to $1.91bn; customer accounts up 35% to 5.58 million and client equity up 27% to $965bn",
+   "u": "https://finviz.com/news/403263/interactive-brokers-group-announces-3q2026-results"
+  }
+ ],
+ "BK": [
+  {
+   "d": "2026-10-15",
+   "h": "Q3 net income $1.61bn, up 20%; fee revenue up 12%; assets under custody and administration $63.4tn, up 10%",
+   "u": "https://www.familywealthreport.com/article.php/BNY-Says-Q3-2026-Net-Income-Higher"
+  }
+ ],
+ "TRV": [
+  {
+   "d": "2026-10-16",
+   "h": "Q3 net income $1.92bn, or $9.04 a share; combined ratio improved to 86.8%; net written premiums roughly flat",
+   "u": "https://insurancenewsnet.com/oarticle/travelers-reports-excellent-third-quarter-and-year-to-date-results-3"
+  }
+ ],
+ "MSCI": [
+  {
+   "d": "2026-10-20",
+   "h": "Q3 revenue up 12.4% to $892m with asset-based fees up 25% on record ETF assets linked to MSCI indexes; adjusted EPS up 14% to $5.11",
+   "u": "https://finviz.com/news/404371/msci-reports-financial-results-for-third-quarter-and-nine-months-2026"
+  }
+ ],
+ "ARES": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 fee-related earnings of $524m and realized income of $1.26 a share; more than $31bn raised as AUM reaches about $691bn",
+   "u": "https://www.sec.gov/Archives/edgar/data/0001176948/000162828026067994/a2026q3-ex991.htm"
+  }
+ ],
+ "HLT": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 RevPAR up 5.8% with US up 7.0% and a record pipeline; full-year adjusted EPS guided to $9.07-$9.13",
+   "u": "https://lexpress-franchise.com/en-us/news/hilton-q3-2026-record-results-nasdaq/"
+  },
+  {
+   "d": "2026-10-20",
+   "h": "Moves its listing from the NYSE to Nasdaq effective 5 November 2026, keeping the HLT ticker",
+   "u": "https://lexpress-franchise.com/en-us/news/hilton-q3-2026-record-results-nasdaq/"
+  }
+ ],
+ "RCL": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 revenue up 9% to $5.6bn and adjusted EPS of $6.57 beat; 2026 adjusted EPS guide raised to $17.85-$17.95",
+   "u": "https://cruiseindustrynews.com/cruise-news/2026/10/royal-caribbean-group-reports-q3-2026-results-raises-full-year-guidance/"
+  }
+ ],
+ "UL": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 underlying sales growth of 5.2% with turnover up 6.7% to EUR13.3bn; full-year volume outlook raised",
+   "u": "https://uk.finance.yahoo.com/news/unilever-reports-5-2-q3-075252616.html"
+  }
+ ],
+ "KMI": [
+  {
+   "d": "2026-10-21",
+   "h": "Record Q3 with adjusted EPS up 21% to $0.35 and adjusted EBITDA of $2.18bn; project backlog reaches a record $14.4bn",
+   "u": "https://scanx.trade/stock-market-news/companies/kinder-morgan-fy26-results-adj-eps-guidance-1-36-vs-1-54-est/54159480"
+  }
+ ],
+ "NEM": [
+  {
+   "d": "2026-10-22",
+   "h": "Record Q3 adjusted net income of $2.3bn as gold prices lift EPS 41%, though attributable ounces fall 8%",
+   "u": "https://www.geminiq.com/blog/newmont-earnings-q3-2026"
+  }
+ ],
+ "ECL": [
+  {
+   "d": "2026-10-27",
+   "h": "Q3 organic sales growth accelerates to 7% as the data-centre-led High-Tech business surges 63%; growth outlook lifted",
+   "u": "https://www.tradingkey.com/news/transcripts/262243957-tradingkey"
+  }
+ ],
+ "AEP": [
+  {
+   "d": "2026-10-28",
+   "h": "Q3 operating EPS of $2.18 on revenue of $6.83bn as demand rises; capital plan expanded and long-term growth outlook increased",
+   "u": "https://www.aep.com/news/stories/view/12347/"
+  }
+ ],
+ "TT": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue of $6.76bn and EPS of $4.79 beat as bookings rise 20% and backlog reaches $12.5bn; revenue guidance raised",
+   "u": "https://stockstory.org/us/stocks/nyse/tt/news/earnings/trane-technologies-nysett-posts-better-than-expected-sales-in-q3-2026"
+  }
+ ],
+ "PWR": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 57% to $12.0bn and EPS of $4.55 beat; backlog reaches a record $63.7bn",
+   "u": "https://www.kalkine.com/news/announcements/quanta-services-q3-2026-120b-revenue-637b-backlog-record"
+  }
+ ],
+ "HWM": [
+  {
+   "d": "2026-10-29",
+   "h": "Q3 revenue up 29% and EPS up 54%; guidance raised and the buyback authorisation boosted by $5bn",
+   "u": "https://www.indexbox.io/blog/howmet-aerospace-q3-2026-revenue-jumps-29-to-270-billion/"
   }
  ]
 }

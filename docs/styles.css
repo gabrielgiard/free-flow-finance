@@ -1605,3 +1605,4 @@ html[data-model="dcf"] .mx-vs div:first-child b, html[data-model="mx"] .mx-vs di
 .header-right{ min-width:0; }
 .search-box{ min-width:0; }
 @media (min-width: 641px) and (max-width: 1100px){ .search-input, .search-input:focus{ width:190px; } }
+.pc-upd.past line{ opacity:.55; }

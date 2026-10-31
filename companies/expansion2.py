@@ -211,7 +211,7 @@ EXPANSION2 = [
       ["Hospital capital equipment budgets tighten when health systems come under financial pressure.",
        "Implant pricing faces steady downward pressure from hospital purchasing groups.",
        "Consistently expensive relative to medical device peers."],
-      "Regarded as the best growth compounder in medical devices. The pushback is valuation rather than execution.",
+      "Regarded as the best growth compounder in medical devices, but the shares fell about 10% on 30 October 2026 after third-quarter revenue of $6.52bn missed estimates despite 7.7% organic growth, and the 2026 EPS guide of $14.80-14.90 came in below consensus as hip and knee growth slowed. The pushback has moved from valuation alone to whether orthopaedics growth is cooling.",
       "Organic revenue growth, Mako installations, procedure volumes, capital equipment orders.",
       (5, 4, 4, 5)),
 
@@ -225,9 +225,9 @@ EXPANSION2 = [
    "Well-executed acquisition strategy that has repeatedly bought growth at reasonable prices."],
       ["Medtronic, Johnson & Johnson and Abbott are taking US pulsed field ablation share, and US electrophysiology sales grew only 3% in the second quarter of 2026.",
    "Watchman demand has slowed sharply, with US stand-alone procedures down in the low teens in the second quarter of 2026 after new stroke-risk evidence reduced referrals.",
-   "An August 2026 cyberattack disrupted manufacturing and order shipments, and the company has said it will no longer meet its third-quarter and full-year 2026 guidance."],
-      "Sentiment has reversed sharply: the shares lost more than half their value between late December 2025 and September 2026 as US electrophysiology share losses and a Watchman slowdown forced repeated guidance cuts. The August 2026 cyberattack added a further setback, although Barclays upgraded the stock to hold in October and the chief executive bought about $9 million of shares.",
-      "Third-quarter results on 28 October 2026 and quantified cyberattack impact, US electrophysiology share trends, Watchman procedure recovery, restructuring savings.",
+   "An August 2026 cyberattack cut third-quarter growth by about 3 points and EPS by $0.07, and management expects 2027 sales and EPS to be hard to grow."],
+      "Sentiment has reversed sharply: the shares lost more than half their value between late December 2025 and September 2026 as US electrophysiology share losses and a Watchman slowdown forced repeated guidance cuts. The third quarter of 2026 confirmed the damage, with organic growth of 1.5%, fourth-quarter organic sales guided down 1-3% and management warning it will be challenged to grow sales and EPS in 2027 before a return to growth in 2028.",
+      "Recovery from the August cyberattack, US electrophysiology and Watchman share trends, 2027 guidance after management warned growth will be hard, pending Penumbra acquisition, restructuring savings.",
       (5, 5, 4, 5)),
 
     C("CI", "The Cigna Group", "health", "Bloomfield, Connecticut, USA", 1982,
@@ -318,7 +318,7 @@ EXPANSION2 = [
        "Consulting revenue is discretionary and cyclical.",
        "Regulatory scrutiny of broker compensation and contingent commissions recurs periodically."],
       "Regarded as one of the highest-quality business models in financials, and priced accordingly.",
-      "Third-quarter results on 15 October 2026, organic revenue growth, insurance pricing cycle, consulting demand, acquisition activity.",
+      "Fourth-quarter results in January 2027, organic revenue growth, insurance pricing cycle, consulting demand, acquisition activity.",
       (5, 3, 4, 5)),
 
     C("ICE", "Intercontinental Exchange, Inc.", "financials", "Atlanta, Georgia, USA", 2000,
@@ -333,7 +333,7 @@ EXPANSION2 = [
    "Heavy debt from the Black Knight acquisition, with further debt to be issued to fund the roughly $5.7bn MarketAxess purchase.",
    "Regulatory scrutiny of exchange market data pricing is persistent, and the MarketAxess deal is under US antitrust review."],
       "The exchange business is universally admired, and trading volumes were strong through the third quarter of 2026. The mortgage technology business remains the contested part, and the debt-funded MarketAxess acquisition adds an integration and regulatory question.",
-      "Third-quarter results, MarketAxess antitrust review and shareholder vote on 29 October 2026, mortgage origination volumes, recurring revenue growth, debt reduction.",
+      "Fourth-quarter results in early 2027, outcome of the MarketAxess antitrust review, mortgage origination volumes, recurring revenue growth, debt reduction.",
       (5, 3, 3, 5)),
 
     C("CME", "CME Group Inc.", "financials", "Chicago, Illinois, USA", 1898,
@@ -392,7 +392,7 @@ EXPANSION2 = [
       ["Ratings revenue swings with debt issuance volumes, which are highly rate-sensitive.",
        "Periodic regulatory pressure on the issuer-pays model that funds the agencies.",
        "The valuation consistently reflects a high-quality premium."],
-      "Universally regarded as an exceptional business model. Issuance volumes drive the near-term earnings debate.",
+      "Universally regarded as an exceptional business model, but the third quarter of 2026 was a reminder of its cyclical half: revenue rose only 1% to $2.02bn and adjusted EPS of $4.14 missed as weaker leveraged-finance issuance cut ratings revenue, while Analytics kept growing. Full-year EPS guidance of $16.50-17.00 was held.",
       "Debt issuance volumes, Analytics recurring revenue growth, transactional versus recurring mix, regulatory developments.",
       (5, 4, 4, 5)),
 
@@ -438,7 +438,7 @@ EXPANSION2 = [
       ["Very high multiple that assumes many years of continued unit growth and comparable sales.",
        "Food and labour cost inflation compresses restaurant margins directly.",
        "Portion size controversies demonstrated how sensitive the brand is to value perception."],
-      "A growth story where nobody disputes the concept and everybody debates the price.",
+      "A growth story where nobody disputes the concept and everybody debates the price. Third-quarter 2026 revenue rose 9.6% but comparable sales grew only 2.1% and margins narrowed, with fourth-quarter comps guided near 2%, so the debate has shifted from valuation to whether traffic can reaccelerate.",
       "Comparable restaurant sales, transaction growth, new unit openings, restaurant-level margin.",
       (5, 4, 5, 4)),
 
@@ -484,7 +484,7 @@ EXPANSION2 = [
        "Walmart, Costco and Aldi all compete aggressively on price.",
        "The blocked Albertsons merger removed the scale strategy management had been pursuing."],
       "A defensive holding in a structurally low-margin industry, now under a new chief executive. The September 2026 cut to full-year identical sales guidance, to 0.2%-0.8%, prompted target cuts from Citi and Deutsche Bank even though earnings guidance held. Retail media, where profit rose 24% in the second quarter, remains the main margin improvement hope.",
-      "Investor update meeting on 20 October 2026, identical sales excluding fuel, completion of the $2 billion buyback, retail media growth, gross margin.",
+      "Identical sales excluding fuel, follow-through on the October 2026 investor update, completion of the $2 billion buyback, retail media growth, gross margin, third-quarter results in December 2026.",
       (3, 2, 3, 3)),
 
     C("MNST", "Monster Beverage Corporation", "consumer", "Corona, California, USA", 1935,
@@ -560,7 +560,7 @@ EXPANSION2 = [
    "Substantial Indonesian operations carry political, permitting and resource nationalism risk, and Grasberg is still recovering from the September 2025 mud rush, with mill throughput at about 67% of pre-incident rates in the third quarter of 2026.",
    "Mining is capital-intensive with significant environmental and closure liabilities."],
       "The structural copper deficit argument is widely accepted, and realised copper prices above $6.50 per pound in the third quarter of 2026 are supporting earnings. The debate is now the pace of the Grasberg recovery, which management still expects to reach 80% of capacity by mid-2027, alongside Indonesian political risk.",
-      "Q3 2026 results on 27 October 2026, Grasberg Block Cave ramp-up and Production Block 1S restart in mid-2027, Bagdad expansion investment decision by end-2026, copper price, unit cash costs.",
+      "Q4 2026 results in January 2027, Grasberg Block Cave ramp-up and Production Block 1S restart in mid-2027, Bagdad expansion investment decision by end-2026, copper price, unit cash costs.",
       (4, 3, 3, 4)),
 
     C("APD", "Air Products and Chemicals, Inc.", "energy", "Allentown, Pennsylvania, USA", 1940,
@@ -651,7 +651,7 @@ EXPANSION2 = [
        "Fuel and labour costs are significant and inflation-sensitive.",
        "The Stericycle acquisition added medical waste, a new business with integration risk."],
       "Considered one of the most defensive quality compounders in the market, and priced as such. The August 2026 announcement that long-serving President John Morris will succeed Jim Fish in January 2027 points to continuity rather than a change of strategy.",
-      "Q3 2026 results on 27 October 2026, CEO transition to John Morris on 4 January 2027, core price growth, volume trends, recycling commodity prices, renewable energy project returns.",
+      "Q4 2026 results in early 2027, CEO transition to John Morris on 4 January 2027, core price growth, volume trends, recycling commodity prices, renewable energy project returns.",
       (5, 3, 3, 5)),
 
     C("TDG", "TransDigm Group Incorporated", "industrials", "Cleveland, Ohio, USA", 1993,
@@ -696,7 +696,7 @@ EXPANSION2 = [
    "Expanding constrained solid rocket motor capacity requires heavy investment, including a $3 billion build-out and new plants in Arkansas, and the large PAC-3 and THAAD propulsion contracts are still undefinitized.",
    "Fixed-price development contracts carry cost overrun risk."],
       "Seen as well positioned for munitions and communications demand, a view reinforced by more than $10 billion of PAC-3 and THAAD propulsion awards in September 2026. The abrupt departure of Christopher Kubasik in August 2026 raised governance questions, though the successor is an internal appointment and 2026 guidance was reaffirmed.",
-      "Q3 2026 results on 29 October 2026, leadership transition under Sam Mehta, solid rocket motor capacity build-out, definitisation of PAC-3 and THAAD propulsion contracts, defence budget appropriations.",
+      "Q4 2026 results in early 2027, leadership transition under Sam Mehta, solid rocket motor capacity build-out, definitisation of PAC-3 and THAAD propulsion contracts, defence budget appropriations.",
       (4, 3, 3, 4)),
 
     # ===================== AUTOS & MOBILITY =====================
@@ -727,7 +727,7 @@ EXPANSION2 = [
    "R2 execution is existential: deliveries began in June 2026, but only the higher-priced Performance version is on sale through 2026 and the ramp has to lift volumes quickly.",
    "Competing against Tesla, legacy manufacturers and Chinese entrants simultaneously."],
       "A binary story. Bulls back the product, the VW partnership and an R2 ramp that helped third-quarter deliveries beat expectations; bears point to cash burn and the difficulty of scaling automotive manufacturing.",
-      "Third-quarter results on 29 October 2026, R2 production ramp, fourth-quarter deliveries against the 65,000–70,000 outlook, gross profit per vehicle, cash burn rate, CFO succession, Volkswagen joint venture milestones.",
+      "R2 production ramp, fourth-quarter deliveries against the 65k–70k outlook, gross profit per vehicle, cash burn rate, CFO succession, Volkswagen joint venture milestones.",
       (3, 5, 3, 2)),
 
     # ===================== TELECOM & MEDIA =====================
@@ -759,6 +759,6 @@ EXPANSION2 = [
        "Payment for order flow remains a target for regulatory prohibition, particularly in Europe.",
        "Crypto revenue is volatile and dependent on speculative cycles."],
       "A high-beta play on retail investor engagement. Product expansion beyond trading is the main bull argument.",
-      "Third-quarter results on 27 October 2026, funded customers and platform assets, prediction market volumes, crypto trading volumes, regulatory developments on order flow.",
+      "Funded customers and platform assets, prediction market volumes, crypto trading volumes, regulatory developments on order flow, fourth-quarter results in February 2027.",
       (3, 5, 4, 3)),
 ]

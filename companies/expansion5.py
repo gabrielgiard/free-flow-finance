@@ -272,8 +272,8 @@ EXPANSION5 = [
       ["Travel demand weakens in a recession.",
        "US hotel revenue per room has slowed.",
        "Relies on owners being able to finance new hotels."],
-      "Regarded as a best-in-class hotel franchisor; valuation reflects consistent growth.",
-      "Quarterly results, revenue per available room, net unit growth, pipeline, buybacks.",
+      "Regarded as a best-in-class hotel franchisor; valuation reflects consistent growth. Third-quarter 2026 RevPAR rose 5.8% with a record pipeline, and Hilton is moving its listing from the NYSE to Nasdaq on 5 November 2026, citing its technology-led growth strategy.",
+      "Nasdaq listing from 5 November 2026, quarterly results, revenue per available room, net unit growth, pipeline, buybacks.",
       (5, 4, 3, 5)),
 
     C("RCL", "Royal Caribbean Cruises Ltd.", "consumer", "Miami, Florida, USA", 1968,

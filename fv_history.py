@@ -39,6 +39,7 @@ LEGACY_PATH = os.path.join(HERE, "docs", "fv-history.js")
 
 MODEL_UPDATES = [
     ("2026-10-12", "October 2026 review: corrected share counts, splits and net debt; every write-up refreshed"),
+    ("2026-10-31", "Q3 2026 earnings review: results, guidance, catalysts and street views refreshed for every company that has reported"),
 ]
 
 MOVE = 0.01          # record a new point when fair value moves 1% or more

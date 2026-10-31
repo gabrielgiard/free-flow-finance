@@ -586,43 +586,21 @@ function pcRender(fig) {
         ${d ? `<path d="${d}" class="pc-fvjump"/>` : ''}
         ${seenVers.map(v => `<path d="${byVer[v].join('')}" class="pc-fvstep ${v === latest ? 'cur' : v === latest - 1 ? 'old' : 'old old2'}"/>`).join('')}
       </g>`;
-    // Name each earlier version on the chart, ending where it ended:
-    // "Update 1 · $157.20" (its last value). The text may run back over that
-    // version's earlier steps; it is skipped only when the chart has no room.
-    seenVers.filter(v => v !== latest).forEach(v => {
-      const mine = steps.filter(x => x.ver === v);
-      const s = mine[mine.length - 1];
-      const x2 = XD(s.b), y = Y(s.v);
-      const txt = `${W < 560 ? 'Upd' : 'Update'} ${pcVerNo(v)} · ${pcMoney(s.v)}`;
-      const tw = txt.length * 6.3 + 10;
-      if (x2 - padL < tw) return;                              // no room left of the update
-      // above or below the step, whichever the price line crosses less
-      const hits = (yA, yB) => closes.reduce((k, c, i) =>
-        k + (X(i) >= x2 - tw && X(i) <= x2 && Y(c) >= yA && Y(c) <= yB ? 1 : 0), 0);
-      const canAbove = y - 20 > padT, canBelow = y + 20 < H - padB;
-      // never print over today's fair-value label at the right edge
-      const fvTxtW = (W < 560 ? 18 : 30) * 6.6, fy0 = showFV ? Y(fv) : -1e9;
-      const fvTop = fy0 > padT + 22 ? fy0 - 20 : fy0 + 4;
-      const clash = ty => showFV && x2 - 5 > plotR - 6 - fvTxtW && x2 - 5 - tw < plotR - 6
-        && ty - 12 < fvTop + 16 && ty > fvTop;
-      let order = (canAbove && (!canBelow || hits(y - 20, y) <= hits(y, y + 20))) ? [y - 7, y + 15] : [y + 15, y - 7];
-      order = order.filter(ty => (ty < y ? canAbove : canBelow) && !clash(ty));
-      if (!order.length) return;                               // nowhere clean to put it
-      labelLayer += `<text x="${(x2 - 5).toFixed(1)}" y="${order[0].toFixed(1)}" text-anchor="end" class="pc-fvseg${v === latest - 1 ? '' : ' old2'}">${txt}</text>`;
-    });
-    // model-update markers; labels drop to a second row when two are close
-    let lastEnd = -1e9, row = 0;
+    // Earlier versions are drawn (fainter, dashed) but not labelled: one
+    // label for the current fair value is enough, and the hover read-out
+    // names the version under the pointer.
+    // A line marks every model update; only the most recent one is named.
     const word = W < 560 ? 'Upd' : 'Model update';
+    const newest = st.fvh.updates.reduce((m, u) => Math.max(m, u.n), -1);
     st.fvh.updates.forEach(u => {
       if (u.date <= dates[0] || u.date > dates[n - 1]) return;
       const ux = XD(u.date);
       const wLab = (word.length + 2) * 6.4;
       const right = ux + 5 + wLab > plotR;
-      const startX = right ? ux - 5 - wLab : ux + 5;
-      row = startX < lastEnd + 6 ? (row + 1) % 2 : 0;
-      lastEnd = startX + wLab;
-      histLayer += `<g class="pc-upd"><line x1="${ux.toFixed(1)}" x2="${ux.toFixed(1)}" y1="${padT - 6}" y2="${H - padB}"/>
-        <text x="${(right ? ux - 5 : ux + 5).toFixed(1)}" y="${padT + 4 + row * 13}" text-anchor="${right ? 'end' : 'start'}">${word} ${pcVerNo(u.n)}</text><title>Model update ${pcVerNo(u.n)}, ${pcFmtDate(u.date)}: ${escapeHtml(u.label)}</title></g>`;
+      const lab = u.n === newest
+        ? `<text x="${(right ? ux - 5 : ux + 5).toFixed(1)}" y="${padT + 4}" text-anchor="${right ? 'end' : 'start'}">${word} ${pcVerNo(u.n)}</text>` : '';
+      histLayer += `<g class="pc-upd${u.n === newest ? '' : ' past'}"><line x1="${ux.toFixed(1)}" x2="${ux.toFixed(1)}" y1="${padT - 6}" y2="${H - padB}"/>
+        ${lab}<title>Model update ${pcVerNo(u.n)}, ${pcFmtDate(u.date)}: ${escapeHtml(u.label)}</title></g>`;
     });
   }
   st.geo.vers = seenVers;
@@ -694,8 +672,7 @@ function pcRender(fig) {
     const latest = st.fvh ? st.fvh.latest : 0;
     const olds = (st.geo.vers || []).filter(v => v !== latest);
     kold.hidden = !olds.length;
-    kold.querySelector('.pc-k-old-text').textContent = olds.length
-      ? 'Fair value under model update ' + olds.map(pcVerNo).join(' and ') : '';
+    kold.querySelector('.pc-k-old-text').textContent = olds.length ? 'Earlier fair values' : '';
   }
   if (kmodel) kmodel.hidden = !ghost;
   const note = fig.querySelector('.pc-note');
