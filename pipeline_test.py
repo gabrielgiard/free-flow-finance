@@ -556,6 +556,21 @@ check("the page reads the model from data.js", "c.mx" in open("docs/views.js").r
 
 
 # ------------------------------------------------------------------------
+section("Monte Carlo portfolio simulation")
+_idx = open(os.path.join(_repo, "docs/index.html")).read()
+check("montecarlo.js is loaded, and before the page code that uses it",
+      'src="montecarlo.js"' in _idx and _idx.index("montecarlo.js") < _idx.index("views.js"))
+import make_single_file as _msf  # noqa: E402
+check("the single-file build includes montecarlo.js ahead of views.js",
+      "montecarlo.js" in _msf.SCRIPTS and _msf.SCRIPTS.index("montecarlo.js") < _msf.SCRIPTS.index("views.js"))
+_mc = subprocess.run(["node", os.path.join(_repo, "montecarlo_test.js")], capture_output=True, text=True, timeout=300)
+_mc_tail = (_mc.stdout.strip().splitlines() or [_mc.stderr[-300:]])[-1]
+check("the simulation engine passes its own maths checks (known answers, seeds, shrinkage)", _mc.returncode == 0, _mc_tail)
+check("the Portfolio page only offers the panel when the engine loaded",
+      "typeof FF_MC !== 'undefined'" in open(os.path.join(_repo, "docs/views.js")).read())
+
+
+# ------------------------------------------------------------------------
 shutil.rmtree(work, ignore_errors=True)
 print("\n" + "=" * 68)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

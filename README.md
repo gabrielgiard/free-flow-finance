@@ -245,6 +245,32 @@ the portfolio valued at *your own DCF fair values*, and its weighted upside.
 Positions are stored in the visitor's browser via `localStorage` — nothing is
 sent anywhere, because there is no server. Clearing browser data clears them.
 
+**Monte Carlo simulation** (bottom of the Portfolio page, `docs/montecarlo.js`) —
+plays out thousands of possible futures for the portfolio and draws them as a fan
+(a 5th-to-95th percentile band, the middle half, the median), with the chance of
+ending lower, the chance of a 20% fall along the way, the average of the worst
+1-in-20 outcomes, and which holding the risk really comes from. How it works:
+
+- Daily returns for every holding come from the last year of closes in `history.js`
+  (days matched across holdings; a holding with under 60 days is stood in for by the
+  S&P 500, and the page says so).
+- The co-movement table is shrunk toward a constant-correlation matrix with the
+  Ledoit-Wolf (2004) intensity, because one year of data cannot pin down a 20-by-20
+  table. Paths are simulated monthly with correlated normal shocks ("Bell curve") or
+  by reshuffling real month-long windows of the past year ("Replay").
+- Every stock is given the same assumed return, 8% a year (`DEFAULTS.baseDrift`),
+  and the shocks are calibrated so the simulated average equals it exactly. The past
+  year's own average return is deliberately not used.
+- The dashed gold line is a scenario, not a forecast: the same futures with each stock
+  also drifting toward our fair value, half the gap over three years, at most 10% a year.
+- The random numbers are seeded from the tickers, so a portfolio shows the same picture
+  on every visit; "Run it again" changes the seed.
+
+`node montecarlo_test.js` checks the engine against cases with known answers (a
+single stock against the lognormal formulas, independent stocks against vol/sqrt(2),
+the drift calibration, shrinkage against a known covariance, seeds, edge cases) and
+is also run by `pipeline_test.py`.
+
 **Financial analysis** (a tab on every company page) — margin quality, leverage,
 capital structure, common-size revenue, and where each metric ranks against its
 own sector. Deliberately *not* a fabricated three-statement model: this library

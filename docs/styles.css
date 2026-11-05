@@ -933,6 +933,103 @@ select.scr-input{ font-family:var(--font-body); cursor:pointer; }
   .pf-summary, .pf-addcard, .pf-alloc, .pf-empty{ padding-left:16px; padding-right:16px; }
 }
 
+/* ------------------------- portfolio: Monte Carlo panel -------------------------
+   A fan of lilac bands (where the portfolio could land) with one dashed gold line
+   (the middle outcome if prices move toward our fair values). Same colours as the
+   company chart: lilac is the market, gold is our number. */
+.pf-mc{
+  margin-top:16px; padding:24px 28px 22px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
+  box-shadow: inset 0 1px 0 0 var(--rim-lit), var(--shadow-sm);
+  -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
+}
+.pf-mcjump{ display:block; margin-top:14px; }
+.pf-mc-top{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px 24px; flex-wrap:wrap; }
+.pf-mc-kicker{ font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--lilac-dim); }
+.pf-mc-title{ font-family:var(--font-display); font-size:26px; line-height:1.15; margin:6px 0 0; color:var(--text); }
+.pf-mc-ctl{ display:flex; gap:10px; flex-wrap:wrap; }
+.pf-mc-lede{ font-size:14px; line-height:1.55; color:var(--text-muted); max-width:66ch; margin:12px 0 18px; }
+.pf-mc-lede em{ font-style:normal; color:var(--text); }
+.pf-mc-body{ min-height:360px; transition:opacity .2s ease; }
+.pf-mc-body.busy{ opacity:.45; pointer-events:none; }
+.pf-mc-wait, .pf-mc-empty{
+  border:1px dashed var(--line); border-radius:var(--radius); padding:30px 24px; text-align:center;
+  color:var(--text-dim); font-size:13px; line-height:1.65;
+}
+.pf-mc-empty b{ display:block; color:var(--text-muted); margin-bottom:4px; font-weight:600; }
+
+.pf-mc-read{ display:flex; flex-wrap:wrap; gap:6px 18px; min-height:20px; margin-bottom:8px; font-family:var(--font-mono); font-size:12.5px; color:var(--text-dim); }
+.pf-mc-read b{ margin-left:4px; font-weight:500; color:var(--text); }
+.pf-mc-read .mc-r-when{ min-width:92px; color:var(--text-muted); }
+.pf-mc-read .gold, .pf-mc-read .gold b{ color:var(--gold-soft); }
+.pf-mc-chart{ margin:0 -4px; min-height:250px; touch-action:pan-y; cursor:crosshair; border-radius:12px; }
+.pf-mc-chart:focus-visible{ outline:2px solid var(--lilac); outline-offset:4px; }
+.mc-band.wide{ fill:rgba(185,163,245,.13); }
+.mc-band.mid{ fill:rgba(185,163,245,.26); }
+.mc-median{ fill:none; stroke:var(--lilac); stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round; }
+.mc-view{ fill:none; stroke:#c9a227; stroke-width:2; stroke-dasharray:6 4; stroke-linecap:round; }
+.mc-today{ stroke:rgba(241,238,248,.42); stroke-width:1; stroke-dasharray:3 4; }
+.mc-endlab{ font-family:var(--font-mono); font-size:11.5px; fill:var(--lilac); }
+.mc-endlab.gold{ fill:var(--gold-soft); }
+.mc-cross-line{ stroke:rgba(241,238,248,.38); stroke-width:1; }
+.mc-dot{ fill:var(--lilac); stroke:var(--ink); stroke-width:2; }
+.mc-dot.gold{ fill:#c9a227; }
+
+.pf-mc-legend{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:12px 0 2px; font-size:12px; color:var(--text-muted); }
+.pf-mc-legend span{ display:inline-flex; align-items:center; gap:7px; }
+.pf-mc-legend i{ display:inline-block; width:18px; height:10px; border-radius:3px; }
+.pf-mc-legend .lg-wide{ background:rgba(185,163,245,.18); }
+.pf-mc-legend .lg-mid{ background:rgba(185,163,245,.4); }
+.pf-mc-legend .lg-med{ height:3px; border-radius:2px; background:var(--lilac); }
+.pf-mc-legend .lg-view{ height:0; border-radius:0; border-top:2px dashed #c9a227; }
+.pf-mc-legend .lg-today{ height:0; border-radius:0; border-top:1px dashed rgba(241,238,248,.55); }
+
+.mc-tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-top:18px; }
+.mc-tile{ padding:14px 15px 13px; border-radius:14px; background:rgba(255,255,255,.035); border:1px solid var(--line-soft); }
+.mc-k{ font-size:12px; color:var(--text-dim); }
+.mc-v{ margin-top:5px; font-family:var(--font-mono); font-size:22px; font-weight:500; letter-spacing:-.01em; color:var(--text); }
+.mc-s{ margin-top:5px; font-size:11.5px; line-height:1.45; color:var(--text-dim); }
+
+.pf-mc-view{ margin-top:14px; padding:14px 18px; border-radius:14px; background:rgba(201,162,39,.07); border:1px solid rgba(201,162,39,.26); }
+.pf-mc-viewtag{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold-soft); }
+.pf-mc-viewtag i{ display:inline-block; width:16px; border-top:2px dashed #c9a227; }
+.pf-mc-view p{ margin:8px 0 6px; font-size:14.5px; line-height:1.5; color:var(--text); max-width:72ch; }
+.pf-mc-view p b{ font-weight:600; }
+.pf-mc-view small{ display:block; font-size:12px; line-height:1.5; color:var(--text-dim); max-width:80ch; }
+
+.pf-mc-risk{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line-soft); }
+.pf-mc-insight{ margin:0 0 14px; max-width:70ch; font-size:14.5px; line-height:1.55; color:var(--text); }
+.pf-mc-insight b{ font-family:var(--font-mono); font-weight:600; color:var(--lilac); }
+.mc-risk{ list-style:none; margin:0; padding:0; display:grid; gap:11px; }
+.mc-risk-row{ display:grid; grid-template-columns:64px minmax(0,1fr) 190px; gap:14px; align-items:center; }
+.mc-rt{ font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--lilac); }
+.mc-bars{ display:grid; gap:4px; }
+.mc-bar{ height:7px; min-width:2px; border-radius:4px; }
+.mc-bar.money, .mc-risk-key i.money{ background:rgba(241,238,248,.28); }
+.mc-bar.risk, .mc-risk-key i.risk{ background:linear-gradient(90deg, var(--violet-500), var(--lilac)); }
+.mc-rn{ display:flex; flex-direction:column; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--text-dim); }
+.mc-rn b{ font-weight:500; color:var(--text); }
+.mc-risk-key{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:12px; font-size:12px; color:var(--text-dim); }
+.mc-risk-key i{ display:inline-block; width:14px; height:7px; margin-right:7px; border-radius:4px; }
+.pf-mc-more{ margin:10px 0 0; font-size:12px; color:var(--text-dim); }
+
+.pf-mc-note{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line-soft); font-size:12.5px; line-height:1.6; color:var(--text-dim); }
+.pf-mc-note p{ margin:0 0 6px; max-width:92ch; }
+.pf-mc-note b{ font-weight:600; color:var(--text-muted); }
+.pf-mc-note .pf-link{ margin-top:4px; font-size:12.5px; }
+
+@media (max-width: 760px){
+  .pf-mc{ padding:20px 16px 18px; }
+  .pf-mc-title{ font-size:22px; }
+  .pf-mc-body{ min-height:300px; }
+  .mc-tiles{ grid-template-columns:1fr 1fr; }
+  .mc-tiles .mc-tile:last-child:nth-child(odd){ grid-column:1 / -1; }
+  .mc-v{ font-size:19px; }
+  .mc-risk-row{ grid-template-columns:58px minmax(0,1fr); row-gap:4px; }
+  .mc-rn{ grid-column:1 / -1; flex-direction:row; justify-content:space-between; text-align:left; }
+  .pf-mc-read{ font-size:12px; gap:4px 12px; }
+}
+
 /* Recent developments (Thesis tab) */
 .news-card{ margin-bottom:16px; }
 .news-card .label{ font-size:12px; color:var(--text-muted); letter-spacing:.01em; margin-bottom:12px; }

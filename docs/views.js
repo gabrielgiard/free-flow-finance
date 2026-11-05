@@ -1422,7 +1422,7 @@ function viewPortfolio() {
     <div class="wrap">
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Portfolio' })}
       <h1 class="pf-title">Your portfolio</h1>
-      <p class="pf-lede">Add what you own and see it against our fair values. Saved on this device only: no account, nothing sent anywhere.</p>
+      <p class="pf-lede">Add what you own, see it against our fair values, then stress-test it with a Monte Carlo simulation. Saved on this device only: no account, nothing sent anywhere.</p>
     </div>
   </section>`;
 
@@ -1431,7 +1431,7 @@ function viewPortfolio() {
     <section style="padding-top:6px"><div class="wrap" id="pf-root">
       <div class="pf-empty">
         <h2>Start with one stock</h2>
-        <p>Type a ticker or company name. You'll see what your holdings are worth, how much you're up, and whether our model thinks they're cheap or expensive.</p>
+        <p>Type a ticker or company name. You'll see what your holdings are worth, how much you're up, whether our model thinks they're cheap or expensive, and a Monte Carlo simulation of where they could go.</p>
         ${pfAddFormHTML()}
         <button type="button" class="pf-link" data-pf-example>Or look at an example portfolio first</button>
       </div>
@@ -1463,6 +1463,7 @@ function viewPortfolio() {
       </div>
       ${pfMeterHTML(st)}
       <p class="pf-verdict">${pfVerdict(st)}${st.nm ? ` <span>${st.nm} holding${st.nm > 1 ? 's have' : ' has'} no meaningful fair value and ${st.nm > 1 ? 'are' : 'is'} counted at market price.</span>` : ''}</p>
+      ${typeof FF_MC !== 'undefined' ? `<button type="button" class="pf-link pf-mcjump" data-pf-mcjump>Stress-test this portfolio: what could the next few years look like? ↓</button>` : ''}
     </div>
 
     <div class="pf-addcard">
@@ -1478,6 +1479,7 @@ function viewPortfolio() {
       <div class="pf-allocbar">${allocBar}</div>
       <div class="pf-allockey">${allocKey}</div>
     </div>
+    ${typeof FF_MC !== 'undefined' ? mcPanelHTML() : ''}
     <p class="pf-foot">Fair values come from ${MODEL.cur === 'mx' ? 'the peer multiples model' : 'our DCF model'} and update every market day. Not investment advice.</p>
   </div></section>`;
 }
@@ -1578,9 +1580,13 @@ function mountPortfolio(root) {
   });
 
   el.addEventListener('click', e => {
-    const t = e.target.closest('[data-pf-edit],[data-pf-remove],[data-pf-save],[data-pf-cancel],[data-pf-example],[data-pf-clear]');
+    const t = e.target.closest('[data-pf-edit],[data-pf-remove],[data-pf-save],[data-pf-cancel],[data-pf-example],[data-pf-clear],[data-pf-mcjump]');
     if (!t) return;
-    if (t.dataset.pfEdit) { PF.editing = t.dataset.pfEdit; pfRefresh(); document.querySelector('.pf-edit input')?.focus(); }
+    if ('pfMcjump' in t.dataset) {
+      const panel = document.getElementById('pf-mc');
+      if (panel) panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    }
+    else if (t.dataset.pfEdit) { PF.editing = t.dataset.pfEdit; pfRefresh(); document.querySelector('.pf-edit input')?.focus(); }
     else if (t.dataset.pfRemove) { if (PF.editing === t.dataset.pfRemove) PF.editing = null; pfRemove(t.dataset.pfRemove); pfRefresh(); }
     else if (t.dataset.pfSave) {
       const id = 'pf-' + t.dataset.pfSave.replace(/[^a-z0-9]/gi, '');
@@ -1610,6 +1616,375 @@ function mountPortfolio(root) {
     const box = btn.closest('.pf-edit');
     box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
   }
+
+  mcMount(el);
+}
+
+/* ===================== MONTE CARLO PANEL (Portfolio page) =====================
+   The maths lives in montecarlo.js and is tested on its own. This is the part
+   that asks it the question and draws the answer.
+
+   The picture is a fan: the lilac bands are where the portfolio could land if
+   every stock simply earns a normal return, and the dashed gold line is the
+   middle outcome if prices also move toward OUR fair values. Gold is the site's
+   colour for "what we think it's worth", so the reader sees at a glance what
+   the valuations add, and how much of the picture is just luck. */
+
+const MC_KEY = 'freeflow.mc.v1';
+const MCUI = { years: 3, method: 'normal', salt: 0, loaded: false, key: '', out: null };
+
+function mcLoad() {
+  if (MCUI.loaded) return;
+  MCUI.loaded = true;
+  try {
+    const s = JSON.parse(localStorage.getItem(MC_KEY) || 'null');
+    if (s && [1, 3, 5].includes(s.years)) MCUI.years = s.years;
+    if (s && (s.method === 'normal' || s.method === 'bootstrap')) MCUI.method = s.method;
+  } catch (e) { /* storage blocked: the defaults are fine */ }
+}
+function mcSave() {
+  try { localStorage.setItem(MC_KEY, JSON.stringify({ years: MCUI.years, method: MCUI.method })); } catch (e) { /* ignore */ }
+}
+
+const mcDay = d => Math.round(d.getTime() / 86400000);
+const mcPct = p => p < 0.005 ? '<1%' : p > 0.995 ? '>99%' : Math.round(p * 100) + '%';
+const mcYears = y => y === 1 ? '1 year' : y + ' years';
+
+/* $12.5k, $1.2M: short enough for an axis or the end of a line. */
+function mcShort(v) {
+  const a = Math.abs(v), s = v < 0 ? '-' : '';
+  const f = (x, d) => String(+x.toFixed(d));
+  if (a >= 1e9) return s + '$' + f(a / 1e9, 2) + 'B';
+  if (a >= 1e6) return s + '$' + f(a / 1e6, a >= 1e7 ? 1 : 2) + 'M';
+  if (a >= 1e5) return s + '$' + f(a / 1e3, 0) + 'k';
+  if (a >= 1e3) return s + '$' + f(a / 1e3, a >= 1e4 ? 1 : 2) + 'k';
+  return s + '$' + f(a, 0);
+}
+
+function mcWhen(m) {
+  if (m === 0) return 'Today';
+  if (m < 12) return m + (m === 1 ? ' month' : ' months');
+  const y = Math.floor(m / 12), r = m % 12;
+  return y + (y === 1 ? ' year' : ' years') + (r ? ' ' + r + ' mo' : '');
+}
+
+function mcKey() {
+  return JSON.stringify([PF.positions.map(p => { const c = byT(p.t); return [p.t, p.sh, c.price, c.fv]; }),
+    MCUI.years, MCUI.method, MCUI.salt, MODEL.cur]);
+}
+
+function mcInputs() {
+  const holdings = PF.positions.map(p => {
+    const c = byT(p.t), s = pcSeries(p.t);
+    return { t: p.t, value: c.price * p.sh, price: c.price, fv: c.fv,
+             dates: s ? s.dates.map(mcDay) : [], closes: s ? s.closes : [] };
+  });
+  const m = pcSeries('^GSPC');
+  return { holdings, market: m ? { dates: m.dates.map(mcDay), closes: m.closes } : null };
+}
+
+/* One run. Same portfolio, same settings, same answer every time: the seed comes
+   from the tickers, and only "run again" changes it. */
+function mcCompute() {
+  const inp = mcInputs();
+  const prep = FF_MC.prepare(inp.holdings, inp.market);
+  if (!prep.ok) return { err: 'history' };
+  const seed = FF_MC.hashSeed(inp.holdings.map(h => h.t).sort().join(',') + '|' + MCUI.method + '|' + MCUI.salt);
+  const res = FF_MC.run(prep, inp.holdings, { months: MCUI.years * 12, method: MCUI.method, seed });
+  return { res, holdings: inp.holdings };
+}
+
+function mcPanelHTML() {
+  mcLoad();
+  const seg = (attr, cur, opts) => opts.map(([v, label, tip]) =>
+    `<button type="button" class="pc-range${String(cur) === String(v) ? ' on' : ''}" ${attr}="${v}" aria-pressed="${String(cur) === String(v)}"${tip ? ` title="${tip}"` : ''}>${label}</button>`).join('');
+  return `
+  <section class="pf-mc" id="pf-mc" aria-labelledby="pf-mc-h">
+    <div class="pf-mc-top">
+      <div>
+        <div class="pf-mc-kicker">Monte Carlo simulation</div>
+        <h2 class="pf-mc-title" id="pf-mc-h">Where could your portfolio go?</h2>
+      </div>
+      <div class="pf-mc-ctl">
+        <div class="pc-ranges" role="group" aria-label="How far ahead">${seg('data-mc-years', MCUI.years, [[1, '1 year'], [3, '3 years'], [5, '5 years']])}</div>
+        <div class="pc-ranges" role="group" aria-label="How the futures are drawn">${seg('data-mc-method', MCUI.method, [
+          ['normal', 'Bell curve', 'Smooth random moves, as big as the past year’s and moving together the same way'],
+          ['bootstrap', 'Replay', 'Reshuffles real month-long stretches from the past year, so a past crash can happen again']])}</div>
+      </div>
+    </div>
+    <p class="pf-mc-lede">We play out thousands of possible futures for exactly what you hold. Each one uses how these stocks really moved over the past year, and how they moved <em>together</em>, then shows the range of places you could end up.</p>
+    <div class="pf-mc-body" id="pf-mc-body" aria-live="polite"><div class="pf-mc-wait">Running the simulation…</div></div>
+  </section>`;
+}
+
+/* ---- the fan chart ------------------------------------------------------- */
+
+function mcFanSVG(res, W, geo) {
+  const N = res.neutral, V = res.view, S = res.start, M = res.months;
+  const hasView = res.tilted.length > 0;
+  const narrow = W < 520;
+  const H = narrow ? 250 : 320;
+
+  let lo = S, hi = S;
+  for (let m = 0; m <= M; m++) {
+    lo = Math.min(lo, N.bands[0][m], hasView ? V.bands[2][m] : lo);
+    hi = Math.max(hi, N.bands[4][m], hasView ? V.bands[2][m] : hi);
+  }
+  const pad = (hi - lo) * 0.06 || hi * 0.05;
+  lo = Math.max(0, lo - pad); hi += pad;
+  const ticks = pcNiceTicks(lo, hi, narrow ? 3 : 4);
+  const padL = Math.max(44, 14 + 6.6 * Math.max(...ticks.map(t => mcShort(t).length)));
+  const padR = narrow ? 58 : 74, padT = 12, padB = 26;
+  const X = m => padL + (m / M) * (W - padL - padR);
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  Object.assign(geo, { X, Y, M, W, H, padL, padR, padT, padB });
+
+  const line = a => Array.from(a, (v, m) => (m ? 'L' : 'M') + X(m).toFixed(1) + ',' + Y(v).toFixed(1)).join('');
+  const band = (top, bot) => {
+    let d = line(top);
+    for (let m = M; m >= 0; m--) d += 'L' + X(m).toFixed(1) + ',' + Y(bot[m]).toFixed(1);
+    return d + 'Z';
+  };
+
+  const grid = ticks.filter(t => Y(t) > padT - 2 && Y(t) < H - padB + 1).map(t => `
+    <line x1="${padL}" x2="${W - padR}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}" class="pc-grid"/>
+    <text x="${padL - 10}" y="${(Y(t) + 3.5).toFixed(1)}" class="pc-axis" text-anchor="end">${mcShort(t)}</text>`).join('');
+
+  const monthly = M <= 12;
+  const step = monthly ? 3 : (X(12) - X(0) < 56 ? 24 : 12);       // thin the labels when the plot is narrow
+  const marks = [];
+  for (let m = 0; m <= M; m += step) marks.push(m);
+  if (marks[marks.length - 1] !== M && X(M) - X(marks[marks.length - 1]) >= 36) marks.push(M);
+  const xl = marks.map(m => {
+    const lab = m === 0 ? 'Today' : monthly ? (m === 12 ? '1y' : m + 'm') : (m / 12) + 'y';
+    return `<text x="${X(m).toFixed(1)}" y="${H - 8}" class="pc-axis" text-anchor="${m === 0 ? 'start' : m === M ? 'end' : 'middle'}">${lab}</text>`;
+  });
+
+  // line-end labels, nudged apart if the two medians finish close together
+  let yn = Y(N.median), yv = hasView ? Y(V.median) : null;
+  if (hasView && Math.abs(yn - yv) < 13) {
+    const push = (13 - Math.abs(yn - yv)) / 2;
+    if (yn <= yv) { yn -= push; yv += push; } else { yn += push; yv -= push; }
+  }
+  const ex = (W - padR + 7).toFixed(1);
+
+  return `
+  <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="pc-svg mc-svg" aria-hidden="true">
+    ${grid}
+    <path d="${band(N.bands[4], N.bands[0])}" class="mc-band wide"/>
+    <path d="${band(N.bands[3], N.bands[1])}" class="mc-band mid"/>
+    <line x1="${padL}" x2="${W - padR}" y1="${Y(S).toFixed(1)}" y2="${Y(S).toFixed(1)}" class="mc-today"/>
+    <path d="${line(N.bands[2])}" class="mc-median"/>
+    ${hasView ? `<path d="${line(V.bands[2])}" class="mc-view"/>` : ''}
+    <text x="${ex}" y="${(yn + 4).toFixed(1)}" class="mc-endlab">${mcShort(N.median)}</text>
+    ${hasView ? `<text x="${ex}" y="${(yv + 4).toFixed(1)}" class="mc-endlab gold">${mcShort(V.median)}</text>` : ''}
+    ${xl.join('')}
+    <g class="mc-cross" style="display:none">
+      <line class="mc-cross-line" y1="${padT}" y2="${H - padB}"/>
+      <circle class="mc-dot" r="4"/>${hasView ? '<circle class="mc-dot gold" r="4"/>' : ''}
+    </g>
+  </svg>`;
+}
+
+function mcReadHTML(res, m) {
+  const N = res.neutral, V = res.view, hasView = res.tilted.length > 0;
+  return `<span class="mc-r-when">${m === res.months ? 'After ' + mcWhen(m) : mcWhen(m)}</span>
+    <span>Bad case <b>${pfMoney(N.bands[0][m])}</b></span>
+    <span class="mid">Middle <b>${pfMoney(N.bands[2][m])}</b></span>
+    <span>Good case <b>${pfMoney(N.bands[4][m])}</b></span>
+    ${hasView ? `<span class="gold">With our view <b>${pfMoney(V.bands[2][m])}</b></span>` : ''}`;
+}
+
+/* ---- the numbers under the chart ---------------------------------------- */
+
+function mcBodyHTML(out) {
+  const { res, holdings } = out;
+  const N = res.neutral, V = res.view, S = res.start, rk = res.risk;
+  const yrs = mcYears(MCUI.years);
+  const chg = v => FMT.pct(v / S - 1, 0);
+  const hasView = res.tilted.length > 0;
+
+  const tile = (k, v, s, cls = '') => `<div class="mc-tile ${cls}"><div class="mc-k">${k}</div><div class="mc-v">${v}</div><div class="mc-s">${s}</div></div>`;
+  const tiles = [
+    tile('Bad case', pfMoney(N.p05), `${chg(N.p05)}. 1 in 20 futures end lower, averaging ${pfMoney(N.avgWorst5)}`, 'bad'),
+    tile('Middle outcome', pfMoney(N.median), `${chg(N.median)} after ${yrs}`),
+    tile('Good case', pfMoney(N.p95), `${chg(N.p95)}. 1 in 20 futures end higher`, 'good'),
+    tile('Chance you end lower', mcPct(N.probLoss), `of futures finish below what you hold today`),
+    tile('Chance of a 20% fall', mcPct(N.probDrop20), `at some point on the way (month-end values)`),
+  ].join('');
+
+  // our view
+  const modelName = MODEL.cur === 'mx' ? 'peer-multiples' : 'DCF';
+  let viewHTML = '';
+  if (hasView) {
+    const d = V.median / N.median - 1;
+    const lead = Math.abs(d) < 0.01
+      ? `Our fair values are close to today’s prices, so they barely change this picture.`
+      : d > 0
+        ? `If prices move toward our fair values, the middle outcome rises to <b>${pfMoney(V.median)}</b> (${chg(V.median)}) and the chance of ending lower goes from ${mcPct(N.probLoss)} to <b>${mcPct(V.probLoss)}</b>.`
+        : `On balance our fair values sit below today’s prices. If prices move toward them, the middle outcome falls to <b>${pfMoney(V.median)}</b> (${chg(V.median)}) and the chance of ending lower rises from ${mcPct(N.probLoss)} to <b>${mcPct(V.probLoss)}</b>.`;
+    const left = holdings.filter(h => !res.tilted.includes(h.t)).map(h => h.t);
+    viewHTML = `
+    <div class="pf-mc-view">
+      <div class="pf-mc-viewtag"><i></i>With our view</div>
+      <p>${lead}</p>
+      <small>A scenario, not a forecast: it assumes half the gap to each ${modelName} fair value closes over three years, at most 10% a year.${left.length ? ` ${left.length > 3 ? left.length + ' holdings' : left.join(', ')} ${left.length === 1 ? 'has' : 'have'} no usable fair value to move toward, so ${left.length === 1 ? 'it is' : 'they are'} left alone.` : ''}</small>
+    </div>`;
+  }
+
+  // where the risk comes from
+  const rows = rk.holdings.slice(0, 6);
+  const topScale = Math.max(...rows.map(r => Math.max(r.weight, r.share)), 1e-9);
+  const gapRow = rk.holdings.slice().sort((a, b) => (b.share - b.weight) - (a.share - a.weight))[0];
+  const insight = gapRow && gapRow.share - gapRow.weight >= 0.06 && gapRow.share >= 0.2
+    ? `<b>${gapRow.t}</b> is ${Math.round(gapRow.weight * 100)}% of your money but ${Math.round(gapRow.share * 100)}% of your risk.`
+    : `Your risk is spread about in line with your money.`;
+  const swing = Math.round(rk.portVol * 100), avg = Math.round(rk.avgVol * 100);
+  const cut = rk.avgVol > 0 ? 1 - rk.portVol / rk.avgVol : 0;
+  const divers = rk.holdings.length < 2
+    ? `A typical year moves your portfolio by about ±${swing}%. It is one stock, so nothing is cushioning that.`
+    : cut >= 0.05
+      ? `A typical year moves your portfolio by about ±${swing}%. Its holdings average ±${avg}% on their own; owning them together cuts that by ${Math.round(cut * 100)}% because they don’t all move at once.`
+      : `A typical year moves your portfolio by about ±${swing}%. Your holdings mostly move together, so owning several doesn’t smooth the ride much.`;
+  const riskRows = rows.map(r => `
+    <li class="mc-risk-row">
+      <a class="mc-rt" href="#/company/${encodeURIComponent(r.t)}">${r.t}</a>
+      <div class="mc-bars" aria-hidden="true">
+        <div class="mc-bar money" style="width:${Math.max(1.5, r.weight / topScale * 100).toFixed(1)}%"></div>
+        <div class="mc-bar risk" style="width:${Math.max(1.5, r.share / topScale * 100).toFixed(1)}%"></div>
+      </div>
+      <div class="mc-rn"><span>${Math.round(r.weight * 100)}% of money</span><b>${Math.round(r.share * 100)}% of risk</b></div>
+    </li>`).join('');
+
+  // honest notes about the data
+  const stand = [], flat = [];
+  holdings.forEach((h, k) => { if (res.kinds[k] === 'proxy') stand.push(h.t); else if (res.kinds[k] === 'flat') flat.push(h.t); });
+  const list = a => a.length > 3 ? a.length + ' holdings' : a.join(', ');
+  const dataNote = [
+    stand.length ? `${list(stand)} ${stand.length === 1 ? 'has' : 'have'} too little price history, so ${stand.length === 1 ? 'it moves' : 'they move'} like the S&P 500 here.` : '',
+    flat.length ? `${list(flat)} ${flat.length === 1 ? 'has' : 'have'} no price history and ${flat.length === 1 ? 'is' : 'are'} held at today’s value.` : '',
+  ].filter(Boolean).join(' ');
+  const fromTo = d => new Date(d * 86400000).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', year: 'numeric' });
+  const how = MCUI.method === 'bootstrap'
+    ? `Each future is built from random month-long stretches of what these stocks actually did between ${fromTo(res.from)} and ${fromTo(res.to)} (${res.T} trading days), so real crashes and rallies can repeat. One year is a short memory, so treat the bad case as a floor you shouldn’t count on.`
+    : `Each future adds random price moves, month by month, as big as these stocks’ moves between ${fromTo(res.from)} and ${fromTo(res.to)} (${res.T} trading days) and moving together the same way. Real markets have fatter tails than a bell curve, so try Replay as well.`;
+
+  return `
+  <div class="pf-mc-read" id="pf-mc-read" aria-live="off">${mcReadHTML(res, res.months)}</div>
+  <figure class="pf-mc-chart" id="pf-mc-plot" tabindex="0" role="img"
+    aria-label="Fan chart of ${res.paths.toLocaleString('en-US')} simulated futures. After ${yrs}, your ${mcShort(S)} could end between ${mcShort(N.p05)} and ${mcShort(N.p95)} in nine futures out of ten, with a middle outcome of ${mcShort(N.median)}."></figure>
+  <div class="pf-mc-legend">
+    <span><i class="lg-wide"></i>9 in 10 futures land here</span>
+    <span><i class="lg-mid"></i>Middle half</span>
+    <span><i class="lg-med"></i>Middle outcome</span>
+    ${hasView ? '<span><i class="lg-view"></i>If our fair values are right</span>' : ''}
+    <span><i class="lg-today"></i>What you hold today</span>
+  </div>
+
+  <div class="mc-tiles">${tiles}</div>
+  ${viewHTML}
+
+  <div class="pf-mc-risk">
+    <div class="pf-h3">Where your risk comes from</div>
+    <p class="pf-mc-insight">${insight} ${divers}</p>
+    <ul class="mc-risk">${riskRows}</ul>
+    ${rk.holdings.length > rows.length ? `<p class="pf-mc-more">and ${rk.holdings.length - rows.length} smaller holding${rk.holdings.length - rows.length === 1 ? '' : 's'}</p>` : ''}
+    <div class="mc-risk-key"><span><i class="money"></i>Share of your money</span><span><i class="risk"></i>Share of your risk</span></div>
+  </div>
+
+  <div class="pf-mc-note">
+    <p><b>How to read this.</b> ${res.paths.toLocaleString('en-US')} futures, each starting from what you hold today. ${how} Every stock is assumed to earn ${Math.round(res.baseDrift * 100)}% a year on average, because one year of past returns says very little about the next. No trading, dividends, fees or tax. It shows the range of what could happen, not what will.${dataNote ? ' ' + dataNote : ''}</p>
+    <button type="button" class="pf-link" data-mc-again>Run it again with new random numbers</button>
+  </div>`;
+}
+
+function mcShow(body, out) {
+  body.classList.remove('busy');
+  if (out.err) {
+    body.innerHTML = out.err === 'history'
+      ? `<div class="pf-mc-empty"><b>Not enough price history yet.</b> The simulation needs about three months of daily prices for your holdings. They build up on their own with every daily update, and everything else on this page already works.</div>`
+      : `<div class="pf-mc-empty"><b>The simulation couldn’t run for this portfolio.</b> Everything else on this page still works.</div>`;
+    return;
+  }
+  body.innerHTML = mcBodyHTML(out);
+  mcMountFan(body, out.res);
+}
+
+function mcMountFan(body, res) {
+  const fig = body.querySelector('#pf-mc-plot'), read = body.querySelector('#pf-mc-read');
+  if (!fig) return;
+  const geo = {};
+  const draw = () => {
+    const W = Math.round(fig.clientWidth);
+    if (W < 200) return;
+    fig.innerHTML = mcFanSVG(res, W, geo);
+  };
+  draw();
+  if ('ResizeObserver' in window) {
+    let last = 0;
+    new ResizeObserver(() => { const w = Math.round(fig.clientWidth); if (w && w !== last) { last = w; draw(); } }).observe(fig);
+  } else window.addEventListener('resize', draw);
+
+  // scrub along the fan to read any month
+  const show = m => {
+    const svg = fig.querySelector('.mc-svg');
+    if (!svg || !geo.X) return;
+    const g = svg.querySelector('.mc-cross'), x = geo.X(m);
+    g.style.display = m === res.months && !fig.matches(':hover, :focus') ? 'none' : '';
+    g.querySelector('.mc-cross-line').setAttribute('x1', x); g.querySelector('.mc-cross-line').setAttribute('x2', x);
+    const dots = g.querySelectorAll('.mc-dot');
+    dots[0].setAttribute('cx', x); dots[0].setAttribute('cy', geo.Y(res.neutral.bands[2][m]));
+    if (dots[1]) { dots[1].setAttribute('cx', x); dots[1].setAttribute('cy', geo.Y(res.view.bands[2][m])); }
+    read.innerHTML = mcReadHTML(res, m);
+  };
+  const monthAt = ev => {
+    const r = fig.getBoundingClientRect();
+    const f = (ev.clientX - r.left - geo.padL) / (geo.W - geo.padL - geo.padR);
+    return Math.max(0, Math.min(res.months, Math.round(f * res.months)));
+  };
+  let cur = res.months;
+  fig.addEventListener('pointermove', ev => { cur = monthAt(ev); show(cur); });
+  fig.addEventListener('pointerleave', () => { cur = res.months; show(cur); });
+  fig.addEventListener('keydown', ev => {
+    if (ev.key === 'ArrowLeft') { cur = Math.max(0, cur - 1); show(cur); ev.preventDefault(); }
+    else if (ev.key === 'ArrowRight') { cur = Math.min(res.months, cur + 1); show(cur); ev.preventDefault(); }
+    else if (ev.key === 'Home') { cur = 0; show(cur); ev.preventDefault(); }
+    else if (ev.key === 'End') { cur = res.months; show(cur); ev.preventDefault(); }
+  });
+  fig.addEventListener('blur', () => { cur = res.months; show(cur); });
+}
+
+function mcRun(root) {
+  const body = root.querySelector('#pf-mc-body');
+  if (!body) return;
+  const key = mcKey();
+  if (MCUI.key === key && MCUI.out) { mcShow(body, MCUI.out); return; }
+  if (body.querySelector('.pf-mc-chart')) body.classList.add('busy');
+  // Let the page paint first; the run itself takes a fraction of a second.
+  setTimeout(() => {
+    if (!body.isConnected || mcKey() !== key) return;
+    let out;
+    try { out = mcCompute(); } catch (e) { console.warn('Monte Carlo run failed:', e); out = { err: 'failed' }; }
+    MCUI.key = key; MCUI.out = out;
+    mcShow(body, out);
+  }, 30);
+}
+
+function mcMount(el) {
+  const panel = el.querySelector('#pf-mc');
+  if (!panel) return;
+  panel.addEventListener('click', e => {
+    const t = e.target.closest('[data-mc-years],[data-mc-method],[data-mc-again]');
+    if (!t) return;
+    if (t.dataset.mcYears) MCUI.years = +t.dataset.mcYears;
+    else if (t.dataset.mcMethod) MCUI.method = t.dataset.mcMethod;
+    else MCUI.salt += 1;
+    mcSave();
+    panel.querySelectorAll('[data-mc-years]').forEach(b => { const on = +b.dataset.mcYears === MCUI.years; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    panel.querySelectorAll('[data-mc-method]').forEach(b => { const on = b.dataset.mcMethod === MCUI.method; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    mcRun(panel);
+  });
+  mcRun(panel);
 }
 
 /* ======================= FINANCIAL ANALYSIS TAB =======================
