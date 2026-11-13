@@ -245,6 +245,37 @@ the portfolio valued at *your own DCF fair values*, and its weighted upside.
 Positions are stored in the visitor's browser via `localStorage` — nothing is
 sent anywhere, because there is no server. Clearing browser data clears them.
 
+**Market map** (`#/map`, and a band on the homepage; `docs/map.js`) — every company
+as one tile in a squarified treemap, grouped by sector. Area is market value, colour
+is the gap between price and fair value under whichever model is selected (it can also
+show the 1-day, 1-month and 1-year price move). Hover for the numbers, click to open
+the company; on a phone each sector gets its own full-width block and the first tap
+shows the numbers. The green and red are shifted toward teal and coral on purpose: the
+site's standard pair is nearly indistinguishable to red-green colour-blind readers, and
+on a map colour carries the whole message. `node map_test.js` checks the layout (areas
+proportional, nothing overlapping, everything inside its sector) on the real library.
+
+**The Daily Ten** (`#/play`, `docs/play.js`) — ten companies a day, the same ten for
+everyone: is each priced below or above our DCF fair value? The player sees an
+analyst's starting clues (growth, cash margin, price against sales and against the
+sector), makes the call, and gets the model's answer and one line of why. Scores,
+streaks and a spoiler-free share text; a practice mode that does not touch the streak.
+The set is seeded from the date, skips anything within 10% of fair value, and always
+holds between three and seven undervalued names so one-note guessing loses. Saved in
+the visitor's browser only. `node play_test.js` pins those rules down over a year of days.
+
+**Compare** (`#/compare/NVDA/AMD`, `docs/compare.js`) — two companies through the
+identical model: a short answer in sentences (which the model prefers, who grows
+faster, who is more profitable, what each costs), both share prices from a common start
+of 100, and the inputs side by side. One ticker in the address picks its closest peer.
+Every company page has a Compare button. `node compare_test.js`.
+
+**Glossary** (`#/learn`, `docs/glossary.js`) — the first time a term of art (WACC, free
+cash flow, EV / Sales...) appears in a section it gets a faint dotted underline; hover,
+focus or tap for a two-sentence card. Never inside links, buttons, headings, charts or
+table bodies, and a switch on the glossary page turns it off. To add a term, add an
+entry to `GLOSSARY`. `node glossary_test.js`.
+
 **Monte Carlo simulation** (bottom of the Portfolio page, `docs/montecarlo.js`) —
 plays out thousands of possible futures for the portfolio and draws them as a fan
 (a 5th-to-95th percentile band, the middle half, the median), with the chance of

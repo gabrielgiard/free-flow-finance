@@ -4,6 +4,9 @@
 const FMT = {
   usd(v, d = 2) {
     if (v == null || isNaN(v)) return '—';
+    // A whole-dollar figure is fine for a $400 share and useless for a $3
+    // one: "$1 to $1" says nothing. Under ten dollars, keep the cents.
+    if (d === 0 && v !== 0 && Math.abs(v) < 10) d = 2;
     const s = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
     return (v < 0 ? '-$' : '$') + s;
   },
@@ -11,6 +14,8 @@ const FMT = {
     if (v == null || isNaN(v)) return '—';
     const a = Math.abs(v);
     if (a >= 1000) return (v < 0 ? '-$' : '$') + (a / 1000).toFixed(2) + 'T';
+    // Below a billion, "$0.0B" hides the number. Show millions instead.
+    if (a > 0 && a < 0.95) return (v < 0 ? '-$' : '$') + (a * 1000).toFixed(a < 0.0095 ? 1 : 0) + 'M';
     return (v < 0 ? '-$' : '$') + a.toFixed(a >= 100 ? 0 : 1) + 'B';
   },
   pct(v, d = 1) {
@@ -96,8 +101,11 @@ function rangeBarHTML(bear, base, bull, price) {
   // table beneath repeats every figure, so losing a tick label costs nothing
   // while two labels printed over each other costs legibility.
   const CLEAR = 34;
-  const showBear = Math.abs(X(price) - X(bear)) > CLEAR;
-  const showBull = Math.abs(X(price) - X(bull)) > CLEAR;
+  // Same when the range itself is too narrow for two words side by side,
+  // which happens when the price is many times the fair value.
+  const roomy = X(bull) - X(bear) > CLEAR;
+  const showBear = roomy && Math.abs(X(price) - X(bear)) > CLEAR;
+  const showBull = roomy && Math.abs(X(price) - X(bull)) > CLEAR;
 
   const inside = price >= bear && price <= bull;
   const verdict = inside

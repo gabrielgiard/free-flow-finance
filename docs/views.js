@@ -294,6 +294,10 @@ function viewHome() {
     </div>
   </section>
 
+  ${typeof homeMapHTML === 'function' ? homeMapHTML() : ''}
+
+  ${typeof homePlayHTML === 'function' ? homePlayHTML() : ''}
+
   <section class="home-band">
     <div class="wrap">
       <div class="hb-head">
@@ -617,10 +621,16 @@ function viewCompany(ticker) {
             <span class="co-up ${upClass(c.upside)}" data-num="co-up" data-val="${c.upside}" data-fmt="pct">${FMT.pct(c.upside)}</span>
           </div>
           ${valuationStripHTML(c)}
+          <div class="co-actions">
+          ${typeof viewCompare === 'function' ? `<a class="co-share" href="#/compare/${encodeURIComponent(c.t)}" aria-label="Compare ${escapeHtml(c.n)} with another company">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M6 4L3 7M6 4l3 3M14 16V4M14 16l-3-3M14 16l3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Compare</span>
+          </a>` : ''}
           <button type="button" class="co-share" data-share="${c.t}" aria-label="Share ${c.n}">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3M6 7l4-4 4 4M4 11v5h12v-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Share</span>
           </button>
+          </div>
         </div>
       </div>
       ${c.mx ? modelBarHTML(c) : ''}
@@ -1491,6 +1501,7 @@ function pfRefresh(focusSearch) {
   const y = window.scrollY;
   APP.innerHTML = viewPortfolio();
   mountPortfolio(APP);
+  if (typeof glossAnnotate === 'function') glossAnnotate(APP);
   window.scrollTo(0, y);
   if (focusSearch) document.getElementById('pf-q')?.focus({ preventScroll: true });
 }

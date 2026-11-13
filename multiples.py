@@ -98,6 +98,19 @@ def pick_peers(c, sector_members):
     return sorted(others, key=lambda p: (_distance(c, p), p["t"]))[:PEERS]
 
 
+def _own(v):
+    """Round a company's own sales or cash flow the way the browser does.
+
+    Two things matter here. Under $1B the figure keeps four places (to the
+    $0.1M), because two places turns $13M of revenue into $10M and moves the
+    answer by a quarter. And halves round up, as JavaScript's Math.round does;
+    Python's round() sends 0.425 to 0.42, and the page would then disagree
+    with the published value by a cent or more.
+    """
+    d = 4 if abs(v) < 1 else 2
+    return math.floor(v * 10 ** d + 0.5) / 10 ** d
+
+
 def _fwd(p, kind):
     """Next year's free cash flow (or sales): the model's year-one forecast."""
     m = p.get("model") or []
@@ -171,14 +184,14 @@ def value(c, peers, sector_members):
         if len(vals) < 3:
             continue
         methods.append({"id": when, "k": f"{pre}{unit}, {label}", "w": WEIGHTS[when],
-                        "n": len(vals), "from": source, "own": round(own, 2),
+                        "n": len(vals), "from": source, "own": _own(own),
                         "med": round(statistics.median(vals), 2),
                         "q25": round(_quantile(vals, 0.25), 2),
                         "q75": round(_quantile(vals, 0.75), 2)})
     reg = regression(c, kind, equity, sector_members) if kind == "fcf" else None
     if reg and reg["usable"] and c["ttm_fcf"] > 0:
         methods.append({"id": "reg", "k": f"{pre}{unit}, growth-adjusted", "w": WEIGHTS["reg"],
-                        "n": reg["n"], "from": "sector", "own": round(c["ttm_fcf"], 2),
+                        "n": reg["n"], "from": "sector", "own": _own(c["ttm_fcf"]),
                         "med": reg["pred"], "q25": reg["lo"], "q75": reg["hi"]})
     if not methods:
         return None

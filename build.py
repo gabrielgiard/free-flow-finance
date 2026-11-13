@@ -137,9 +137,10 @@ def load_companies():
     from companies.expansion3 import EXPANSION3
     from companies.expansion4 import EXPANSION4
     from companies.expansion5 import EXPANSION5
+    from companies.expansion6 import EXPANSION6
     companies = (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
                  + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3
-                 + EXPANSION4 + EXPANSION5)
+                 + EXPANSION4 + EXPANSION5 + EXPANSION6)
     # Recent developments (dated, sourced headlines) for the Thesis tab.
     try:
         from companies.news import NEWS

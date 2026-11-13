@@ -21,6 +21,10 @@ function renderRoute(opts) {
   else if (route === 'company' && arg) { html = viewCompany(decodeURIComponent(arg)); navKey = 'company'; }
   else if (route === 'screener') { html = viewScreener(); navKey = 'screener'; }
   else if (route === 'portfolio') { html = viewPortfolio(); navKey = 'portfolio'; }
+  else if (route === 'map' && typeof viewMap === 'function') { html = viewMap(); navKey = 'map'; }
+  else if (route === 'play' && typeof viewPlay === 'function') { html = viewPlay(); navKey = 'play'; }
+  else if (route === 'compare' && typeof viewCompare === 'function') { html = viewCompare(); navKey = 'compare'; }
+  else if (route === 'learn' && typeof viewLearn === 'function') { html = viewLearn(); navKey = 'learn'; }
   else if (route === 'about') { html = viewAbout(); navKey = 'about'; }
   else if (route === 'methodology') { html = viewMethodology(); navKey = 'methodology'; }
   else if (route === 'track-record') { html = viewTrackRecord(); navKey = 'track-record'; }
@@ -48,6 +52,11 @@ function renderRoute(opts) {
   mountMarkets(APP);
   mountHomeIdeas(APP);
   mountHeroFind(APP);
+  if (typeof mountMap === 'function') mountMap(APP);
+  if (typeof mountPlay === 'function') mountPlay(APP);
+  if (typeof mountCompare === 'function') mountCompare(APP);
+  if (typeof mountLearn === 'function') mountLearn(APP);
+  if (typeof glossAnnotate === 'function') glossAnnotate(APP);   // last: after every panel has drawn its text
   updateCanonical(navKey, arg);
   closeSectorMenu(); closeSearch(); closeMobileNav(); closeSidebar();
 }
@@ -125,6 +134,18 @@ function buildSidebar() {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
         Screener
       </div>
+      <div class="sb-link" data-route="map" data-navlink="map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M12 11h9M3 14h9"/></svg>
+        Market map
+      </div>
+      <div class="sb-link" data-route="play" data-navlink="play">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><path d="M14.5 17.5l2.2 2.2 4-4.4"/></svg>
+        The Daily Ten
+      </div>
+      <div class="sb-link" data-route="compare" data-navlink="compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg>
+        Compare
+      </div>
       <div class="sb-link" data-route="portfolio" data-navlink="portfolio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 019.5 4h5A1.5 1.5 0 0116 5.5V7M3 12h18"/></svg>
         Portfolio
@@ -136,6 +157,10 @@ function buildSidebar() {
       <div class="sb-link" data-route="methodology" data-navlink="methodology">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
         Methodology
+      </div>
+      <div class="sb-link" data-route="learn" data-navlink="learn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 20.5A2.5 2.5 0 016.5 18H20v3H6.5A2.5 2.5 0 014 20.5z"/></svg>
+        Glossary
       </div>
       <div class="sb-link" data-route="about" data-navlink="about">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/></svg>
@@ -207,14 +232,25 @@ function updateNavActive(navKey) {
   document.querySelectorAll('.main-nav a[data-nav]').forEach(a => {
     a.classList.toggle('active', a.dataset.nav === navKey);
   });
+  // the "More" button lights up when the page on screen lives inside its menu
+  const more = document.getElementById('more-menu-btn');
+  if (more) more.classList.toggle('active', !!document.querySelector(`#more-menu a[data-nav="${navKey}"]`));
 }
 
 /* ---------------------------------- sector dropdown ---------------------- */
 function toggleSectorMenu(e) {
   e.stopPropagation();
-  document.getElementById('sector-menu').classList.toggle('open');
+  const m = document.getElementById('sector-menu'), open = m.classList.contains('open');
+  closeSectorMenu();
+  m.classList.toggle('open', !open);
 }
-function closeSectorMenu() { document.getElementById('sector-menu')?.classList.remove('open'); }
+function closeSectorMenu() { document.querySelectorAll('.sector-menu.open').forEach(m => m.classList.remove('open')); }   // both dropdowns
+function toggleMoreMenu(e) {
+  e.stopPropagation();
+  const m = document.getElementById('more-menu'), open = m.classList.contains('open');
+  closeSectorMenu();
+  m.classList.toggle('open', !open);
+}
 
 /* ---------------------------------- mobile nav ---------------------------- */
 function toggleMobileNav(e) {
@@ -378,6 +414,7 @@ document.addEventListener('click', (e) => {
   }
 
   if (e.target.closest('#sector-menu-btn')) { toggleSectorMenu(e); return; }
+  if (e.target.closest('#more-menu-btn')) { toggleMoreMenu(e); return; }
   if (e.target.closest('#mobile-toggle-btn')) { toggleSidebar(); return; }
   if (e.target.closest('#sb-backdrop')) { closeSidebar(); return; }
   if (e.target.closest('.search-box')) { return; }

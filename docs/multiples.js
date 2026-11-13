@@ -41,6 +41,9 @@ const FF_MX = (() => {
     return x > lo && x < hi ? x : null;
   }
   const r2 = v => Math.round(v * 100) / 100;
+  // A company's own figure keeps four places under $1B: two would turn $13M
+  // of revenue into $10M. multiples.py rounds the same way.
+  const rOwn = v => Math.abs(v) < 1 ? Math.round(v * 1e4) / 1e4 : r2(v);
 
   /* opts.peers: tickers to use (default: the published peers)
      opts.cash:  change applied to the company's cash flow, e.g. 0.1 = +10%
@@ -61,12 +64,12 @@ const FF_MX = (() => {
         from = 'sector';
       }
       if (vals.length < (opts.peers ? 1 : 3)) continue;
-      methods.push({ id: when, w: W[when], own: r2(own), from, n: vals.length,
+      methods.push({ id: when, w: W[when], own: rOwn(own), from, n: vals.length,
         med: r2(quant(vals, .5)), q25: r2(quant(vals, .25)), q75: r2(quant(vals, .75)) });
     }
     const reg = c.mx && c.mx.reg;
     if (reg && reg.usable && c.ttm_fcf > 0)
-      methods.push({ id: 'reg', w: W.reg, own: r2(c.ttm_fcf), from: 'sector', n: reg.n, med: reg.pred, q25: reg.lo, q75: reg.hi });
+      methods.push({ id: 'reg', w: W.reg, own: rOwn(c.ttm_fcf), from: 'sector', n: reg.n, med: reg.pred, q25: reg.lo, q75: reg.hi });
     if (!methods.length) return null;
     const tw = methods.reduce((a, m) => a + m.w, 0);
     methods.forEach(m => { m.w = Math.round(m.w / tw * 1e4) / 1e4; });

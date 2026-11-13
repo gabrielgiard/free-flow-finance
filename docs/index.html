@@ -42,11 +42,22 @@
         </button>
         <div class="sector-menu" id="sector-menu"></div>
       </div>
+      <a href="#/map" data-nav="map">Map</a>
       <a href="#/screener" data-nav="screener">Screener</a>
+      <a href="#/compare" data-nav="compare">Compare</a>
       <a href="#/portfolio" data-nav="portfolio">Portfolio</a>
-      <a href="#/track-record" data-nav="track-record">Track record</a>
-      <a href="#/methodology" data-nav="methodology">Methodology</a>
-      <a href="#/about" data-nav="about">About</a>
+      <a href="#/play" data-nav="play">Daily Ten</a>
+      <div style="position:relative;">
+        <button class="nav-btn" id="more-menu-btn" data-nav-more aria-haspopup="true">More
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="sector-menu more-menu" id="more-menu">
+          <a href="#/track-record" data-nav="track-record"><span class="sm-name">Track record</span><span class="sm-meta">how past calls turned out</span></a>
+          <a href="#/methodology" data-nav="methodology"><span class="sm-name">Methodology</span><span class="sm-meta">how both models work</span></a>
+          <a href="#/learn" data-nav="learn"><span class="sm-name">Glossary</span><span class="sm-meta">the jargon, in plain English</span></a>
+          <a href="#/about" data-nav="about"><span class="sm-name">About</span><span class="sm-meta">who built this, and why</span></a>
+        </div>
+      </div>
     </nav>
 
     <div class="header-right">
@@ -107,9 +118,13 @@
       </div>
       <div>
         <h5>Site</h5>
+        <a href="#/map">Market Map</a>
         <a href="#/screener">Stock Screener</a>
+        <a href="#/compare">Compare Two Companies</a>
         <a href="#/portfolio">Portfolio Tracker</a>
+        <a href="#/play">The Daily Ten</a>
         <a href="#/methodology">Methodology</a>
+        <a href="#/learn">Glossary</a>
         <a href="#/about">About the Analyst</a>
         <a href="#/">Home</a>
       </div>
@@ -137,6 +152,10 @@
 <script src="interact.js"></script>
 <script src="montecarlo.js"></script>
 <script src="views.js"></script>
+<script src="map.js"></script>
+<script src="play.js"></script>
+<script src="compare.js"></script>
+<script src="glossary.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

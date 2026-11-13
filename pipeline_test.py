@@ -537,7 +537,10 @@ for (const c of ctx.FF_DATA.companies) {
   const v = ctx.FF_MX.value(c);
   const d = Math.abs(v.fv - c.mx.fv) / Math.max(1, c.mx.fv);
   if (d > worst) worst = d;
-  if (d > 0.001) bad.push(c.t + ' ' + v.fv.toFixed(2) + ' vs ' + c.mx.fv);
+  // The published figure is rounded to the cent, so on a fair value of a
+  // dollar or two half a cent is already more than 0.1%. Judge those by the
+  // cent they are published to; everything larger by the relative gap.
+  if (d > 0.001 && Math.abs(v.fv - c.mx.fv) > 0.0051) bad.push(c.t + ' ' + v.fv.toFixed(2) + ' vs ' + c.mx.fv);
 }
 console.log(JSON.stringify({ worst, bad }));
 """, js, os.path.join(_repo, "docs/data.js")], capture_output=True, text=True)
@@ -568,6 +571,25 @@ _mc_tail = (_mc.stdout.strip().splitlines() or [_mc.stderr[-300:]])[-1]
 check("the simulation engine passes its own maths checks (known answers, seeds, shrinkage)", _mc.returncode == 0, _mc_tail)
 check("the Portfolio page only offers the panel when the engine loaded",
       "typeof FF_MC !== 'undefined'" in open(os.path.join(_repo, "docs/views.js")).read())
+
+
+# ------------------------------------------------------------------------
+section("Market map, Daily Ten, compare, glossary")
+_app = open(os.path.join(_repo, "docs/app.js")).read()
+for _js, _fn, _test, _what in (
+        ("map.js", "viewMap", "map_test.js", "treemap layout: areas, overlaps, colour scale"),
+        ("play.js", "viewPlay", "play_test.js", "same ten for everyone, 3-7 undervalued, streaks"),
+        ("compare.js", "viewCompare", "compare_test.js", "rebasing, choosing an opponent"),
+        ("glossary.js", "viewLearn", "glossary_test.js", "term matching, no overlaps")):
+    check(f"{_js} is loaded after views.js and before app.js",
+          f'src="{_js}"' in _idx and _idx.index("views.js") < _idx.index(_js) < _idx.index('src="app.js"'))
+    check(f"the single-file build includes {_js} in the same place",
+          _js in _msf.SCRIPTS and _msf.SCRIPTS.index("views.js") < _msf.SCRIPTS.index(_js) < _msf.SCRIPTS.index("app.js"))
+    check(f"the router only uses {_js} when it loaded (a missed upload cannot blank the site)",
+          f"typeof {_fn} === 'function'" in _app)
+    _r = subprocess.run(["node", os.path.join(_repo, _test)], capture_output=True, text=True, timeout=300, cwd=_repo)
+    check(f"{_test} passes ({_what})", _r.returncode == 0, (_r.stdout.strip().splitlines() or [_r.stderr[-300:]])[-1])
+check("every page in the header menu has a route", all(f"route === '{r}'" in _app for r in ("map", "play", "compare", "learn")))
 
 
 # ------------------------------------------------------------------------

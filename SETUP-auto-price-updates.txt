@@ -31,7 +31,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     env:
       # The last scheduled try, and any manual run, must leave the site on the
       # latest close or go red. Earlier tries are allowed one day of slack so a

@@ -117,6 +117,16 @@ def _compound(gs):
     return x
 
 
+def _r(v, d):
+    """Round for publication, keeping detail on figures under $1B.
+
+    One decimal of a billion is plenty for Apple and useless for a company
+    with $13M of revenue, whose every row would otherwise print as $0.0B or
+    $0.1B. Below one (billion) keep three more places, i.e. to the million.
+    """
+    return round(v, d + 3) if abs(v) < 1 else round(v, d)
+
+
 def build(c):
     base, bull, bear = scenarios(c)
     fv, price = base["per_share"], c["price"]
@@ -135,21 +145,21 @@ def build(c):
         "rating": rate(upside),
         "mcap": round(mcap, 1),
         "ev_now": round(ev_now, 1),
-        "ttm_fcf": round(ttm_fcf, 2),
+        "ttm_fcf": _r(ttm_fcf, 2),
         "fcf_yield": round(ttm_fcf / mcap, 4) if mcap else 0,
         "ev_sales": round(ev_now / c["rev"], 2) if c["rev"] else 0,
         "ev_fcf": round(ev_now / ttm_fcf, 1) if ttm_fcf else 0,
         "cagr5": round(_compound(c["growth"]) ** 0.2 - 1, 4),
-        "rev5": round(c["rev"] * _compound(c["growth"]), 1),
-        "model": [{"y": r["year"], "rev": round(r["rev"], 1),
+        "rev5": _r(c["rev"] * _compound(c["growth"]), 1),
+        "model": [{"y": r["year"], "rev": _r(r["rev"], 1),
                    "growth": round(r["growth"], 4), "margin": round(r["margin"], 4),
-                   "fcf": round(r["fcf"], 2), "df": round(r["df"], 4),
-                   "pv": round(r["pv"], 2), "stage": r["stage"]}
+                   "fcf": _r(r["fcf"], 2), "df": round(r["df"], 4),
+                   "pv": _r(r["pv"], 2), "stage": r["stage"]}
                   for r in base["rows"]],
-        "dcf": {"pv_explicit": round(base["pv_explicit"], 1),
-                "tv": round(base["tv"], 1), "pv_tv": round(base["pv_tv"], 1),
-                "ev": round(base["ev"], 1), "netdebt": round(c["netdebt"], 1),
-                "equity": round(base["equity"], 1),
+        "dcf": {"pv_explicit": _r(base["pv_explicit"], 1),
+                "tv": _r(base["tv"], 1), "pv_tv": _r(base["pv_tv"], 1),
+                "ev": _r(base["ev"], 1), "netdebt": _r(c["netdebt"], 1),
+                "equity": _r(base["equity"], 1),
                 "tv_share": round(base["tv_share"], 4)},
         "grid": grid(c),
         "segs": [s for s in c["segs"] if s[1] > 0],
