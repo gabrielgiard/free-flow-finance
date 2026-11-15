@@ -626,6 +626,10 @@ function viewCompany(ticker) {
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M6 4L3 7M6 4l3 3M14 16V4M14 16l-3-3M14 16l3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Compare</span>
           </a>` : ''}
+          ${typeof FF_XLSX !== 'undefined' ? `<button type="button" class="co-share" data-xlsx="${c.t}" aria-label="Download the ${escapeHtml(c.n)} model as an Excel workbook">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3h8l4 4v10H4zM12 3v4h4M7 10l4 5M11 10l-4 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            <span>Excel model</span>
+          </button>` : ''}
           <button type="button" class="co-share" data-share="${c.t}" aria-label="Share ${c.n}">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V3M6 7l4-4 4 4M4 11v5h12v-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Share</span>
@@ -740,6 +744,7 @@ function panelDCF(c) {
       <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin:28px 0 14px;">Sensitivity: Fair Value by WACC &amp; Terminal Growth</h4>
       <div class="table-wrap" style="padding:18px;">${sensitivityGridHTML(c.grid, c.price)}</div>
       <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Green cells sit above the current share price of ${FMT.usd(c.price)}; red cells sit below it. Small changes to either input move the fair value a lot — that sensitivity is the honest reason no DCF should be read as a precise number.</p>
+      ${growthMarginGridHTML(c)}
     </div>
     <div>
       <div class="card" style="margin-bottom:16px;">
@@ -758,8 +763,105 @@ function panelDCF(c) {
           <div class="stat-cell" style="padding:14px;"><div class="label">Bull</div><div class="value" style="font-size:16px;">${fvStr(c.fv_bull)}</div><div class="sub ${upClass(c.up_bull)}">${FMT.pct(c.up_bull)}</div></div>
         </div>
       </div>
+      ${dcfChecksHTML(c)}
+      ${xlsxCardHTML(c)}
     </div>
   </div>`;
+}
+
+/* Second sensitivity table: the two operating assumptions that matter most,
+   revenue growth (moved in every year) against the year-5 cash margin. Every
+   cell reruns the full ten-year DCF in the browser with the site's own
+   engine, so the centre is the model's value to the cent. */
+function growthMarginGrid(c) {
+  if (typeof FF_ENGINE === 'undefined') return null;
+  const dgs = [-0.04, -0.02, 0, 0.02, 0.04], dms = [-0.04, -0.02, 0, 0.02, 0.04];
+  const values = dgs.map(dg => dms.map(dm => +FF_ENGINE.dcf(c.rev, c.growth.map(g => g + dg), c.m0, c.m1 + dm,
+    c.wacc, c.tg, c.netdebt, c.shares).perShare.toFixed(2)));
+  return { waccs: dgs.map(x => x * 100), tgs: dms.map(dm => (c.m1 + dm) * 100), values };
+}
+
+function growthMarginGridHTML(c) {
+  const g = growthMarginGrid(c);
+  if (!g) return '';
+  const pts = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(0) + ' pts';
+  return `
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin:28px 0 14px;">Sensitivity: Fair Value by Growth &amp; Cash Margin</h4>
+      <div class="table-wrap" style="padding:18px;">${sensitivityGridHTML(g, c.price, {
+        corner: 'Growth ↓ / margin →', row: pts, col: v => v.toFixed(1) + '%',
+        rn: 'growth', cn: 'year-5 cash margin', base: 'the model' })}</div>
+      <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Rows move revenue growth in every forecast year by up to four points either way; columns set the free cash flow margin reached in year 5. The first grid tests the discount rate, this one tests the business.</p>`;
+}
+
+/* The checks a reviewer runs on any DCF before trusting it, drawn from
+   standard banking practice: how much of the value sits beyond the forecast,
+   whether long-run growth is plausible, what exit multiple the terminal
+   value implies, what the discount rate implies at today's interest rates,
+   and how much debt stands between the business and the shares. */
+function dcfChecks(c) {
+  const out = [];
+  const d = c.dcf || {}, last = (c.model || [])[c.model.length - 1] || {};
+  const s = sectorMeta(c.sec) || {};
+  const tv = d.tv_share;
+  if (d.ev > 0 && tv != null) {
+    if (tv > 1) out.push({ ok: false, k: 'Value beyond year 10', v: 'all of it',
+      t: 'The first ten years use more cash than they make, so the whole value rests on the long-run assumptions. Read the sensitivity grids before the headline number.' });
+    else if (tv > 0.75) out.push({ ok: false, k: 'Value beyond year 10', v: FMT.pctPlain(tv, 0),
+      t: 'Above the 50–75% that is usual, so the value leans heavily on the long-run assumptions. Treat the headline number with extra care.' });
+    else if (tv < 0.40) out.push({ ok: true, k: 'Value beyond year 10', v: FMT.pctPlain(tv, 0),
+      t: 'Below the usual 50–75%: the next ten years of cash do most of the work, which is common at a cyclical high. Check the near-term margins.' });
+    else out.push({ ok: true, k: 'Value beyond year 10', v: FMT.pctPlain(tv, 0), t: 'Inside the usual 50–75% range for a ten-year model.' });
+  }
+  out.push(c.tg > 0.035
+    ? { ok: false, k: 'Terminal growth', v: FMT.pctPlain(c.tg), t: 'Above 3.5% a year forever, faster than the economy can grow for long. Most analysts stay at or below 3%.' }
+    : { ok: true, k: 'Terminal growth', v: FMT.pctPlain(c.tg), t: c.tg > 0.03 ? 'At the top of the usual range; at or below 3% is the norm.' : 'At or below long-run economic growth, as it should be.' });
+  if (last.fcf > 0 && d.tv > 0) {
+    const mult = d.tv / last.fcf, med = s.med_ev_fcf;
+    const rich = med > 0 && mult > med;
+    out.push({ ok: !rich, k: 'Implied exit multiple', v: FMT.x(mult),
+      t: med > 0 ? `The terminal value equals ${FMT.x(mult)} year-10 free cash flow; the sector trades at ${FMT.x(med)} today.${rich ? ' The model assumes it stays priced richly in ten years.' : ' A cautious exit, as a mature business should be.'}` : `The terminal value equals ${FMT.x(mult)} year-10 free cash flow.` });
+  } else if (last.fcf <= 0) {
+    out.push({ ok: false, k: 'Cash flow in year 10', v: 'negative', t: 'Still burning cash at the end of the forecast, so no terminal value can be supported.' });
+  }
+  if (typeof FF_XLSX !== 'undefined') {
+    const rf = FF_XLSX.RF, erp = 0.055, kd = (rf + 0.015) * 0.79;
+    const mc = c.price * c.shares, nd = Math.max(c.netdebt, 0), we = mc / (mc + nd), wd = 1 - we;
+    const beta = ((c.wacc - wd * kd) / we - rf) / erp;
+    const rank = FF_DATA.companies.filter(x => x.wacc < c.wacc).length + 1;
+    out.push({ ok: true, info: true, k: 'Discount rate', v: FMT.pctPlain(c.wacc),
+      t: `Lower than ${Math.round((1 - rank / FF_DATA.companies.length) * 100)}% of the library. At today's ${FMT.pctPlain(rf, 2)} 10-year Treasury yield and a 5.5% equity premium it implies a beta of ${beta.toFixed(2)} (the market is 1.0). The Excel model lets you swap in a measured beta.` });
+  }
+  if (d.equity <= 0) out.push({ ok: false, k: 'Debt', v: 'exceeds value', t: 'Net debt is larger than the value of the business\'s cash flows, so the cash-flow model leaves nothing for shareholders.' });
+  else if (d.ev > 0 && c.netdebt / d.ev > 0.5) out.push({ ok: false, k: 'Debt', v: FMT.pctPlain(c.netdebt / d.ev, 0) + ' of value',
+    t: 'Debt takes more than half of the business value, so a small change in the business swings the share value a lot.' });
+  return out;
+}
+
+function dcfChecksHTML(c) {
+  const list = dcfChecks(c);
+  if (!list.length) return '';
+  const flags = list.filter(x => !x.ok).length;
+  return `
+      <h4 style="font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;margin:28px 0 14px;">Model Checks</h4>
+      <div class="card chk">
+        <p class="chk-lede">${flags ? `${flags} thing${flags > 1 ? 's' : ''} to keep in mind when reading this valuation.` : 'This valuation passes the standard checks an analyst would run.'}</p>
+        <ul class="chk-list">${list.map(x => `
+          <li class="${x.info ? 'info' : x.ok ? 'ok' : 'flag'}">
+            <span class="chk-ico" aria-hidden="true">${x.info ? 'i' : x.ok ? '✓' : '!'}</span>
+            <div><div class="chk-h"><b>${x.k}</b><span class="mono">${x.v}</span></div><p>${x.t}</p></div>
+          </li>`).join('')}
+        </ul>
+      </div>`;
+}
+
+function xlsxCardHTML(c) {
+  if (typeof FF_XLSX === 'undefined') return '';
+  return `
+      <div class="card xl-card">
+        <div class="xl-h"><b>Take the model with you</b><span>Excel · 5 sheets</span></div>
+        <p>The same DCF in live formulas: bear, base and bull cases with a switch, the ten-year projection, three sensitivity tables, a CAPM check on the discount rate and the peer comparison with quartiles. Change any blue cell and everything updates.</p>
+        <button type="button" class="btn btn-violet" data-xlsx="${c.t}"><span>Download ${escapeHtml(c.t)} model (.xlsx)</span></button>
+      </div>`;
 }
 
 /* A short summary of the multiples value; the full working is on the
@@ -789,27 +891,66 @@ function multiplesHTML(c) {
 function panelComps(c) {
   const s = sectorMeta(c.sec);
   const peers = c.peers.map(t => byT(t)).filter(Boolean);
-  const rows = [c, ...peers].map(p => `
-    <tr ${p.t !== c.t ? `data-route="company" data-ticker="${p.t}"` : ''} style="${p.t === c.t ? 'background:var(--surface-2)' : ''}">
+  const eq = c.sec === 'financials', soft = c.sec === 'software';
+  // Following standard comps practice: size, growth and margin first, then the
+  // multiples, then the peers' quartiles so the subject can be placed among them.
+  const sales = p => eq ? (p.rev > 0 ? p.mcap / p.rev : null) : (p.ev_sales > 0 ? p.ev_sales : null);
+  const cash = p => eq ? (p.ttm_fcf > 0 ? p.mcap / p.ttm_fcf : null) : (p.ev_fcf > 0 && p.ev_fcf < 999 ? p.ev_fcf : null);
+  const cols = [
+    { h: 'Market value', f: p => p.mcap, fmt: v => FMT.usdB(v), stat: false },
+    { h: '5-yr growth', f: p => p.cagr5, fmt: v => FMT.pct(v), stat: true },
+    { h: 'FCF margin', f: p => p.m0, fmt: v => FMT.pctPlain(v), stat: true },
+    ...(soft ? [{ h: 'Rule of 40', f: p => p.cagr5 + p.m0, fmt: v => FMT.pctPlain(v), stat: true }] : []),
+    { h: eq ? 'P/Sales' : 'EV/Sales', f: sales, fmt: v => FMT.x(v), stat: true },
+    { h: eq ? 'P/FCF' : 'EV/FCF', f: cash, fmt: v => FMT.x(v), stat: true },
+    { h: 'FCF yield', f: p => p.fcf_yield, fmt: v => FMT.pctPlain(v), stat: true },
+  ];
+  const q = (vals, p) => {               // inclusive quartile, as Excel's QUARTILE
+    const v = vals.filter(x => x != null && isFinite(x)).sort((a, b) => a - b);
+    if (!v.length) return null;
+    const h = (v.length - 1) * p, lo = Math.floor(h);
+    return v[lo] + (v[Math.min(lo + 1, v.length - 1)] - v[lo]) * (h - lo);
+  };
+  const cell = (col, v) => `<td class="num">${v == null ? '<span class="cmp-na">n/m</span>' : col.fmt(v)}</td>`;
+  const row = p => `
+    <tr ${p.t !== c.t ? `data-route="company" data-ticker="${p.t}"` : 'class="cps-me"'}>
       <td class="tk">${p.t}${p.t === c.t ? ' <span class="tag tag-lilac" style="margin-left:6px;">this page</span>' : ''}</td>
       <td>${p.n}</td>
-      <td class="num">${FMT.usd(p.price)}</td>
-      <td class="num">${FMT.x(p.ev_sales)}</td>
-      <td class="num">${p.ev_fcf>0 && p.ev_fcf<999 ? FMT.x(p.ev_fcf) : '—'}</td>
-      <td class="num ${p.prem_sales>=0?'upside-neg':'upside-pos'}">${FMT.pct(p.prem_sales)}</td>
-    </tr>`).join('');
+      ${cols.map(col => cell(col, col.f(p))).join('')}
+    </tr>`;
+  const statRow = (label, pp) => `
+    <tr class="cps-stat"><td></td><td>${label}</td>
+      ${cols.map(col => col.stat ? cell(col, q(peers.map(col.f), pp)) : '<td></td>').join('')}
+    </tr>`;
+  // where the subject sits on its peers' cash multiple
+  const own = cash(c), qs = [0.25, 0.5, 0.75].map(pp => q(peers.map(cash), pp));
+  let where = '';
+  if (own != null && qs[1] != null) {
+    const pos = own < qs[0] ? 'below the peers\' 25th percentile, the cheap end of the group'
+      : own < qs[1] ? 'between the 25th percentile and the median'
+      : own <= qs[2] ? 'between the median and the 75th percentile'
+      : 'above the peers\' 75th percentile, the expensive end of the group';
+    where = `<p class="cps-where">On ${eq ? 'price' : 'enterprise value'} to free cash flow, ${c.t} trades at ${FMT.x(own)}, ${pos} (peer median ${FMT.x(qs[1])}).</p>`;
+  } else if (own == null) {
+    where = `<p class="cps-where">${c.t} has no positive free cash flow yet, so its cash multiple is not meaningful; compare it on ${eq ? 'price' : 'EV'} to sales instead.</p>`;
+  }
   return `
   <div class="prose">
     ${multiplesHTML(c)}
     <h4>Comparable companies</h4>
-    <p>The ${s.n} companies most like ${c.n} on size, growth, cash margin and leverage. Their multiples set the value above. The last column compares each company's EV/Sales to the sector median of ${s.med_ev_sales}x.</p>
+    <p>The ${s.n} companies most like ${c.n} on size, growth, cash margin and leverage. Their multiples set the value above. ${eq ? 'Banks and insurers are compared on price rather than enterprise value, because debt is part of how they operate.' : ''}</p>
     ${s.note ? `<div class="comp-note">${s.note}</div>` : ''}
+    ${where}
     <div class="table-wrap">
-      <table class="ff-table">
-        <thead><tr><th>Ticker</th><th>Company</th><th class="num">Price</th><th class="num">EV/Sales</th><th class="num">EV/FCF</th><th class="num">Prem. to Sector Median</th></tr></thead>
-        <tbody>${rows}</tbody>
+      <table class="ff-table cps">
+        <thead><tr><th>Ticker</th><th>Company</th>${cols.map(col => `<th class="num">${col.h}</th>`).join('')}</tr></thead>
+        <tbody>${row(c)}${peers.map(row).join('')}
+          <tr class="cps-gap"><td colspan="${cols.length + 2}"></td></tr>
+          ${statRow('Peers, 75th percentile', 0.75)}${statRow('Peers, median', 0.5)}${statRow('Peers, 25th percentile', 0.25)}
+        </tbody>
       </table>
     </div>
+    <p class="cps-foot">Growth is the model's five-year forecast, so every company is measured on the same forward basis. Statistics cover the peers only, not ${c.t}. "n/m" marks a multiple that means nothing because the cash flow is negative.${typeof FF_XLSX !== 'undefined' ? ' The Excel model has this table with live formulas.' : ''}</p>
   </div>`;
 }
 

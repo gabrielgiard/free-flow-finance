@@ -593,6 +593,29 @@ check("every page in the header menu has a route", all(f"route === '{r}'" in _ap
 
 
 # ------------------------------------------------------------------------
+section("Excel model download and model checks")
+_xl = open(os.path.join(_repo, "docs/xlsx.js")).read()
+_views = open(os.path.join(_repo, "docs/views.js")).read()
+check("xlsx.js is loaded after views.js and before app.js",
+      'src="xlsx.js"' in _idx and _idx.index("views.js") < _idx.index("xlsx.js") < _idx.index('src="app.js"'))
+check("the single-file build includes xlsx.js in the same place",
+      "xlsx.js" in _msf.SCRIPTS and _msf.SCRIPTS.index("views.js") < _msf.SCRIPTS.index("xlsx.js") < _msf.SCRIPTS.index("app.js"))
+check("the spreadsheet library is pinned to an exact version on cdnjs",
+      "cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" in _xl)
+check("the library is fetched only when someone asks for a workbook (not on page load)",
+      "exceljs" not in open(os.path.join(_repo, "docs/index.html")).read().lower())
+check("every Excel button is guarded, so a missed upload of xlsx.js cannot break the company page",
+      _views.count("typeof FF_XLSX !== 'undefined'") + _views.count("typeof FF_XLSX === 'undefined'") >= 3
+      and "typeof FF_XLSX === 'undefined'" in _app)
+check("the workbook recalculates when opened (no stale cached values)", "fullCalcOnLoad = true" in _xl)
+check("the DCF tab shows the model checks and the growth x margin grid",
+      "${dcfChecksHTML(c)}" in _views and "${growthMarginGridHTML(c)}" in _views)
+_xr = subprocess.run([sys.executable, os.path.join(_repo, "xlsx_test.py")], capture_output=True, text=True, timeout=1200, cwd=_repo)
+_xt = (_xr.stdout.strip().splitlines() or [_xr.stderr[-300:]])[-1]
+check("xlsx_test.py: workbooks recompute the site's values in LibreOffice (or skip without the tools)", _xr.returncode == 0, _xt)
+
+
+# ------------------------------------------------------------------------
 shutil.rmtree(work, ignore_errors=True)
 print("\n" + "=" * 68)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

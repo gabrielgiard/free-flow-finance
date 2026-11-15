@@ -310,6 +310,34 @@ be worse than useless. Every figure traces to a model input or a market price.
 
 ---
 
+## Excel model download and model checks
+
+Every company page has an **Excel model** button (in the header and on the DCF tab). It builds a
+five-sheet workbook in the visitor's browser with live formulas, following standard banking DCF
+and comps practice:
+
+| Sheet | What it holds |
+|---|---|
+| DCF | Bear / base / bull scenario blocks with a case selector, the ten-year projection with the mid-year convention, the Gordon-growth terminal value, the bridge to value per share, and three 5×5 sensitivity tables (WACC × terminal growth, growth × year-5 margin, beta × risk-free rate). Every sensitivity cell recomputes the whole DCF; the centre cell is the selected case. |
+| WACC | A CAPM cross-check: risk-free rate, equity risk premium, beta, cost of debt, market-value weights. Switch cell DCF!B6 to 2 to value the company on it. The default beta is the one FreeFlow's own rate implies. |
+| Comps | The peer set with operating metrics, multiples, and max / quartile / median / min rows, plus the value at peer multiples. |
+| Workings | The cash-flow paths the sensitivity tables discount. |
+| Notes | Sources, method, colour key, known differences from the site. |
+
+Blue = inputs, black = formulas, green = links between sheets. The builder is `docs/xlsx.js`;
+the spreadsheet library (ExcelJS 4.4.0 from cdnjs) is only downloaded when someone clicks.
+**Update `RF` in `docs/xlsx.js` when the 10-year Treasury yield moves** (currently 5.15%, 13 Nov 2026).
+
+`xlsx_test.py` builds real workbooks, recalculates them in LibreOffice and checks every value
+against the Python engine (`--all` does all 400 companies). It needs node with `exceljs` and
+LibreOffice; without them it skips. Last full run: 4,007 checks, largest gap $0.0000.
+
+The DCF tab also shows **Model Checks**: the share of value beyond year 10 (usual range 50–75%),
+terminal growth (flagged above 3.5%), the exit multiple the terminal value implies against the
+sector's current multiple, the beta the discount rate implies at today's Treasury yield, and debt.
+A second sensitivity grid tests growth against the year-5 cash margin. The Comparables tab shows
+growth, margin, multiples and the peers' quartiles, with one sentence placing the company among them.
+
 ## Adding a new company
 
 1. Open the right file in `companies/` (or create a new one).

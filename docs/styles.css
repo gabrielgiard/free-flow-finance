@@ -2023,3 +2023,38 @@ html[data-model="dcf"] .mx-vs div:first-child b, html[data-model="mx"] .mx-vs di
 .search-box{ min-width:0; }
 @media (min-width: 641px) and (max-width: 1100px){ .search-input, .search-input:focus{ width:190px; } }
 .pc-upd.past line{ opacity:.55; }
+
+/* ---------------------------------- model checks & Excel download ---------
+   Checks a reviewer runs on any DCF. Ticks are lilac (passed), flags are
+   amber (worth reading), notes are neutral; the colour is never the only
+   signal, each row carries its own symbol. */
+.chk{ padding:20px 22px; }
+.chk-lede{ font-size:13px; color:var(--text-muted); margin:0 0 12px; }
+.chk-list{ list-style:none; margin:0; padding:0; }
+.chk-list li{ display:grid; grid-template-columns:22px 1fr; gap:10px; padding:11px 0; border-top:1px solid var(--line-soft); }
+.chk-list li:first-child{ border-top:0; padding-top:2px; }
+.chk-ico{ width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px var(--font-mono); margin-top:1px; }
+.chk-list li.ok .chk-ico{ background:rgba(185,163,245,.16); color:var(--lilac); }
+.chk-list li.flag .chk-ico{ background:var(--amber-soft); color:var(--amber); }
+.chk-list li.info .chk-ico{ background:var(--surface-3); color:var(--text-muted); font-style:italic; }
+.chk-h{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; }
+.chk-h b{ font-weight:500; font-size:13.5px; color:var(--text); }
+.chk-h .mono{ font-size:13px; color:var(--text); white-space:nowrap; }
+.chk-list li.flag .chk-h .mono{ color:var(--amber); }
+.chk-list p{ font-size:12px; line-height:1.55; color:var(--text-dim); margin:3px 0 0; }
+.xl-card{ margin-top:16px; padding:20px 22px; }
+.xl-h{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:4px 10px; margin-bottom:6px; }
+.xl-h b{ font-family:var(--font-display); font-weight:400; font-size:18px; color:var(--text); }
+.xl-h span{ font:12px var(--font-mono); color:var(--text-dim); }
+.xl-card p{ font-size:12.5px; line-height:1.6; margin:0 0 14px; }
+.xl-card .btn[disabled], .co-share[disabled]{ opacity:.7; cursor:progress; }
+
+/* comparables table with peer quartiles */
+.cps .cps-me{ background:var(--surface-2); }
+.cps .cps-gap td{ padding:4px; border-bottom:1px solid var(--line); }
+.cps .cps-stat td{ background:rgba(255,255,255,.025); color:var(--text-muted); font-size:12.5px; cursor:default; }
+.cps .cps-stat td:nth-child(2){ font-family:var(--font-body); color:var(--text-dim); }
+.cps tbody tr.cps-stat:hover{ background:none; }
+.cps .cmp-na{ color:var(--text-dim); }
+.cps-where{ font-size:14px; color:var(--text); border-left:3px solid var(--lilac); padding:4px 0 4px 14px; margin:6px 0 18px; }
+.cps-foot{ font-size:11.5px !important; color:var(--text-dim) !important; margin-top:12px; }

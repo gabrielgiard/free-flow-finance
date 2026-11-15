@@ -504,6 +504,31 @@ document.addEventListener('input', e => {
 
 
 
+/* Download a company's model as an Excel workbook. The builder and the
+   spreadsheet library are only fetched on the first click. */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-xlsx]');
+  if (!btn || typeof FF_XLSX === 'undefined') return;
+  const c = byT(btn.dataset.xlsx);
+  if (!c || btn.disabled) return;
+  const label = btn.querySelector('span');
+  const was = label.textContent;
+  const say = (txt, ms) => { label.textContent = txt; clearTimeout(btn._t); if (ms) btn._t = setTimeout(() => { label.textContent = was; }, ms); };
+  btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+  say('Building…');
+  try {
+    const peers = (c.peers || []).map(byT).filter(Boolean);
+    const s = sectorMeta(c.sec);
+    await FF_XLSX.download(c, peers, { sectorName: s ? s.n : c.sec, source: 'FreeFlow Finance data file', date: new Date() });
+    say('Downloaded', 2500);
+  } catch (err) {
+    say('Could not build it — try again', 4000);
+    console.error(err);
+  } finally {
+    btn.disabled = false; btn.removeAttribute('aria-busy');
+  }
+});
+
 /* Share a company. The link is the company's own page (/company/NVDA/), not
    the #/ address: apps can't see anything after a #, so only the real page
    gives the link its preview card. People who tap it land on that page, which

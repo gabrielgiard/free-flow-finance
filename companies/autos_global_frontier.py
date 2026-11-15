@@ -277,7 +277,7 @@ C("RKLB", "Rocket Lab Corporation", "frontier", "Long Beach, California, USA", 2
 
 C("IONQ", "IonQ, Inc.", "frontier", "College Park, Maryland, USA", 2015,
   "Niccolo de Masi", "NYSE", 55.00, 0.40, -1.2, 0.16,
-  [0.68, 0.54, 0.43, 0.34, 0.27], -0.40, 0.06, 0.165, 0.038,
+  [0.68, 0.54, 0.43, 0.34, 0.27], -0.40, 0.06, 0.165, 0.030,
   "Founded in 2015 by Christopher Monroe and Jungsang Kim, commercialising trapped-ion quantum computing research from the University of Maryland and Duke. Headquartered in College Park, Maryland. IonQ builds quantum computers that hold individual ytterbium ions in electromagnetic traps and manipulate them with lasers, an approach with high qubit fidelity but slower gate speeds than superconducting designs. It sells systems directly, including a 256-qubit machine to the University of Cambridge in the first quarter of 2026, and provides cloud access through AWS, Azure and Google Cloud. It acquired SkyWater Technology for $1.8 billion to manufacture its own chips.",
   [("Quantum systems & cloud access", 100)],
   ["Trapped-ion qubits have the highest fidelity of any commercial approach, which matters more than raw qubit count.",

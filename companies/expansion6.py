@@ -1495,7 +1495,7 @@ EXPANSION6 = [
 
     C("QNT", "Quantinuum Inc.", "frontier", "Broomfield, Colorado, USA", 2021,
       "Rajeeb Hazra", "Nasdaq", 37.57, 0.263, -1.2, 0.029,
-      [0.60, 0.60, 0.60, 0.55, 0.45], -0.50, 0.10, 0.165, 0.038,
+      [0.60, 0.60, 0.60, 0.55, 0.45], -0.50, 0.10, 0.165, 0.030,
       "Formed in 2021 by merging Honeywell's quantum computing unit with the British software firm Cambridge Quantum; Honeywell remains its largest shareholder. Rajeeb Hazra, a former Intel executive, is chief executive. Quantinuum builds quantum computers that use individual charged atoms held in electromagnetic traps, an approach that has produced the most accurate machines so far, and writes the software to run on them. It listed on Nasdaq in June 2026.",
       [("Quantum hardware access and systems", 80), ("Software and services", 20)],
       ["Its machines hold records for accuracy, the main obstacle in quantum computing.",
@@ -1510,7 +1510,7 @@ EXPANSION6 = [
 
     C("RGTI", "Rigetti Computing, Inc.", "frontier", "Berkeley, California, USA", 2013,
       "Subodh Kulkarni", "Nasdaq", 11.44, 0.334, -0.39, 0.0134,
-      [0.60, 0.60, 0.60, 0.50, 0.40], -0.50, 0.08, 0.165, 0.038,
+      [0.60, 0.60, 0.60, 0.50, 0.40], -0.50, 0.08, 0.165, 0.030,
       "Founded in 2013 by Chad Rigetti, a physicist who had worked on quantum computing at IBM. Subodh Kulkarni has been chief executive since 2022. Rigetti builds quantum computers from superconducting circuits cooled to near absolute zero, the same basic approach as IBM and Google, and makes its chips in its own small factory in California. It sells access over the cloud and small systems to research laboratories, with most revenue coming from government contracts.",
       [("Research contracts and cloud access", 70), ("System sales", 30)],
       ["Controls its own chip manufacturing, so it can test new designs quickly.",
@@ -1525,7 +1525,7 @@ EXPANSION6 = [
 
     C("QBTS", "D-Wave Quantum Inc.", "frontier", "Palo Alto, California, USA", 1999,
       "Alan Baratz", "NYSE", 11.54, 0.372, -0.50, 0.0124,
-      [0.50, 0.60, 0.50, 0.45, 0.35], -0.50, 0.10, 0.165, 0.038,
+      [0.50, 0.60, 0.50, 0.45, 0.35], -0.50, 0.10, 0.165, 0.030,
       "Founded in 1999 in British Columbia, D-Wave was the first company to sell a quantum computer. Alan Baratz has been chief executive since 2020. Its machines use a method called quantum annealing, which is suited to one kind of task — finding the best answer among a huge number of possibilities, such as scheduling or routing — rather than general computing. Customers mostly rent time over the cloud, and it has begun selling complete systems and developing a general-purpose machine as well.",
       [("Cloud access", 60), ("Systems and professional services", 40)],
       ["Its machines are being used on real commercial problems today.",
