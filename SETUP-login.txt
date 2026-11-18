@@ -1,0 +1,131 @@
+SWITCHING ON THE OPTIONAL LOGIN  (about 15 minutes, free, no credit card)
+=========================================================================
+
+What this does
+--------------
+Visitors can sign in (with Google, or with an email and password) to keep
+their portfolio, Monte Carlo settings, watchlist, Daily Ten streak and saved
+"Your case" scenarios on every device. Nothing on the site needs a login.
+
+Until you finish these steps the site simply has no "Sign in" button. The
+watchlist and saved cases already work without it, saved on each device.
+So you can upload the new files first and do this later.
+
+You need: a Google account. Firebase is Google's free service for this.
+Its free plan (called "Spark") never charges you; if the site ever got
+enormous, sync would pause for the day rather than cost money.
+
+
+STEP 1. Create the Firebase project
+-----------------------------------
+1. Go to  https://console.firebase.google.com  and sign in with Google.
+2. Click "Create a project" (or "Get started by setting up a Firebase project").
+3. Name it  freeflow-finance  and click Continue.
+4. If it asks about Gemini or AI assistance, you can leave it off. Continue.
+5. When it asks about Google Analytics, switch it OFF. Click "Create project".
+6. Wait for it to finish, then click Continue.
+
+
+STEP 2. Register the website and copy its settings
+--------------------------------------------------
+1. On the project's home page, click the web icon. It looks like  </>
+   (it may sit under "Add app" or "Get started by adding Firebase to your app").
+2. App nickname:  FreeFlow website
+   Do NOT tick "Also set up Firebase Hosting".
+3. Click "Register app".
+4. Firebase now shows some code. Find the part that starts with
+
+       const firebaseConfig = {
+
+   and ends with
+
+       };
+
+   Select from "const" down to and including "};" and copy it.
+   Paste it somewhere safe for a minute (Notes is fine).
+   These values are not secret: every visitor's browser needs them.
+5. Click "Continue to console".
+
+
+STEP 3. Switch on the two ways to sign in
+-----------------------------------------
+1. In the left menu: Build  >  Authentication  >  "Get started".
+2. Open the "Sign-in method" tab.
+3. Click "Email/Password". Turn ON the first switch (Email/Password).
+   Leave "Email link" off. Click Save.
+4. Click "Add new provider", then "Google". Turn it on.
+   Pick your email as the "Project support email". Click Save.
+
+
+STEP 4. Allow your website's address
+------------------------------------
+1. Still in Authentication, open the "Settings" tab.
+2. Click "Authorized domains", then "Add domain".
+3. Type   free-flow-finance.pages.dev   and click Add.
+   (If you later get your own domain name, add it here too.)
+
+
+STEP 5. Create the database
+---------------------------
+1. In the left menu: Build  >  Firestore Database  >  "Create database".
+2. If it asks for an edition, choose "Standard".
+3. Location: leave the suggested one (for example nam5, United States).
+   This can't be changed later, and the default is fine.
+4. Choose "Start in production mode". Click Create.
+
+
+STEP 6. Paste the security rules
+--------------------------------
+These rules are what keep every account private.
+1. In Firestore Database, open the "Rules" tab.
+2. Delete everything in the box.
+3. Open the file  firestore.rules  (it's in the zip, next to README.md),
+   copy ALL of it, and paste it into the box.
+4. Click "Publish".
+
+
+STEP 7. Put the settings into the website
+-----------------------------------------
+EITHER send me the block you copied in Step 2 and I'll put it in the next
+zip for you,
+
+OR do it yourself on GitHub:
+1. Open your repository on github.com, go into the  docs  folder and click
+   auth-config.js.
+2. Click the pencil icon (Edit this file).
+3. At the very bottom is the line
+
+       const firebaseConfig = null;
+
+   Select that whole line and paste your block over it, so the line is
+   replaced. Don't paste it underneath: there must be only one
+   "const firebaseConfig".
+4. Click "Commit changes" (green button), then "Commit changes" again.
+5. Wait about a minute for Cloudflare to publish, then open the site.
+   A small round account button appears at the top right, next to search.
+
+
+STEP 8. Try it
+--------------
+1. Click the round button, then "Create an account" with your email.
+2. Star a company (the "Watch" button on any company page).
+3. Open the site on your phone, sign in with the same account, and the star
+   is there too.
+Then in Firebase, Authentication > Users shows your account, and Firestore
+Database > Data shows one record under "users".
+
+Inside Instagram's built-in browser, Google sign-in is blocked by Google
+itself. The site explains this and email sign-in still works there.
+
+
+Good to know
+------------
+- Deleting accounts: people can delete their own account from the account
+  window. You can also delete any user in Authentication > Users, and their
+  record in Firestore Database > Data > users.
+- The privacy page on the site (#/privacy, linked in the footer) says
+  exactly what is stored. If you ever add anything else, update it.
+- Optional: in Authentication > Templates you can change the sender name
+  on the password reset email to "FreeFlow Finance".
+- To switch the login off again, put back  const firebaseConfig = null;
+  Nobody loses anything saved on their own device.

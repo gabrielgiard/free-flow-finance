@@ -165,6 +165,7 @@ function caseHTML(c) {
       </div>
     </div>
     <div class="case-shared" hidden></div>
+    <div class="case-saved" hidden></div>
     <div class="case-body">
       <div class="case-sliders">${rows}
         <p class="case-hint" hidden></p>
@@ -186,6 +187,7 @@ function caseHTML(c) {
         <p class="case-warn" hidden></p>
         <div class="case-actions">
           <button type="button" class="btn btn-violet case-share">Share my case</button>
+          ${typeof FF_ACCT !== 'undefined' ? '<button type="button" class="btn btn-ghost case-save">Save my case</button>' : ''}
           <button type="button" class="btn btn-ghost case-reset" hidden>Reset to model</button>
         </div>
         <div class="case-copy" hidden>
@@ -425,6 +427,26 @@ async function caseCopy(sec, text) {
 
 /* --------------------------------------------------------------- mount --- */
 
+/* A case saved with "Save my case" (kept on this device, and in the account
+   when signed in). Showing: it is what the sliders hold. Otherwise it is
+   only mentioned, with a button to bring it back. */
+function caseSavedBanner(sec) {
+  const st = CASE_STATE.get(sec), el = sec.querySelector('.case-saved');
+  if (!st || !el || typeof FF_ACCT === 'undefined') return;
+  const saved = FF_ACCT.getCase(st.c.t);
+  if (!saved) { el.hidden = true; el.innerHTML = ''; return; }
+  const when = new Date(saved.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const v = caseValue(st.c, { ...st.model, ...saved.s }).perShare;
+  el.innerHTML = st.showingSaved
+    ? `Your saved case from ${when}: fair value <b>${v > 0 ? FMT.usd(v) : 'N/M'}</b> against the model's <b>${fvStr(dcfOf(st.c).fv)}</b>.
+       <button type="button" class="case-linkbtn" data-preset="model">Reset to the model</button>
+       <button type="button" class="case-linkbtn" data-case-del>Delete saved case</button>`
+    : `You have a saved case from ${when} (fair value <b>${v > 0 ? FMT.usd(v) : 'N/M'}</b>).
+       <button type="button" class="case-linkbtn" data-case-load>Load it</button>
+       <button type="button" class="case-linkbtn" data-case-del>Delete it</button>`;
+  el.hidden = false;
+}
+
 function mountCasePanels(root) {
   (root || document).querySelectorAll('.case').forEach(sec => {
     if (CASE_STATE.has(sec)) return;
@@ -448,7 +470,17 @@ function mountCasePanels(root) {
         against the model's <b>${fvStr(dcfOf(c).fv)}</b>. <button type="button" class="case-linkbtn" data-preset="model">Reset to the model</button>`;
       banner.hidden = false;
       requestAnimationFrame(() => sec.scrollIntoView({ block: 'center' }));
+    } else if (typeof FF_ACCT !== 'undefined') {
+      // no shared link: open with the case this person saved, if any
+      const saved = FF_ACCT.getCase(c.t);
+      if (saved) {
+        st.s = { ...model, ...saved.s };
+        for (const sl of sliders) st.s[sl.k] = caseClamp(st.s[sl.k], sl.min, sl.max);
+        st.preset = null;
+        st.showingSaved = true;
+      }
     }
+    if (typeof FF_ACCT !== 'undefined') caseSavedBanner(sec);
 
     let raf = 0;
     const schedule = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => caseUpdate(sec)); };
@@ -459,17 +491,45 @@ function mountCasePanels(root) {
       st.s[k] = parseFloat(e.target.value);
       st.last = k;
       st.preset = null;
+      if (st.showingSaved) { st.showingSaved = false; if (typeof FF_ACCT !== 'undefined') caseSavedBanner(sec); }
       schedule();
     });
 
     sec.addEventListener('click', e => {
-      const b = e.target.closest('[data-preset], .case-reset, .case-share');
+      const b = e.target.closest('[data-preset], .case-reset, .case-share, .case-save, [data-case-load], [data-case-del]');
       if (!b) return;
       if (b.classList.contains('case-share')) {
         caseUpdate(sec);
         caseCopy(sec, caseShareText(st).text);
         return;
       }
+      if (b.classList.contains('case-save')) {
+        caseUpdate(sec);
+        FF_ACCT.saveCase(c.t, st.s, st.result && st.result.meaningful ? st.result.fv : null);
+        st.showingSaved = true;
+        caseSavedBanner(sec);
+        b.textContent = 'Saved ✓';
+        setTimeout(() => { b.textContent = 'Save my case'; }, 2000);
+        return;
+      }
+      if (b.hasAttribute('data-case-del')) {
+        FF_ACCT.deleteCase(c.t);
+        st.showingSaved = false;
+        caseSavedBanner(sec);
+        return;
+      }
+      if (b.hasAttribute('data-case-load')) {
+        const saved = FF_ACCT.getCase(c.t);
+        if (!saved) { caseSavedBanner(sec); return; }
+        st.s = { ...model, ...saved.s };
+        for (const sl of sliders) st.s[sl.k] = caseClamp(st.s[sl.k], sl.min, sl.max);
+        st.preset = null; st.last = null; st.showingSaved = true;
+        sec.querySelector('.case-shared').hidden = true;
+        caseUpdate(sec);
+        caseSavedBanner(sec);
+        return;
+      }
+      st.showingSaved = false;
       const p = b.classList.contains('case-reset') ? 'model' : b.dataset.preset;
       st.s = p === 'bear' ? { ...sc.bearInputs } : p === 'bull' ? { ...sc.bullInputs } : { ...model };
       for (const sl of sliders) st.s[sl.k] = caseClamp(st.s[sl.k], sl.min, sl.max);
@@ -477,6 +537,7 @@ function mountCasePanels(root) {
       st.last = null;
       if (p === 'model') sec.querySelector('.case-shared').hidden = true;
       caseUpdate(sec);
+      if (typeof FF_ACCT !== 'undefined') caseSavedBanner(sec);
     });
 
     caseUpdate(sec);

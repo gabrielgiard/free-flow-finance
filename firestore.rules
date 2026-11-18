@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// FreeFlow Finance — database rules for the optional accounts.
+// Paste all of this into Firebase: Firestore Database > Rules > Publish.
+//
+// Each signed-in person gets exactly one record, users/{their id}, and can
+// only read, write or delete their own. The record may only hold the six
+// synced items (as text, with size limits) plus their change times.
+// Everything else in the database is refused.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+      function okText(m, k, n) {
+        return !(k in m) || (m[k] is string && m[k].size() <= n);
+      }
+      function okTime(m, k) {
+        return !(k in m) || (m[k] is number && m[k] >= 0);
+      }
+      function valid() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['v', 'data', 't', 'updated'])
+          && d.v == 1
+          && d.updated == request.time
+          && d.data is map
+          && d.data.keys().hasOnly(['portfolio', 'example', 'mc', 'play', 'watch', 'cases'])
+          && okText(d.data, 'portfolio', 60000)
+          && okText(d.data, 'example', 4)
+          && okText(d.data, 'mc', 2000)
+          && okText(d.data, 'play', 60000)
+          && okText(d.data, 'watch', 120000)
+          && okText(d.data, 'cases', 120000)
+          && d.t is map
+          && d.t.keys().hasOnly(['portfolio', 'mc', 'play', 'watch', 'cases'])
+          && okTime(d.t, 'portfolio') && okTime(d.t, 'mc') && okTime(d.t, 'play')
+          && okTime(d.t, 'watch') && okTime(d.t, 'cases');
+      }
+
+      allow read, delete: if isOwner();
+      allow create, update: if isOwner() && valid();
+    }
+
+    match /{everything=**} {
+      allow read, write: if false;
+    }
+  }
+}

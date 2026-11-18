@@ -622,6 +622,7 @@ function viewCompany(ticker) {
           </div>
           ${valuationStripHTML(c)}
           <div class="co-actions">
+          ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.watchBtnHTML(c) : ''}
           ${typeof viewCompare === 'function' ? `<a class="co-share" href="#/compare/${encodeURIComponent(c.t)}" aria-label="Compare ${escapeHtml(c.n)} with another company">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4v12M6 4L3 7M6 4l3 3M14 16V4M14 16l-3-3M14 16l3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Compare</span>
@@ -635,6 +636,7 @@ function viewCompany(ticker) {
             <span>Share</span>
           </button>
           </div>
+          ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.watchNoteHTML(c) : ''}
         </div>
       </div>
       ${c.mx ? modelBarHTML(c) : ''}
@@ -1573,7 +1575,7 @@ function viewPortfolio() {
     <div class="wrap">
       ${crumbs({ href: '#/', label: 'Home' }, { label: 'Portfolio' })}
       <h1 class="pf-title">Your portfolio</h1>
-      <p class="pf-lede">Add what you own, see it against our fair values, then stress-test it with a Monte Carlo simulation. Saved on this device only: no account, nothing sent anywhere.</p>
+      <p class="pf-lede">${typeof FF_ACCT !== 'undefined' ? FF_ACCT.ledeText() : 'Add what you own, see it against our fair values, then stress-test it with a Monte Carlo simulation. Saved on this device only: no account, nothing sent anywhere.'}</p>
     </div>
   </section>`;
 
@@ -1586,6 +1588,7 @@ function viewPortfolio() {
         ${pfAddFormHTML()}
         <button type="button" class="pf-link" data-pf-example>Or look at an example portfolio first</button>
       </div>
+      ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.mineHTML() : ''}
     </div></section>`;
   }
 
@@ -1631,6 +1634,7 @@ function viewPortfolio() {
       <div class="pf-allockey">${allocKey}</div>
     </div>
     ${typeof FF_MC !== 'undefined' ? mcPanelHTML() : ''}
+    ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.mineHTML() : ''}
     <p class="pf-foot">Fair values come from ${MODEL.cur === 'mx' ? 'the peer multiples model' : 'our DCF model'} and update every market day. Not investment advice.</p>
   </div></section>`;
 }

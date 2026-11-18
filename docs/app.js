@@ -28,6 +28,7 @@ function renderRoute(opts) {
   else if (route === 'about') { html = viewAbout(); navKey = 'about'; }
   else if (route === 'methodology') { html = viewMethodology(); navKey = 'methodology'; }
   else if (route === 'track-record') { html = viewTrackRecord(); navKey = 'track-record'; }
+  else if (route === 'privacy' && typeof viewPrivacy === 'function') { html = viewPrivacy(); navKey = 'privacy'; }
   else { html = view404(); }
 
   APP.innerHTML = html;
@@ -167,6 +168,7 @@ function buildSidebar() {
         About
       </div>
       </nav>
+      ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.sidebarHTML() : ''}
       <div class="sb-head">Sectors</div>
       ${groups}
     </div>`;

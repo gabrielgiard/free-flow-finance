@@ -338,6 +338,26 @@ sector's current multiple, the beta the discount rate implies at today's Treasur
 A second sensitivity grid tests growth against the year-5 cash margin. The Comparables tab shows
 growth, margin, multiples and the peers' quartiles, with one sentence placing the company among them.
 
+## Optional accounts, watchlist and saved cases
+
+Signing in is optional and changes nothing about what visitors can see. It only syncs the things the
+site already saved in the browser (portfolio, Monte Carlo settings, Daily Ten streak) plus two new
+ones: a **watchlist** (the Watch button on every company page; the list sits in the sidebar and on
+the Portfolio page, with a "was Hold" badge when a rating changes) and **saved cases** (Save my case
+on the Your Case tab; it reopens with the page next time).
+
+To switch the sign-in on, follow **SETUP-login.txt** (Firebase, free). Until `docs/auth-config.js`
+holds the Firebase settings there is no sign-in button; the watchlist and saved cases still work on
+each device. `firestore.rules` is the database's security rules: paste it into Firebase as is.
+
+How sync works: each device notes when a synced item last changed. The portfolio and Monte Carlo
+settings take the newest copy; Daily Ten days, watchlist entries and saved cases are combined item by
+item, so nothing is lost when two devices are used. The first time a device with its own portfolio
+signs in to an account that already has a different one, the person chooses which to keep. The
+merge rules are in `docs/account.js` (`FF_SYNCCORE`) and tested by `account_test.js`. The Firebase
+scripts (version 10.14.1) load only when someone clicks Sign in or comes back signed in. The privacy
+page is `#/privacy`; keep it accurate if you ever store anything new.
+
 ## Adding a new company
 
 1. Open the right file in `companies/` (or create a new one).
@@ -427,5 +447,9 @@ on the Financials sector page and in every bank's comps table.
 | `docs/charts.js`      | Hand-built SVG charts and formatters        |
 | `docs/views.js`       | Page renderers                               |
 | `docs/app.js`         | Router, search, table sorting, tabs         |
+| `docs/account.js`     | Optional sign-in, sync, watchlist, saved cases, privacy page |
+| `docs/auth-config.js` | Your Firebase settings (null = no sign-in)  |
+| `firestore.rules`     | Database security rules to paste into Firebase |
+| `SETUP-login.txt`     | Step-by-step: switching the sign-in on      |
 | `docs/data.js`        | Generated — do not edit by hand             |
 | `docs/history.js`     | Generated — price history for the charts    |

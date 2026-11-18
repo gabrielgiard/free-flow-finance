@@ -616,6 +616,42 @@ check("xlsx_test.py: workbooks recompute the site's values in LibreOffice (or sk
 
 
 # ------------------------------------------------------------------------
+section("Optional accounts, watchlist and saved cases")
+import re  # noqa: E402
+_acct = open(os.path.join(_repo, "docs/account.js")).read()
+_cfg = open(os.path.join(_repo, "docs/auth-config.js")).read()
+_cfg_code = re.sub(r"//[^\n]*", "", re.sub(r"/\*.*?\*/", "", _cfg, flags=re.S))   # the instructions mention the same words
+_case = open(os.path.join(_repo, "docs/case.js")).read()
+_rules = open(os.path.join(_repo, "firestore.rules")).read()
+check("auth-config.js then account.js load after xlsx.js and before app.js",
+      _idx.index('src="xlsx.js"') < _idx.index('src="auth-config.js"') < _idx.index('src="account.js"') < _idx.index('src="app.js"'))
+check("the single-file build includes both in the same order",
+      _msf.SCRIPTS.index("xlsx.js") < _msf.SCRIPTS.index("auth-config.js") < _msf.SCRIPTS.index("account.js") < _msf.SCRIPTS.index("app.js"))
+check("auth-config.js defines firebaseConfig exactly once (a second paste would be a syntax error)",
+      len(re.findall(r"^\s*(const|let|var)\s+firebaseConfig\b", _cfg_code, re.M)) == 1, "paste the Firebase block over the null line, not under it")
+_cfg_ok = subprocess.run(["node", "--check", os.path.join(_repo, "docs/auth-config.js")], capture_output=True, text=True)
+check("auth-config.js is valid JavaScript", _cfg_ok.returncode == 0, _cfg_ok.stderr[-200:])
+_m = re.search(r"firebaseConfig\s*=\s*\{(.*?)\}", _cfg_code, re.S)
+if _m:
+    check("pasted settings include apiKey, authDomain and projectId", all(k in _m.group(1) for k in ("apiKey", "authDomain", "projectId")))
+check("the Firebase scripts are pinned to one exact version and only fetched on demand",
+      "firebasejs/${SDK_V}/firebase-${n}-compat.js" in _acct and re.search(r"SDK_V = '\d+\.\d+\.\d+'", _acct)
+      and "firebasejs" not in _idx)
+check("every account hook is guarded, so a missed upload of account.js cannot break a page",
+      _views.count("typeof FF_ACCT !== 'undefined'") >= 4 and _app.count("typeof FF_ACCT !== 'undefined'") >= 1
+      and _case.count("typeof FF_ACCT") >= 4 and "typeof viewPrivacy === 'function'" in _app)
+check("the privacy page is routed and linked from the footer", "route === 'privacy'" in _app and 'href="#/privacy"' in _idx)
+check("database rules: owner only, fixed fields, everything else refused",
+      "request.auth.uid == uid" in _rules and "hasOnly(['v', 'data', 't', 'updated'])" in _rules
+      and "match /{everything=**}" in _rules and "allow read, write: if false" in _rules)
+_fields = re.search(r"const FIELDS = \[([^\]]+)\]", _acct).group(1)
+check("the rules allow exactly the fields the site syncs",
+      all(f in _rules for f in re.findall(r"'(\w+)'", _fields)))
+_ar = subprocess.run(["node", os.path.join(_repo, "account_test.js")], capture_output=True, text=True, timeout=120, cwd=_repo)
+check("account_test.js passes (sync merge rules)", _ar.returncode == 0, (_ar.stdout.strip().splitlines() or [_ar.stderr[-300:]])[-1])
+
+
+# ------------------------------------------------------------------------
 shutil.rmtree(work, ignore_errors=True)
 print("\n" + "=" * 68)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")
