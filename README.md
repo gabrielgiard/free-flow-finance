@@ -329,7 +329,7 @@ the spreadsheet library (ExcelJS 4.4.0 from cdnjs) is only downloaded when someo
 **Update `RF` in `docs/xlsx.js` when the 10-year Treasury yield moves** (currently 5.15%, 13 Nov 2026).
 
 `xlsx_test.py` builds real workbooks, recalculates them in LibreOffice and checks every value
-against the Python engine (`--all` does all 400 companies). It needs node with `exceljs` and
+against the Python engine (`--all` does every company). It needs node with `exceljs` and
 LibreOffice; without them it skips. Last full run: 4,007 checks, largest gap $0.0000.
 
 The DCF tab also shows **Model Checks**: the share of value beyond year 10 (usual range 50–75%),
@@ -357,6 +357,20 @@ signs in to an account that already has a different one, the person chooses whic
 merge rules are in `docs/account.js` (`FF_SYNCCORE`) and tested by `account_test.js`. The Firebase
 scripts (version 10.14.1) load only when someone clicks Sign in or comes back signed in. The privacy
 page is `#/privacy`; keep it accurate if you ever store anything new.
+
+## Companies priced abroad, and the earnings calendar
+
+Most companies trade in New York, directly or as US-listed shares. About seventy (Airbus, Hermès,
+Allianz, Nintendo, SK hynix, Moutai…) are priced from their home exchange instead. They are listed in
+**`foreign_listings.py`** with their Yahoo symbol and currency; each daily run fetches live exchange
+rates and converts to dollars (London quotes in pence, which the file handles). The fundamentals feed
+does not cover these, so their revenue, share count and net debt are reviewed by hand each results
+season. To add one: put it in a `companies/` file and add a line to `FOREIGN_LISTINGS`.
+
+The **earnings calendar** (`#/earnings`, also a line on each company page) comes from
+`fetch_earnings.py`, which runs in the daily workflow with the same Finnhub key and writes
+`earnings.json`. It covers US listings only (Finnhub's free calendar). Until the first run the page
+says the dates are on their way.
 
 ## Adding a new company
 
@@ -428,10 +442,13 @@ Two-stage unlevered DCF, applied identically to every company:
    Strong Buy ≥ +30%, Buy +12% to +30%, Hold −12% to +12%,
    Reduce −30% to −12%, Sell < −30%.
 
-Banks use a simplified variant — net revenue as the top line, distributable net
-income as the margin, net debt set to zero — because a conventional FCF DCF
-breaks when debt is the raw material rather than the financing. This is flagged
-on the Financials sector page and in every bank's comps table.
+Banks and insurers use an excess-return (residual income) model instead, because a
+conventional FCF DCF breaks when debt is the raw material rather than the
+financing: value = book value + the present value of each year's (return on
+equity − cost of equity) × book value, ten years explicit plus a terminal value.
+Inputs (book value, return on equity now and in year 5, payout) are in
+`companies/bank_inputs.py`; the cost of equity is the company's discount rate.
+The old cash-flow DCF is still computed and shown on each page as a cross-check.
 
 ## File map
 
@@ -449,6 +466,9 @@ on the Financials sector page and in every bank's comps table.
 | `docs/app.js`         | Router, search, table sorting, tabs         |
 | `docs/account.js`     | Optional sign-in, sync, watchlist, saved cases, privacy page |
 | `docs/auth-config.js` | Your Firebase settings (null = no sign-in)  |
+| `foreign_listings.py` | Companies priced from a home exchange, and live exchange rates |
+| `fetch_earnings.py`   | Earnings dates and results into `earnings.json` |
+| `companies/bank_inputs.py` | Book value, ROE and payout for the bank & insurer model |
 | `firestore.rules`     | Database security rules to paste into Firebase |
 | `SETUP-login.txt`     | Step-by-step: switching the sign-in on      |
 | `docs/data.js`        | Generated — do not edit by hand             |

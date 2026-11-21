@@ -54,15 +54,16 @@ function modelGaugeHTML(c) {
       aria-pressed="${MODEL.cur === k}" style="left:${P(v)}%" aria-label="${name}: ${FMT.usd(v)}. Show this model.">
       <em>${name} <b>${FMT.usd(v, 0)}</b></em></button>` : '';
   const gap = both ? m / d - 1 : null;
-  const cap = gap == null ? (d > 0 ? 'Peer multiples give no usable value here.' : 'The DCF gives no usable value here.')
+  const iname = c.ri ? (c.ri.kind === 'insurer' ? 'Insurer' : 'Bank') : 'DCF', ithe = c.ri ? 'the bank model' : 'the DCF';
+  const cap = gap == null ? (d > 0 ? 'Peer multiples give no usable value here.' : `${c.ri ? 'The bank model' : 'The DCF'} gives no usable value here.`)
     : Math.abs(gap) < 0.1 ? 'The two models broadly agree.'
-    : `Peer multiples come out ${Math.abs(gap * 100).toFixed(0)}% ${gap > 0 ? 'above' : 'below'} the DCF.`;
+    : `Peer multiples come out ${Math.abs(gap * 100).toFixed(0)}% ${gap > 0 ? 'above' : 'below'} ${ithe}.`;
   return `
   <div class="mg" role="group" aria-label="The two models against the price">
     <div class="mg-track">
       ${both ? `<span class="mg-span" style="left:${Math.min(P(d), P(m))}%;width:${Math.abs(P(m) - P(d)).toFixed(2)}%"></span>` : ''}
       <span class="mg-price" style="left:${P(p)}%"><em>Price ${FMT.usd(p, 0)}</em></span>
-      ${dot('dcf', d, 'DCF')}${dot('mx', m, 'Multiples')}
+      ${dot('dcf', d, iname)}${dot('mx', m, 'Multiples')}
     </div>
     <div class="mg-cap">${cap}</div>
   </div>`;

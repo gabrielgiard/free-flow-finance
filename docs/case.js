@@ -61,6 +61,7 @@ const FF_ENGINE = (() => {
   // Same scenario rules as engine.scenarios(), including the guarantee
   // that bear never prints above base nor bull below it.
   function scenarios(c) {
+    if (c.ri) return riScenarios(c);
     const base = dcf(c.rev, c.growth, c.m0, c.m1, c.wacc, c.tg, c.netdebt, c.shares);
     const bearM1 = Math.min(c.m1, Math.max(c.m1 - 0.020, 0.0));
     const bullWacc = c.wacc - 0.005;
@@ -80,6 +81,54 @@ const FF_ENGINE = (() => {
     };
   }
 
+  /* Banks and insurers: the excess-return model, a port of
+     engine.excess_return(). Value = book value today + the present value of
+     every year's return on equity above the cost of equity. */
+  function excessReturn(bv, roe0, roe1, ke, tg, pay, shares) {
+    if (ke <= tg + 0.010) ke = tg + 0.010;
+    pay = Math.min(Math.max(pay, 0), 1);
+    let b = bv, pv = 0, g5 = 0;
+    const rows = [];
+    for (let i = 0; i < NYEARS; i++) {
+      let roe, gb;
+      if (i < STAGE1) {
+        roe = roe0 + (roe1 - roe0) * ((i + 1) / STAGE1);
+        gb = roe * (1 - pay);
+        if (i === STAGE1 - 1) g5 = gb;
+      } else {
+        roe = roe1;
+        gb = g5 + (tg - g5) * ((i - STAGE1 + 1) / STAGE2);
+      }
+      const ri = b * (roe - ke);
+      const df = 1 / Math.pow(1 + ke, i + 1);
+      pv += ri * df;
+      rows.push({ year: i + 1, bv: b, roe, ri, df, gb });
+      b = b * (1 + gb);
+    }
+    const tv = (roe1 - ke) * b / (ke - tg);
+    const pvTv = tv / Math.pow(1 + ke, NYEARS);
+    const equity = bv + pv + pvTv;
+    return {
+      rows, equity, pvTv, pvRi: pv, bv10: b,
+      perShare: shares ? equity / shares : 0,
+      tvShare: equity > 0 ? pvTv / equity : 0,
+    };
+  }
+
+  function riScenarios(c) {
+    const r = c.ri, ke = c.wacc;
+    const base = excessReturn(r.bv, r.roe0, r.roe1, ke, c.tg, r.pay, c.shares).perShare;
+    const bullKe = ke - 0.005, bullTg = Math.min(c.tg + 0.0025, bullKe - 0.005);
+    const bull = excessReturn(r.bv, r.roe0, r.roe1 + 0.020, bullKe, bullTg, r.pay, c.shares).perShare;
+    const bearTg = Math.max(c.tg - 0.005, 0);
+    const bear = excessReturn(r.bv, r.roe0, r.roe1 - 0.020, ke + 0.005, bearTg, r.pay, c.shares).perShare;
+    return {
+      base, bull: Math.max(bull, base), bear: Math.min(bear, base),
+      bearInputs: { dg: 0, m1: r.roe1 - 0.020, wacc: ke + 0.005, tg: bearTg },
+      bullInputs: { dg: 0, m1: r.roe1 + 0.020, wacc: bullKe, tg: bullTg },
+    };
+  }
+
   function rate(upside) {
     if (upside >= 0.30) return 'Strong Buy';
     if (upside >= 0.12) return 'Buy';
@@ -88,7 +137,7 @@ const FF_ENGINE = (() => {
     return 'Sell';
   }
 
-  return { project, dcf, scenarios, rate };
+  return { project, dcf, excessReturn, scenarios, rate };
 })();
 
 /* ------------------------------------------------------------- panel --- */
@@ -103,6 +152,7 @@ function caseClamp(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
 /* Slider definitions for one company. Ranges are wide enough to express a
    real disagreement, narrow enough that the far ends are still a business. */
 function caseSliders(c) {
+  if (c.ri) return caseSlidersBank(c);
   const avgG = caseAvg(c.growth);
   const minG = Math.min(...c.growth);
   const g = {
@@ -127,7 +177,37 @@ function caseSliders(c) {
     min: 0, max: Math.max(0.05, c.tg + 0.01), step: 0.001, model: c.tg,
     fmt: v => casePts(v) + '%', modelFmt: casePts(c.tg) + '%',
   };
+  g.bet = true;
   return [g, m, w, t];
+}
+
+/* Banks and insurers: the same four slots, the excess-return model's
+   levers. m1 holds the year-5 return on equity, wacc the cost of equity and
+   dg a change to the share of profit paid out, so share links keep working. */
+function caseSlidersBank(c) {
+  const r = c.ri;
+  const pay = {
+    k: 'dg', label: 'Profit paid out', note: 'dividends + buybacks; the rest builds book value',
+    min: -r.pay, max: 1 - r.pay, step: 0.01, model: 0,
+    fmt: v => casePts(r.pay + v, 0) + '%', modelFmt: casePts(r.pay, 0) + '%',
+  };
+  const roe = {
+    k: 'm1', label: 'Return on equity by year 5', note: `today ${casePts(r.roe0)}%`, bet: true,
+    min: Math.max(-0.05, Math.round((r.roe1 - 0.12) * 200) / 200),
+    max: Math.min(0.45, Math.round((r.roe1 + 0.12) * 200) / 200),
+    step: 0.0025, model: r.roe1, fmt: v => casePts(v) + '%', modelFmt: casePts(r.roe1) + '%',
+  };
+  const ke = {
+    k: 'wacc', label: 'Cost of equity', note: 'the return shareholders require',
+    min: Math.min(0.05, c.wacc - 0.02), max: Math.max(0.16, c.wacc + 0.03),
+    step: 0.001, model: c.wacc, fmt: v => casePts(v) + '%', modelFmt: casePts(c.wacc) + '%',
+  };
+  const t = {
+    k: 'tg', label: 'Long-term growth', note: 'forever, after year 10',
+    min: 0, max: Math.max(0.05, c.tg + 0.01), step: 0.001, model: c.tg,
+    fmt: v => casePts(v) + '%', modelFmt: casePts(c.tg) + '%',
+  };
+  return [roe, ke, pay, t];
 }
 
 function caseHTML(c) {
@@ -143,11 +223,11 @@ function caseHTML(c) {
         <input type="range" id="${id}-${s.k}" data-k="${s.k}"
                min="${s.min}" max="${s.max}" step="${s.step}" value="${s.model}">
         <span class="cs-tick cs-tick-model" aria-hidden="true"></span>
-        ${s.k === 'dg' ? '<span class="cs-tick cs-tick-market" aria-hidden="true" hidden></span>' : ''}
+        ${s.bet ? '<span class="cs-tick cs-tick-market" aria-hidden="true" hidden></span>' : ''}
       </div>
       <div class="cs-foot">
         <span><i class="cs-key-model"></i>model ${s.modelFmt}</span>
-        ${s.k === 'dg' ? '<span class="cs-market-label" hidden><i class="cs-key-market"></i><span></span></span>' : ''}
+        ${s.bet ? '<span class="cs-market-label" hidden><i class="cs-key-market"></i><span></span></span>' : ''}
       </div>
     </div>`).join('');
 
@@ -206,6 +286,9 @@ function caseInputs(c, s) {
   };
 }
 function caseValue(c, s) {
+  if (c.ri) {
+    return FF_ENGINE.excessReturn(c.ri.bv, c.ri.roe0, s.m1, s.wacc, s.tg, c.ri.pay + s.dg, c.shares);
+  }
   const i = caseInputs(c, s);
   return FF_ENGINE.dcf(c.rev, i.growth, c.m0, i.m1, i.wacc, i.tg, c.netdebt, c.shares);
 }
@@ -214,7 +297,9 @@ function caseValue(c, s) {
    the visitor's other assumptions held. Bisection: the value is monotonic
    in growth whenever the margin has one sign, which is every real case. */
 function caseImpliedShift(c, s, lo = -0.5, hi = 1.0) {
-  const f = dg => caseValue(c, { ...s, dg }).perShare - c.price;
+  const k = c.ri ? 'm1' : 'dg';
+  if (c.ri) { lo = -0.30; hi = 0.80; }
+  const f = v => caseValue(c, { ...s, [k]: v }).perShare - c.price;
   let flo = f(lo), fhi = f(hi);
   if (!isFinite(flo) || !isFinite(fhi) || flo * fhi > 0) return null;
   for (let k = 0; k < 60; k++) {
@@ -227,12 +312,17 @@ function caseImpliedShift(c, s, lo = -0.5, hi = 1.0) {
 /* Which assumptions moved the value, and by how much. Changes are applied
    one at a time in a fixed order, so the pieces add up exactly to the total. */
 function caseAttribution(c, s, model) {
-  const order = [
+  const order = c.ri ? [
+    ['m1', d => `a return on equity ${casePts(Math.abs(d))} pts ${d > 0 ? 'higher' : 'lower'}`],
+    ['wacc', d => `a cost of equity ${casePts(Math.abs(d), 2)} pts ${d > 0 ? 'higher' : 'lower'}`],
+    ['dg', d => `paying out ${casePts(Math.abs(d), 0)} pts ${d > 0 ? 'more' : 'less'} of profit`],
+  ] : [
     ['dg', d => `${casePts(Math.abs(d))} pts ${d > 0 ? 'more' : 'less'} revenue growth a year`],
     ['m1', d => `a year-5 margin ${casePts(Math.abs(d))} pts ${d > 0 ? 'higher' : 'lower'}`],
     ['wacc', d => `a discount rate ${casePts(Math.abs(d), 2)} pts ${d > 0 ? 'higher' : 'lower'}`],
     ['tg', d => `long-term growth ${casePts(Math.abs(d), 2)} pts ${d > 0 ? 'higher' : 'lower'}`],
   ];
+  if (c.ri) order.push(['tg', d => `long-term growth ${casePts(Math.abs(d), 2)} pts ${d > 0 ? 'higher' : 'lower'}`]);
   let cur = { ...model };
   let prev = caseValue(c, cur).perShare;
   const parts = [];
@@ -258,7 +348,9 @@ function caseUpdate(sec) {
   if (s.wacc < s.tg + 0.01) {
     if (st.last === 'tg') s.tg = Math.max(0, s.wacc - 0.01);
     else s.wacc = s.tg + 0.01;
-    hint.textContent = 'The discount rate has to stay at least 1 point above long-term growth — otherwise the company would be worth infinity.';
+    hint.textContent = c.ri
+      ? 'The cost of equity has to stay at least 1 point above long-term growth — otherwise the company would be worth infinity.'
+      : 'The discount rate has to stay at least 1 point above long-term growth — otherwise the company would be worth infinity.';
     hint.hidden = false;
   }
 
@@ -326,21 +418,29 @@ function caseUpdate(sec) {
   const mk = sec.querySelector('.case-market');
   const tick = sec.querySelector('.cs-tick-market');
   const mlabel = sec.querySelector('.cs-market-label');
-  const gs = sliders[0];
+  const gs = sliders.find(x => x.bet);
   const avgG = caseAvg(c.growth);
   if (shift == null) {
-    mk.textContent = `No growth rate gets this model to today's ${FMT.usd(c.price)} with your other settings — the price is being justified by something else (margins, a lower discount rate, or optimism).`;
+    mk.textContent = c.ri
+      ? `No return on equity gets this model to today's ${FMT.usd(c.price)} with your other settings.`
+      : `No growth rate gets this model to today's ${FMT.usd(c.price)} with your other settings — the price is being justified by something else (margins, a lower discount rate, or optimism).`;
     tick.hidden = true; mlabel.hidden = true;
   } else {
-    const implied = avgG + shift;
-    mk.innerHTML = `<b>Market's bet:</b> at ${FMT.usd(c.price)}, the price implies about
-      <b>${casePts(implied)}% revenue growth a year</b> for five years, with your margin and discount rate.
-      ${Math.abs(shift - s.dg) < 0.0025 ? 'Your growth assumption matches it.'
-        : `That's ${casePts(Math.abs(implied - (avgG + s.dg)))} pts ${implied > avgG + s.dg ? 'more' : 'less'} than yours.`}`;
+    const implied = c.ri ? shift : avgG + shift;
+    const mine = c.ri ? s.m1 : avgG + s.dg;
+    mk.innerHTML = c.ri
+      ? `<b>Market's bet:</b> at ${FMT.usd(c.price)} (${(c.price / (c.ri.bv / c.shares)).toFixed(2)}x book value), the price implies a
+        <b>${casePts(implied)}% return on equity</b> from year 5, with your cost of equity.
+        ${Math.abs(implied - mine) < 0.0025 ? 'Your assumption matches it.'
+          : `That's ${casePts(Math.abs(implied - mine))} pts ${implied > mine ? 'more' : 'less'} than yours.`}`
+      : `<b>Market's bet:</b> at ${FMT.usd(c.price)}, the price implies about
+        <b>${casePts(implied)}% revenue growth a year</b> for five years, with your margin and discount rate.
+        ${Math.abs(shift - s.dg) < 0.0025 ? 'Your growth assumption matches it.'
+          : `That's ${casePts(Math.abs(implied - mine))} pts ${implied > mine ? 'more' : 'less'} than yours.`}`;
     const p = (shift - gs.min) / (gs.max - gs.min);
     const inRange = p >= 0 && p <= 1;
     tick.hidden = !inRange;
-    sec.querySelector('.cs-row[data-k="dg"]').style.setProperty('--pk', caseClamp(p, 0, 1));
+    sec.querySelector(`.cs-row[data-k="${gs.k}"]`).style.setProperty('--pk', caseClamp(p, 0, 1));
     mlabel.hidden = false;
     mlabel.querySelector('span').textContent = inRange
       ? `market's bet ${casePts(implied)}%`
@@ -352,6 +452,8 @@ function caseUpdate(sec) {
   if (!meaningful) {
     warn.textContent = 'With these assumptions the business is worth less than its debt, so a per-share value isn\'t meaningful.';
     warn.hidden = false;
+  } else if (c.ri) {
+    warn.hidden = true;
   } else if (val.tvShare > 1) {
     warn.textContent = 'All of this value comes from after year 10 — the next ten years burn cash. Treat it as a long-range bet rather than a measurement.';
     warn.hidden = false;
@@ -399,6 +501,13 @@ function caseShareText(st) {
   const { c, s, result } = st;
   const link = `${CASE_SITE}company/${encodeURIComponent(c.t)}/?case=${caseEncode(s)}`;
   const g = casePts(caseAvg(c.growth) + s.dg, 0);
+  if (c.ri) {
+    return {
+      link,
+      text: `My ${c.t} case: ${casePts(s.m1)}% return on equity, ${casePts(s.wacc)}% cost of equity → ${result.meaningful ? FMT.usd(result.fv) : 'N/M'} fair value` +
+            `${result.meaningful ? ` (${FMT.pct(result.up, 0)} vs ${FMT.usd(c.price)})` : ''}. FreeFlow Finance's model says ${fvStr(dcfOf(c).fv)}. What's your take?\n${link}`,
+    };
+  }
   const fvTxt = result.meaningful ? FMT.usd(result.fv) : 'N/M';
   const upTxt = result.meaningful ? ` (${FMT.pct(result.up, 0)} vs ${FMT.usd(c.price)})` : '';
   return {
@@ -453,7 +562,7 @@ function mountCasePanels(root) {
     const c = FF_DATA.companies.find(x => x.t === sec.dataset.key);
     if (!c) return;
     const sliders = caseSliders(c);
-    const model = { dg: 0, m1: c.m1, wacc: c.wacc, tg: c.tg };
+    const model = { dg: 0, m1: c.ri ? c.ri.roe1 : c.m1, wacc: c.wacc, tg: c.tg };
     const sc = FF_ENGINE.scenarios(c);
     const st = { c, sliders, model, s: { ...model }, preset: 'model', last: null, sc };
     CASE_STATE.set(sec, st);

@@ -29,6 +29,15 @@ const result = vm.runInContext(`(() => {
     }
     const r = FF_ENGINE.rate(sc.base / c.price - 1);
     if (r !== c.rating) bad.push(c.t + ' rating: js ' + r + ' vs published ' + c.rating);
+    if (c.ri) {
+      // banks and insurers: the cash-flow DCF cross-check must match too
+      const cf = FF_ENGINE.dcf(c.rev, c.growth, c.m0, c.m1, c.wacc, c.tg, c.netdebt, c.shares).perShare;
+      const d2 = Math.abs(Math.round(cf * 100) / 100 - c.cf.fv);
+      worst = Math.max(worst, d2); n++;
+      if (d2 > 0.005) bad.push(c.t + ' cash-flow cross-check: js ' + cf.toFixed(4) + ' vs published ' + c.cf.fv);
+      if (!c.erm || Math.abs(c.erm.equity - FF_ENGINE.excessReturn(c.ri.bv, c.ri.roe0, c.ri.roe1, c.wacc, c.tg, c.ri.pay, c.shares).equity) > 0.06)
+        bad.push(c.t + ' excess-return equity does not match');
+    }
   }
   return { companies: FF_DATA.companies.length, checks: n, worst, bad };
 })()`, ctx);

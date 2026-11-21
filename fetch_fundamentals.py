@@ -40,7 +40,8 @@ from fetch_prices import FOREIGN, QUOTE_ALIASES     # noqa: E402
 # SKIP and SYMBOL_MAP from fetch_prices.py, which no longer has them -- the
 # import crashed on every run, and the old workflow's "|| echo" hid it, so
 # fundamentals had silently stopped updating.
-SKIP = {t for t, (ysym, _fx) in FOREIGN.items() if ysym != t}
+from foreign_listings import FOREIGN_LISTINGS     # noqa: E402
+SKIP = {t for t, (ysym, _fx) in FOREIGN.items() if ysym != t} | set(FOREIGN_LISTINGS)
 SYMBOL_MAP = {}
 
 PROFILE = "https://finnhub.io/api/v1/stock/profile2?symbol={}&token={}"

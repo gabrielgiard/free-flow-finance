@@ -19,6 +19,9 @@ const MODEL_KEY = 'freeflow.model';
 const MODEL_FIELDS = ['fv', 'fv_bear', 'fv_bull', 'upside', 'up_bear', 'up_bull', 'rating'];
 const MODEL = { cur: 'dcf' };
 function modelName(m = MODEL.cur) { return m === 'mx' ? 'Multiples' : 'DCF'; }
+/* The intrinsic model behind a company's headline value: a cash-flow DCF,
+   or for banks and insurers the excess-return model. */
+function intrinsicName(c) { return c.ri ? 'Excess return' : 'DCF'; }
 function dcfOf(c) { return c._dcf || c; }
 function applyModel(mode) {
   const want = mode === 'mx' && FF_DATA.companies.some(c => c.mx) ? 'mx' : 'dcf';
@@ -582,7 +585,8 @@ function viewCompany(ticker) {
 
   const mx = MODEL.cur === 'mx' && c.mx;
   const MX_LABEL = { model: 'Peer Set', dcf: 'Multiples & Valuation' };
-  const tabsHTML = TABS.map(([id, label0]) => [id, mx && MX_LABEL[id] ? MX_LABEL[id] : label0]).map(([id, label]) =>
+  if (!mx && c.erm) MX_LABEL.dcf = c.ri && c.ri.kind === 'insurer' ? 'Insurer Valuation' : 'Bank Valuation';
+  const tabsHTML = TABS.map(([id, label0]) => [id, (mx || (id === 'dcf' && c.erm)) && MX_LABEL[id] ? MX_LABEL[id] : label0]).map(([id, label]) =>
     `<div class="co-tab ${active === id ? 'active' : ''}" data-tab="${id}" data-ticker="${ticker}">${label}</div>`
   ).join('');
 
@@ -617,10 +621,11 @@ function viewCompany(ticker) {
           <div class="co-price">${FMT.usd(c.price)}<span class="cur"> ${priceDateLabel(c)}</span></div>
           <div class="co-fv-row">
             <span class="rating-pill ${ratingClass(c.rating)}" data-swap="co-rating">${c.rating}</span>
-            <span class="co-fv"><small>${MODEL.cur === 'mx' ? 'Multiples' : 'DCF'}</small> <span data-num="co-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</span></span>
+            <span class="co-fv"><small>${MODEL.cur === 'mx' ? 'Multiples' : intrinsicName(c)}</small> <span data-num="co-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</span></span>
             <span class="co-up ${upClass(c.upside)}" data-num="co-up" data-val="${c.upside}" data-fmt="pct">${FMT.pct(c.upside)}</span>
           </div>
           ${valuationStripHTML(c)}
+          ${typeof earnChipHTML === 'function' ? earnChipHTML(c) : ''}
           <div class="co-actions">
           ${typeof FF_ACCT !== 'undefined' ? FF_ACCT.watchBtnHTML(c) : ''}
           ${typeof viewCompare === 'function' ? `<a class="co-share" href="#/compare/${encodeURIComponent(c.t)}" aria-label="Compare ${escapeHtml(c.n)} with another company">
@@ -738,6 +743,7 @@ function panelModel(c) {
 }
 
 function panelDCF(c) {
+  if (c.erm) return panelExcessReturn(c);
   return `
   <div class="two-col">
     <div>
@@ -766,6 +772,130 @@ function panelDCF(c) {
         </div>
       </div>
       ${dcfChecksHTML(c)}
+      ${xlsxCardHTML(c)}
+    </div>
+  </div>`;
+}
+
+
+/* ===================== banks and insurers: excess return ================ */
+const H4 = 'font-family:var(--font-display);font-size:19px;font-weight:400;color:var(--text);letter-spacing:-.01em;';
+
+function ermBridgeHTML(c) {
+  const e = c.erm, line = (label, v, strong, dim) => `
+    <div class="erm-line${strong ? ' strong' : ''}${dim ? ' dim' : ''}"><span>${label}</span><span class="mono">${v}</span></div>`;
+  const parts = [
+    { label: 'Book value today', val: e.bv, color: 'var(--violet-700)' },
+    { label: 'PV of excess returns, years 1–10', val: e.pv_ri, color: 'var(--violet-500)' },
+    { label: 'PV of excess returns after year 10', val: e.pv_tv, color: 'var(--lilac)' },
+  ];
+  const max = Math.max(...parts.map(p => Math.abs(p.val)), e.equity, 1e-9);
+  const bars = parts.map(p => `
+    <div class="erm-bar">
+      <div class="erm-bar-h"><span>${p.label}</span><span class="mono">${p.val < 0 ? '−' : ''}${FMT.usdB(Math.abs(p.val))}</span></div>
+      <div class="erm-track"><div class="grow${p.val < 0 ? ' neg' : ''}" style="width:${(Math.abs(p.val) / max * 100).toFixed(1)}%;background:${p.val < 0 ? 'var(--red)' : p.color}"></div></div>
+    </div>`).join('');
+  return `${bars}
+    ${line('Equity value', FMT.usdB(e.equity), true)}
+    ${line('÷ Shares outstanding', FMT.num(c.shares, 2) + 'B', false, true)}
+    <div class="erm-line fv"><span>Fair value per share</span><span class="mono">${fvStr(c.fv)}</span></div>
+    <div class="erm-pb">
+      <div><span>Book value per share</span><b>${FMT.usd(c.bvps)}</b></div>
+      <div><span>Fair price-to-book</span><b>${FMT.x(e.pb_fair)}</b></div>
+      <div><span>Market price-to-book</span><b>${FMT.x(c.pb)}</b></div>
+    </div>`;
+}
+
+function ermTableHTML(c) {
+  const e = c.erm, pc = v => (v * 100).toFixed(1) + '%';
+  const rows = e.rows.map(r => `
+    <tr class="${r.stage === 2 ? 'fade' : ''}">
+      <td>${r.y}</td><td>${FMT.usdB(r.bv)}</td>
+      <td>${pc(r.roe)} <small class="${r.roe - e.ke >= 0 ? 'up' : 'down'}">${(r.roe - e.ke >= 0 ? '+' : '−') + (Math.abs(r.roe - e.ke) * 100).toFixed(1)}</small></td>
+      <td>${r.ri < 0 ? '−' : ''}${FMT.usdB(Math.abs(r.ri))}</td><td>${r.pv < 0 ? '−' : ''}${FMT.usdB(Math.abs(r.pv))}</td>
+    </tr>`).join('');
+  return `<div class="table-wrap erm-table"><table class="ff-table">
+    <thead><tr><th>Year</th><th>Book value</th><th>ROE <small>vs ${pc(e.ke)}</small></th><th>Excess return</th><th>Present value</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function ermChecks(c) {
+  const e = c.erm, r = c.ri, out = [];
+  const spread = r.roe1 - e.ke;
+  out.push(spread >= 0
+    ? { ok: true, k: 'Return vs cost of equity', v: `+${(spread * 100).toFixed(1)} pts`,
+        t: `The model has ${c.n.split(' ')[0]} earning ${FMT.pctPlain(r.roe1)} on equity from year 5, above the ${FMT.pctPlain(e.ke)} shareholders require, so it is worth more than its book value.` }
+    : { ok: false, k: 'Return vs cost of equity', v: `−${(Math.abs(spread) * 100).toFixed(1)} pts`,
+        t: `A ${FMT.pctPlain(r.roe1)} return on equity is below the ${FMT.pctPlain(e.ke)} shareholders require, so each year destroys a little value and the shares are worth less than book value.` });
+  const fromBook = e.equity > 0 ? e.bv / e.equity : 0;
+  out.push({ ok: true, info: true, k: 'Value already on the balance sheet', v: FMT.pctPlain(Math.min(fromBook, 9.99), 0),
+    t: 'The share of the fair value that is simply today\'s book value. The rest is the excess return the model expects. Banks are usually 50–90% book; a low share means the value leans on future returns.' });
+  if (e.tv_share > 0.5) out.push({ ok: false, k: 'Value after year 10', v: FMT.pctPlain(e.tv_share, 0),
+    t: 'More than half the value comes from excess returns after year 10, which depends on the return on equity staying high for decades.' });
+  const roeMove = r.roe1 - r.roe0;
+  if (Math.abs(roeMove) >= 0.03) out.push({ ok: false, k: 'Return on equity path', v: `${FMT.pctPlain(r.roe0)} → ${FMT.pctPlain(r.roe1)}`,
+    t: roeMove > 0 ? 'The model assumes a clear improvement in profitability. That is the assumption to test first.' : 'The model assumes today\'s returns come down, as unusually strong years usually do.' });
+  out.push(c.tg > 0.035
+    ? { ok: false, k: 'Long-term growth', v: FMT.pctPlain(c.tg), t: 'Above 3.5% a year forever is faster than the economy can grow for long.' }
+    : { ok: true, k: 'Long-term growth', v: FMT.pctPlain(c.tg), t: 'At or below long-run economic growth.' });
+  return out;
+}
+
+function panelExcessReturn(c) {
+  const e = c.erm, r = c.ri;
+  const kind = r.kind === 'insurer' ? 'insurer' : 'bank';
+  const g = e.grid;
+  const flags = ermChecks(c), nflag = flags.filter(x => !x.ok).length;
+  const cf = c.cf || {};
+  return `
+  <div class="erm-intro card">
+    <b>How a ${kind} is valued here.</b> A cash-flow DCF does not work for a ${kind}: ${kind === 'bank' ? 'deposits and loans are the business itself, not its financing' : 'the float it invests is the business itself, not its financing'}, so there is no meaningful “free cash flow”.
+    What matters is how much it earns on its shareholders' money. We start from book value, the shareholders' equity on the balance sheet, and add the present value of every future year's <i>excess return</i>: return on equity above the ${FMT.pctPlain(e.ke)} shareholders require.
+    A ${kind} that earns exactly its cost of equity is worth its book value.
+  </div>
+  <div class="two-col">
+    <div>
+      <h4 style="${H4}margin-bottom:16px;">Excess Return Build-Up</h4>
+      <div class="card">${ermBridgeHTML(c)}</div>
+      <h4 style="${H4}margin:28px 0 14px;">Return on Equity, Year by Year</h4>
+      ${ermTableHTML(c)}
+      <p class="erm-note">Return on equity moves from ${FMT.pctPlain(r.roe0)} today to ${FMT.pctPlain(r.roe1)} by year 5 and holds. Each year ${FMT.pctPlain(1 - r.pay, 0)} of profit stays in the business and builds book value; the other ${FMT.pctPlain(r.pay, 0)} goes to shareholders as dividends and buybacks. After year 10 the excess return grows at ${FMT.pctPlain(c.tg)} a year.</p>
+      <h4 style="${H4}margin:28px 0 14px;">Sensitivity: Fair Value by Cost of Equity &amp; Return on Equity</h4>
+      <div class="table-wrap" style="padding:18px;">${sensitivityGridHTML({ waccs: g.kes, tgs: g.roes, values: g.values }, c.price, {
+        corner: 'Cost of equity ↓ / ROE →', rn: 'cost of equity', cn: 'year-5 return on equity', base: 'the model' })}</div>
+      <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Green cells sit above today's ${FMT.usd(c.price)}, red below. For a ${kind} the two numbers that matter are the return it earns and the return its owners demand; a point on either moves the value a lot.</p>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="label" style="font-size:12px;color:var(--text-muted);letter-spacing:.01em;margin-bottom:16px;">Target Price · excess-return model</div>
+        <div style="font-family:var(--font-mono);font-size:38px;color:var(--gold-soft);line-height:1;" data-num="dcf-fv" data-val="${c.fv}" data-fmt="usd">${fvStr(c.fv)}</div>
+        <div style="margin-top:10px;"><span class="rating-pill ${ratingClass(c.rating)}">${c.rating}</span> <span class="mono ${upClass(c.upside)}" style="margin-left:10px;font-size:13px;">${FMT.pct(c.upside)} vs current price</span></div>
+      </div>
+      <h4 style="${H4}margin-bottom:14px;">Bear / Base / Bull Range</h4>
+      <div class="card">
+        ${rangeBarHTML(c.fv_bear, c.fv, c.fv_bull, c.price)}
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px;">
+          <div class="stat-cell" style="padding:14px;"><div class="label">Bear</div><div class="value" style="font-size:16px;">${fvStr(c.fv_bear)}</div><div class="sub ${upClass(c.up_bear)}">${FMT.pct(c.up_bear)}</div></div>
+          <div class="stat-cell" style="padding:14px;"><div class="label">Base</div><div class="value" style="font-size:16px;color:var(--gold-soft);">${fvStr(c.fv)}</div><div class="sub ${upClass(c.upside)}">${FMT.pct(c.upside)}</div></div>
+          <div class="stat-cell" style="padding:14px;"><div class="label">Bull</div><div class="value" style="font-size:16px;">${fvStr(c.fv_bull)}</div><div class="sub ${upClass(c.up_bull)}">${FMT.pct(c.up_bull)}</div></div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-dim);margin-top:12px;">Bear: return on equity 2 points lower and a cost of equity half a point higher. Bull: the reverse.</p>
+      </div>
+      <h4 style="${H4}margin:28px 0 14px;">Model Checks</h4>
+      <div class="card chk">
+        <p class="chk-lede">${nflag ? `${nflag} thing${nflag > 1 ? 's' : ''} to keep in mind when reading this valuation.` : 'This valuation passes the standard checks for a ' + kind + '.'}</p>
+        <ul class="chk-list">${flags.map(x => `
+          <li class="${x.info ? 'info' : x.ok ? 'ok' : 'flag'}">
+            <span class="chk-ico" aria-hidden="true">${x.info ? 'i' : x.ok ? '✓' : '!'}</span>
+            <div><div class="chk-h"><b>${x.k}</b><span class="mono">${x.v}</span></div><p>${x.t}</p></div>
+          </li>`).join('')}
+        </ul>
+      </div>
+      <details class="card erm-cross">
+        <summary><span>Cash-flow DCF cross-check</span><b class="mono">${fvStr(cf.fv)}</b></summary>
+        <p>The standard ten-year DCF run on net revenue and distributable income gives ${fvStr(cf.fv)} (${escapeHtml(cf.rating || '')}). It ignores that a growing ${kind} has to keep part of its profit to grow its balance sheet, which is why it usually comes out higher. It is shown only as a cross-check; the rating uses the excess-return model.</p>
+        ${dcfWaterfallHTML(c.dcf, c.shares)}
+      </details>
       ${xlsxCardHTML(c)}
     </div>
   </div>`;
@@ -860,8 +990,8 @@ function xlsxCardHTML(c) {
   if (typeof FF_XLSX === 'undefined') return '';
   return `
       <div class="card xl-card">
-        <div class="xl-h"><b>Take the model with you</b><span>Excel · 5 sheets</span></div>
-        <p>The same DCF in live formulas: bear, base and bull cases with a switch, the ten-year projection, three sensitivity tables, a CAPM check on the discount rate and the peer comparison with quartiles. Change any blue cell and everything updates.</p>
+        <div class="xl-h"><b>Take the model with you</b><span>Excel · ${c.ri ? 6 : 5} sheets</span></div>
+        <p>${c.ri ? `The bank model in live formulas (book value, return on equity, the excess-return projection and a sensitivity table), plus the cash-flow DCF cross-check, ` : 'The same DCF in live formulas: '} bear, base and bull cases with a switch, the ten-year projection, sensitivity tables, a CAPM check on the discount rate and the peer comparison with quartiles. Change any blue cell and everything updates.</p>
         <button type="button" class="btn btn-violet" data-xlsx="${c.t}"><span>Download ${escapeHtml(c.t)} model (.xlsx)</span></button>
       </div>`;
 }
@@ -881,7 +1011,7 @@ function multiplesHTML(c) {
           <div class="mx-s">${meaningful ? `${FMT.pct(m.upside)} vs. ${FMT.usd(c.price)} · range ${FMT.usd(m.fv_bear)} to ${FMT.usd(m.fv_bull)}` : ''}</div>
         </div>
         <div class="mx-vs">
-          <div><span>DCF</span><b>${fvStr(dcfOf(c).fv)}</b></div>
+          <div><span>${intrinsicName(c)}</span><b>${fvStr(dcfOf(c).fv)}</b></div>
           <div><span>Peer multiples</span><b>${meaningful ? FMT.usd(m.fv) : 'N/M'}</b></div>
         </div>
       </div>
@@ -1141,7 +1271,7 @@ function viewMethodology() {
     ['What is a discounted cash flow (DCF), in plain English?', 'It\'s a way of estimating what a company is worth today by adding up all the cash it\'s expected to generate in the future, and discounting each future dollar back to a present-day value — because a dollar next year is worth less than a dollar right now.'],
     ['What is WACC?', 'The Weighted Average Cost of Capital: roughly, the return a company needs to generate to satisfy both its lenders and its shareholders. It\'s the discount rate we use to bring future cash flow back to today\'s value. Riskier or smaller companies get a higher WACC; stable, large companies get a lower one.'],
     ['Why does the "terminal value" matter so much?', 'For most companies here, more than 70% of the calculated value comes from the terminal value — the estimate of everything that happens after year 10. That is completely normal in a DCF, but it also means the model rests heavily on a single assumption (the terminal growth rate), which is exactly why we show a sensitivity grid on every company page.'],
-    ['Why do banks and payment networks get modeled differently?', 'A standard free cash flow DCF assumes debt is financing. For a bank, deposits and lending are the actual business, so a conventional DCF breaks. We use total net revenue and a distributable net income margin instead — a simplification we flag directly on the Financials sector page and every bank\'s Comparables tab.'],
+    ['Why do banks and payment networks get modeled differently?', 'A standard free cash flow DCF assumes debt is financing. For a bank, deposits and lending are the actual business, so a conventional DCF breaks. So banks and insurers are valued with an excess-return model instead: book value plus the present value of every future year\'s return on equity above what shareholders require. A bank earning exactly its cost of equity is worth its book value. Payment networks, exchanges and asset managers are ordinary businesses and get the normal DCF.'],
     ['Are the ratings real investment advice?', 'No. FreeFlow Finance is an educational project built by a high school student. The ratings are generated mechanically from one model\'s output, not from proprietary research, management access, or professional judgment a licensed analyst would apply. Treat every page here as a way to learn how valuation works, not as a signal to trade on.'],
     ['Where does the company and market data come from?', 'Company financials, share counts, and prices are sourced from public filings and financial data providers as of the date noted on the homepage; figures for early-stage or recently listed companies (like the frontier sector) can be especially rough given limited history. Every projection beyond that is our own assumption, built the same way for every company.'],
     ['How carefully is the company information checked?', 'Share prices update automatically. The written material — leadership, history, segments, analyst views — is checked by hand, and priority goes to the claims most likely to be wrong or most damaging if they were: named analysts with specific price targets, recent corporate events, and current CEOs, since leadership changes and a written profile can quietly go stale. That is triage, not a guarantee. If you spot something out of date, it probably is, and I would rather hear about it than not.'],

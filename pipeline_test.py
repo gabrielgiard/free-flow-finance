@@ -652,6 +652,54 @@ check("account_test.js passes (sync merge rules)", _ar.returncode == 0, (_ar.std
 
 
 # ------------------------------------------------------------------------
+section("Bank model, global listings and the earnings calendar")
+import datetime as _dt  # noqa: E402
+import engine as _eng  # noqa: E402
+_v = _eng.excess_return(100.0, 0.10, 0.10, 0.10, 0.02, 0.6, 1.0)["per_share"]
+check("a bank earning exactly its cost of equity is worth its book value", abs(_v - 100.0) < 1e-9, _v)
+_hi = _eng.excess_return(100.0, 0.15, 0.15, 0.10, 0.02, 0.6, 1.0)["per_share"]
+_lo = _eng.excess_return(100.0, 0.07, 0.07, 0.10, 0.02, 0.6, 1.0)["per_share"]
+check("above the cost of equity it is worth more than book, below it less", _hi > 100 > _lo, (_hi, _lo))
+import build as _b  # noqa: E402
+_cos = _b.load_companies()
+_ri = [c for c in _cos if c.get("ri")]
+check("banks and insurers carry excess-return inputs", len(_ri) >= 55, len(_ri))
+check("every bank input passes validation", not [e for e in _b.validate(_cos) if "bank input" in e or "book value" in e])
+check("the library has 500 companies with unique tickers", len(_cos) == 500 and len({c["t"] for c in _cos}) == 500, len(_cos))
+from foreign_listings import FOREIGN_LISTINGS as _FL, to_usd as _usd, FALLBACK_USD as _FB  # noqa: E402
+check("every home-exchange listing is a company in the library", set(_FL) <= {c["t"] for c in _cos}, set(_FL) - {c["t"] for c in _cos})
+check("London prices in pence are divided by 100", abs(_usd("RR") - _FB["GBP"] / 100) < 1e-12)
+check("every listing's currency has a fallback rate", all(cur.replace("GBp", "GBP") in _FB for _, cur in _FL.values()))
+import fetch_prices as _fp, fetch_history as _fh, fetch_fundamentals as _ff  # noqa: E402
+check("prices and charts use the same home-exchange table", {t: y for t, (y, _) in _fp.FOREIGN.items()} == {t: y for t, (y, _) in _fh.FOREIGN.items()})
+check("the fundamentals feed skips every home-exchange listing", set(_FL) <= _ff.SKIP)
+import fetch_earnings as _fe  # noqa: E402
+_row = _fe.clean({"date": "2026-12-01", "hour": "amc", "quarter": 4, "year": 2026, "epsEstimate": 1.234567, "revenueEstimate": 5.5e10, "epsActual": None})
+check("earnings rows keep date, timing, estimates; revenue in $ billions", _row == {"d": "2026-12-01", "h": "amc", "q": 4, "y": 2026, "eps_e": 1.2346, "rev_e": 55.0}, _row)
+check("a row without a valid date is dropped", _fe.clean({"date": "soon"}) is None)
+_tmp = os.path.join(os.path.dirname(os.path.abspath(_b.__file__)), "earnings.json")
+_had = os.path.exists(_tmp)
+if not _had:
+    _today = _dt.date(2026, 11, 20)
+    json.dump({"AAA": {"next": {"d": "2026-11-25"}}, "BBB": {"next": {"d": "2026-11-18"}},
+               "CCC": {"last": {"d": "2026-10-01", "eps_a": 1}}, "_fetched_at": "2026-11-20T00:00:00Z"}, open(_tmp, "w"))
+    _cs = [{"t": "AAA"}, {"t": "BBB"}, {"t": "CCC"}]
+    _m = {}
+    try:
+        _b.apply_earnings(_cs, _m, today=_today)
+    finally:
+        os.remove(_tmp)
+    check("earnings: upcoming kept, a passed date becomes 'reported', old reports dropped",
+          _cs[0].get("earn") == {"next": {"d": "2026-11-25"}} and _cs[1].get("earn") == {"last": {"d": "2026-11-18"}} and "earn" not in _cs[2], _cs)
+check("earnings.js loads after account.js and before app.js",
+      _idx.index('src="account.js"') < _idx.index('src="earnings.js"') < _idx.index('src="app.js"')
+      and _msf.SCRIPTS.index("earnings.js") < _msf.SCRIPTS.index("app.js"))
+_wf = open(os.path.join(_repo, ".github/workflows/update-prices.yml")).read()
+check("the daily workflow fetches and commits the earnings calendar", "python fetch_earnings.py" in _wf and "earnings.json" in _wf)
+check("the setup guide's copy of the workflow matches", "python fetch_earnings.py" in open(os.path.join(_repo, "SETUP-auto-price-updates.txt")).read())
+
+
+# ------------------------------------------------------------------------
 shutil.rmtree(work, ignore_errors=True)
 print("\n" + "=" * 68)
 print(f"PASSED {len(PASS)}   FAILED {len(FAIL)}")

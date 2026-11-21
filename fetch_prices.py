@@ -45,16 +45,22 @@ OUT = os.path.join(HERE, "prices.json")
 
 # Foreign primaries Finnhub does not cover on the free tier. Yahoo does, using
 # exchange suffixes, with an approximate FX rate to convert to USD.
-FOREIGN = {
-    "MC":       ("MC.PA",       1.08),
-    "OR":       ("OR.PA",       1.08),
-    "NESN":     ("NESN.SW",     1.13),
-    "SIE":      ("SIE.DE",      1.08),
-    "005930":   ("005930.KS",   0.00072),
-    "RELIANCE": ("RELIANCE.NS", 0.0115),
-    "TCEHY":    ("TCEHY",       1.0),
-    "BYDDY":    ("BYDDY",       1.0),
-}
+from foreign_listings import FOREIGN_LISTINGS, fetch_rates, to_usd   # noqa: E402
+
+# Home-exchange listings (see foreign_listings.py): ticker -> (Yahoo symbol,
+# multiplier to US dollars). The multipliers start at fallback rates and are
+# replaced by live exchange rates when the run starts (use_live_rates).
+FOREIGN = {t: (ysym, to_usd(t)) for t, (ysym, _cur) in FOREIGN_LISTINGS.items()}
+# US over-the-counter shares that Finnhub's free tier misses: Yahoo, in dollars.
+FOREIGN.update({"TCEHY": ("TCEHY", 1.0), "BYDDY": ("BYDDY", 1.0)})
+
+
+def use_live_rates(price_fn):
+    rates = fetch_rates(price_fn)
+    for t, (ysym, _cur) in FOREIGN_LISTINGS.items():
+        FOREIGN[t] = (ysym, to_usd(t, rates))
+    shown = ", ".join(f"{k} {v:.4g}" for k, v in sorted(rates.items()) if k != "USD")
+    print(f"Exchange rates (US$ per unit): {shown}\n")
 
 
 # A company that changed its ticker: if the site's ticker stops quoting, try
@@ -207,6 +213,7 @@ def main():
     companies = load_companies()
 
     prices, sources, failures = {}, {}, []
+    use_live_rates(from_yahoo)
     print(f"Fetching {len(companies)} prices "
           f"(finnhub -> twelvedata -> yahoo)\n")
 

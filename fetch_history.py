@@ -80,16 +80,22 @@ YAHOO_ONLY = tuple(s for s in MARKET if s.startswith("^") or "=" in s or "-" in 
 # exchange suffixes. Each entry is (Yahoo symbol, rough FX rate to USD):
 # Yahoo quotes each listing in its LOCAL currency, so Samsung comes back in
 # won at ~76,500, which fed in as dollars is a $451 trillion market cap.
-FOREIGN = {
-    "MC":       ("MC.PA",       1.08),    # LVMH     — Paris, EUR
-    "OR":       ("OR.PA",       1.08),    # L'Oreal  — Paris, EUR
-    "NESN":     ("NESN.SW",     1.13),    # Nestle   — Zurich, CHF
-    "SIE":      ("SIE.DE",      1.08),    # Siemens  — XETRA, EUR
-    "005930":   ("005930.KS",   0.00072), # Samsung  — Seoul, KRW
-    "RELIANCE": ("RELIANCE.NS", 0.0115),  # Reliance — Mumbai, INR
-    "TCEHY":    ("TCEHY",       1.0),     # Tencent ADR — already USD
-    "BYDDY":    ("BYDDY",       1.0),     # BYD ADR     — already USD
-}
+from foreign_listings import FOREIGN_LISTINGS, fetch_rates, to_usd   # noqa: E402
+
+# Home-exchange listings (see foreign_listings.py): ticker -> (Yahoo symbol,
+# multiplier to US dollars). The multipliers start at fallback rates and are
+# replaced by live exchange rates when the run starts (use_live_rates).
+FOREIGN = {t: (ysym, to_usd(t)) for t, (ysym, _cur) in FOREIGN_LISTINGS.items()}
+# US over-the-counter shares that Finnhub's free tier misses: Yahoo, in dollars.
+FOREIGN.update({"TCEHY": ("TCEHY", 1.0), "BYDDY": ("BYDDY", 1.0)})
+
+
+def use_live_rates(price_fn):
+    rates = fetch_rates(price_fn)
+    for t, (ysym, _cur) in FOREIGN_LISTINGS.items():
+        FOREIGN[t] = (ysym, to_usd(t, rates))
+    shown = ", ".join(f"{k} {v:.4g}" for k, v in sorted(rates.items()) if k != "USD")
+    print(f"Exchange rates (US$ per unit): {shown}\n")
 
 
 # Tickers that changed: try the other symbol if the site's one stops quoting.
@@ -351,6 +357,11 @@ def main():
         print(f"Refreshing {len(targets)} series (Yahoo first, Twelve Data as backup).\n")
         by_source = {"yahoo": 0, "twelve": 0}
         yahoo_dead = False
+
+        def last_close(symbol):
+            r, e = from_yahoo(symbol)
+            return (r[1][-1], None) if r and r[1] else (None, e)
+        use_live_rates(last_close)
 
         for i, sym in enumerate(targets, 1):
             res = err = None

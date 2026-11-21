@@ -239,7 +239,9 @@ const FF_XLSX = (() => {
     put('A78', 'Terminal value as a share of enterprise value', { kind: 'text' });
     put('B78', '=IF(B70>0,B69/B70,"n/m")', { fmt: PCT, note: 'Typical range 50–70%. Above 75% means most of the value depends on what happens after year 10.' });
     put('A79', 'Check: the website\'s base-case value', { kind: 'text', italic: true });
-    put('B79', c.fv, { fmt: PS, note: `Source: free-flow-finance.pages.dev, ${c.t} page, base case with the FreeFlow rate, ${day}.` });
+    put('B79', c.cf ? c.cf.fv : c.fv, { fmt: PS, note: c.cf
+      ? `Source: free-flow-finance.pages.dev, ${c.t} page, the cash-flow DCF cross-check, ${day}. For a ${c.ri.kind} the site's headline value comes from the Bank model sheet.`
+      : `Source: free-flow-finance.pages.dev, ${c.t} page, base case with the FreeFlow rate, ${day}.` });
     put('C79', '=IF(AND($B$5=2,$B$6=1),ROUND(B74-B79,2),"switch to base")', { fmt: '0.00;(0.00);"-"', italic: true, note: 'With scenario 2 and the FreeFlow rate this should read "-" (no difference). The site shows the value after rounding to the cent.' });
     box(67, 79, 'A', 'C');
 
@@ -481,6 +483,138 @@ const FF_XLSX = (() => {
     return ws;
   }
 
+
+  // ========================================================= Bank model ===
+  // Banks and insurers: the excess-return model the site's rating uses.
+  // Same rules as engine.excess_return(): ROE glides to the year-5 level and
+  // holds; book value grows by retained profit (years 1-5), then its growth
+  // fades to the long-term rate; end-of-year discounting at the cost of equity.
+  function sheetBank(wb, c, ctx) {
+    const ws = wb.addWorksheet('Bank model', { views: [{ state: 'frozen', xSplit: 1, ySplit: 3, showGridLines: false }] });
+    const { put, header, sub, box } = S(ws);
+    const r = c.ri, day = stamp(ctx), kind = r.kind;
+    const ke = c.wacc, bullKe = ke - 0.005;
+    ws.getColumn('A').width = 44;
+    COL.forEach(k => { ws.getColumn(k).width = 13; });
+    ws.getColumn('M').width = 13;
+    put('A1', `${c.n} (${c.t}) — excess-return valuation`, { kind: 'text', bold: true, color: F_HDR.replace('FF', 'FF') });
+    ws.getCell('A1').font = { name: 'Calibri', size: 14, bold: true, color: { argb: F_HDR } };
+    put('A2', `A ${kind} is valued on book value plus the present value of its return on equity above the cost of equity. This is the model behind the rating on the website.`, { kind: 'text', italic: true });
+    put('A3', 'US$ billions except per-share figures and percentages', { kind: 'text', italic: true });
+
+    put('A5', 'Scenario (1 = bear, 2 = base, 3 = bull)', { kind: 'text', bold: true });
+    put('B5', ctx.scenario || 2, { fmt: '0', note: 'Type 1, 2 or 3. Everything below follows.' });
+    ws.getCell('B5').dataValidation = { type: 'whole', operator: 'between', formulae: [1, 3], allowBlank: false };
+
+    header(7, 'INPUTS', 'A', 'D');
+    put('A8', 'Book value (common shareholders\' equity)', { kind: 'text' });
+    put('B8', r.bv, { fmt: money(r.bv), note: `Source: latest reported common equity, converted to US$; FreeFlow estimate (companies/bank_inputs.py), ${day}.` });
+    put('A9', 'Shares outstanding (billions)', { kind: 'text' });
+    put('B9', c.shares, { fmt: '#,##0.000', note: 'Source: company filings via the FreeFlow data feed. Same basis as the price (one US-listed share).' });
+    put('A10', 'Share price', { kind: 'text' });
+    put('B10', c.price, { fmt: PS, note: `Source: last close in the FreeFlow data file (${c.pd || day}).` });
+    put('A11', 'Return on equity today (last twelve months)', { kind: 'text' });
+    put('B11', r.roe0, { fmt: PCT, note: 'Net income to common shareholders ÷ average common equity, last twelve months. FreeFlow estimate.' });
+    put('A12', 'Share of profit paid out (dividends + buybacks)', { kind: 'text' });
+    put('B12', r.pay, { fmt: '0%', note: 'The rest stays in the business and grows book value. FreeFlow assumption.' });
+    box(7, 12, 'A', 'D');
+
+    header(14, 'SCENARIOS', 'A', 'D');
+    sub(15, ['', 'Bear', 'Base', 'Bull']);
+    put('A16', 'Return on equity from year 5', { kind: 'text' });
+    put('B16', '=C16-0.02', { fmt: PCT }); put('C16', r.roe1, { fmt: PCT, note: 'FreeFlow assumption: the return on equity the business can sustain.' }); put('D16', '=C16+0.02', { fmt: PCT });
+    put('A17', 'Cost of equity', { kind: 'text' });
+    put('B17', '=C17+0.005', { fmt: PCT2 }); put('C17', ke, { fmt: PCT2, note: 'The FreeFlow discount rate for this company. It moves with the 10-year Treasury yield.' }); put('D17', '=C17-0.005', { fmt: PCT2 });
+    put('A18', 'Long-term growth (after year 10)', { kind: 'text' });
+    put('B18', '=MAX(C18-0.005,0)', { fmt: PCT2 }); put('C18', c.tg, { fmt: PCT2, note: 'FreeFlow assumption.' }); put('D18', '=MIN(C18+0.0025,D17-0.005)', { fmt: PCT2 });
+    put('A20', 'Selected: return on equity from year 5', { kind: 'text', bold: true }); put('B20', '=CHOOSE($B$5,B16,C16,D16)', { fmt: PCT, fill: F_OUT });
+    put('A21', 'Selected: long-term growth', { kind: 'text', bold: true }); put('B21', '=CHOOSE($B$5,B18,C18,D18)', { fmt: PCT2, fill: F_OUT });
+    put('A22', 'Selected: cost of equity', { kind: 'text', bold: true });
+    put('B22', '=MAX(CHOOSE($B$5,B17,C17,D17),B21+0.01)', { fmt: PCT2, fill: F_OUT, note: 'Kept at least one point above long-term growth, or the value would be infinite.' });
+    box(14, 22, 'A', 'D');
+
+    header(24, 'TEN-YEAR PROJECTION');
+    put('A25', 'Year', { kind: 'text', bold: true, fill: F_SUB });
+    for (let y = 1; y <= 10; y++) put(`${YR(y)}25`, y, { kind: 'text', bold: true, fill: F_SUB, align: 'center', fmt: '0' });
+    ws.getCell('B25').fill = fill(F_SUB);
+    const L = ['Return on equity', 'Book value, start of year', 'Net income', 'Charge for equity (book × cost of equity)', 'Excess return', 'Discount factor', 'Book value growth in the year', 'Present value of excess return'];
+    L.forEach((t, i) => put(`A${26 + i}`, t, { kind: 'text', bold: i === 4 || i === 7 }));
+    for (let y = 1; y <= 10; y++) {
+      const k = YR(y), prev = YR(y - 1);
+      put(`${k}26`, `=IF(${k}$25<=5,$B$11+($B$20-$B$11)*${k}$25/5,$B$20)`, { fmt: PCT });
+      put(`${k}27`, y === 1 ? '=$B$8' : `=${prev}27*(1+${prev}32)`, { fmt: money(r.bv) });
+      put(`${k}28`, `=${k}27*${k}26`, { fmt: money(r.bv) });
+      put(`${k}29`, `=${k}27*$B$22`, { fmt: money(r.bv) });
+      put(`${k}30`, `=${k}28-${k}29`, { fmt: money(r.bv), bold: true });
+      put(`${k}31`, `=1/(1+$B$22)^${k}$25`, { fmt: '0.0000' });
+      put(`${k}32`, `=IF(${k}$25<=5,${k}26*(1-$B$12),$G$32+($B$21-$G$32)*(${k}$25-5)/5)`, { fmt: PCT });
+      put(`${k}33`, `=${k}30*${k}31`, { fmt: money(r.bv), bold: true });
+    }
+    box(24, 33, 'A', 'L');
+
+    header(35, 'VALUATION', 'A', 'C');
+    const V = [
+      ['Book value today', '=B8', money(r.bv)],
+      ['Present value of excess returns, years 1–10', '=SUM(C33:L33)', money(r.bv)],
+      ['Book value at the end of year 10', '=L27*(1+L32)', money(r.bv)],
+      ['Excess return in year 11', '=(B20-B22)*B38', money(r.bv)],
+      ['Terminal value (grows at long-term growth)', '=B39/(B22-B21)', money(r.bv)],
+      ['Present value of the terminal value', '=B40/(1+B22)^10', money(r.bv)],
+      ['Equity value', '=B36+B37+B41', money(r.bv)],
+      ['Value per share', '=B42/B9', PS],
+      ['Share price', '=B10', PS],
+      ['Upside / (downside)', '=IF(B43>0,B43/B44-1,-1)', PCT],
+      ['Rating on the FreeFlow scale', '=IF(B43<=0,"Sell",IF(B45>=0.3,"Strong Buy",IF(B45>=0.12,"Buy",IF(B45>=-0.12,"Hold",IF(B45>=-0.3,"Reduce","Sell")))))', null],
+      ['Fair price-to-book', '=B43/(B8/B9)', X],
+      ['Market price-to-book', '=B10/(B8/B9)', X],
+    ];
+    V.forEach(([t, f, fm], i) => {
+      const row = 36 + i, strong = [42, 43, 45, 46].includes(row);
+      put(`A${row}`, t, { kind: 'text', bold: strong });
+      put(`B${row}`, f, Object.assign({ bold: strong }, fm ? { fmt: fm } : {}, row === 43 ? { fill: F_OUT } : {}));
+    });
+    put('A49', 'Check: the website\'s base-case value', { kind: 'text', italic: true });
+    put('B49', c.fv, { fmt: PS, note: `Source: free-flow-finance.pages.dev, ${c.t} page, ${day}.` });
+    put('C49', '=IF($B$5=2,ROUND(B43-B49,2),"switch to base")', { fmt: '0.00;(0.00);"-"', italic: true, note: 'With scenario 2 this should read "-" (no difference).' });
+    box(35, 49, 'A', 'C');
+
+    // ---- sensitivity: cost of equity (rows) x year-5 ROE (columns)
+    header(51, 'SENSITIVITY — value per share by cost of equity (rows) and return on equity from year 5 (columns); every cell reruns the model');
+    const dK = [-0.010, -0.005, 0, 0.005, 0.010], dR = [-0.04, -0.02, 0, 0.02, 0.04];
+    put('A53', 'Cost of equity ↓   ROE →', { kind: 'text', bold: true, fill: F_SUB });
+    // workings: for each ROE column, the ROE path, book path and growth path
+    header(62, 'WORKINGS FOR THE SENSITIVITY TABLE', 'A', 'L');
+    dR.forEach((d, j) => {
+      const col = COL[1 + j];   // C..G
+      put(`${col}53`, `=$B$20+(${d})`, { fmt: PCT, bold: true, fill: F_SUB, align: 'center' });
+      const rr = 64 + j * 3, rb = rr + 1, rg = rr + 2;
+      put(`A${rr}`, `ROE path, column ${j + 1}`, { kind: 'text' });
+      put(`A${rb}`, `Book value, column ${j + 1}`, { kind: 'text' });
+      put(`A${rg}`, `Book growth, column ${j + 1}`, { kind: 'text' });
+      put(`B${rr}`, `=${col}$53`, { fmt: PCT });
+      for (let y = 1; y <= 10; y++) {
+        const k = YR(y), prev = YR(y - 1);
+        put(`${k}${rr}`, `=IF(${k}$25<=5,$B$11+($B${rr}-$B$11)*${k}$25/5,$B${rr})`, { fmt: PCT });
+        put(`${k}${rb}`, y === 1 ? '=$B$8' : `=${prev}${rb}*(1+${prev}${rg})`, { fmt: money(r.bv) });
+        put(`${k}${rg}`, `=IF(${k}$25<=5,${k}${rr}*(1-$B$12),$G${rg}+($B$21-$G${rg})*(${k}$25-5)/5)`, { fmt: PCT });
+      }
+    });
+    dK.forEach((d, i) => {
+      const row = 54 + i;
+      put(`B${row}`, `=MAX($B$22+(${d}),$B$21+0.01)`, { fmt: PCT2, bold: true, fill: F_SUB, align: 'center' });
+      dR.forEach((_, j) => {
+        const col = COL[1 + j], rr = 64 + j * 3, rb = rr + 1, rg = rr + 2, K = `$B${row}`;
+        const f = `=($B$8+SUMPRODUCT(($C${rr}:$L${rr}-${K})*$C${rb}:$L${rb}/(1+${K})^$C$25:$L$25)` +
+                  `+(${col}$53-${K})*$L${rb}*(1+$L${rg})/(${K}-$B$21)/(1+${K})^10)/$B$9`;
+        put(`${col}${row}`, f, { fmt: PS, kind: 'calc', fill: i === 2 && j === 2 ? F_OUT : undefined, bold: i === 2 && j === 2 });
+      });
+    });
+    ws.addConditionalFormatting({ ref: 'C54:G58', rules: [{ type: 'colorScale', priority: 1, cfvo: [{ type: 'min' }, { type: 'percentile', value: 50 }, { type: 'max' }], color: [{ argb: 'FFF8696B' }, { argb: 'FFFFFFFF' }, { argb: 'FF63BE7B' }] }] });
+    put('A60', 'Rows move the cost of equity by up to one point; columns move the year-5 return on equity by up to four points. The centre is the selected scenario.', { kind: 'text', italic: true });
+    box(51, 58, 'A', 'G');
+    return ws;
+  }
+
   // ============================================================== Notes ===
   function sheetNotes(wb, c, ctx) {
     const ws = wb.addWorksheet('Notes', { views: [{ showGridLines: false }] });
@@ -493,7 +627,7 @@ const FF_XLSX = (() => {
       ['h', 'HOW THE MODEL WORKS'],
       ['', '1. Revenue grows at the five yearly rates in the selected case. In years 6–10 growth fades in a straight line from the year-5 rate to the terminal rate.'],
       ['', '2. Free cash flow = revenue × free cash flow margin. The margin glides from today\'s level to the year-5 target, then holds.'],
-      ['', '   FreeFlow models free cash flow as one margin of sales (operating cash flow less capital spending) rather than building it from EBIT, tax, D&A, capex and working capital. That keeps 400 companies on one consistent basis, at the cost of detail.'],
+      ['', '   FreeFlow models free cash flow as one margin of sales (operating cash flow less capital spending) rather than building it from EBIT, tax, D&A, capex and working capital. That keeps every company in the library on one consistent basis, at the cost of detail.'],
       ['', '3. Cash flows are discounted at the selected discount rate with the mid-year convention (periods 0.5, 1.5 … 9.5).'],
       ['', '4. The terminal value is Gordon growth on year-11 free cash flow, discounted from period 9.5.'],
       ['', '5. Enterprise value less net debt gives equity value; divided by diluted shares, the value per share.'],
@@ -502,6 +636,10 @@ const FF_XLSX = (() => {
       ['', 'Share prices: daily closes collected by the FreeFlow update job. Revenue, shares and net debt: company filings via Finnhub, refreshed weekly.'],
       ['', 'Growth, margins, discount rates and terminal growth: FreeFlow model assumptions, documented on the website\'s Methodology page.'],
       ['', RF_NOTE.replace('Source: ', 'Risk-free rate: ')],
+      ...(c.ri ? [
+        ['h', `BANKS AND INSURERS`],
+        ['', `For a ${c.ri.kind} the website's rating comes from the Bank model sheet (the first sheet): book value plus the present value of the return on equity above the cost of equity. The DCF sheet is kept as a cross-check, as on the website.`],
+      ] : []),
       ['h', 'KNOWN DIFFERENCES FROM THE WEBSITE'],
       ['', 'The website never shows a bear value above the base value or a bull value below it; in rare edge cases this workbook can, because it shows the raw arithmetic.'],
       ['', 'The website\'s multiples model blends trailing, forward and growth-adjusted readings; the Comps sheet shows the trailing reading only.'],
@@ -523,8 +661,9 @@ const FF_XLSX = (() => {
   function build(ExcelJS, c, peers, ctx = {}) {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'FreeFlow Finance';
-    wb.title = `${c.t} DCF model`;
+    wb.title = `${c.t} ${c.ri ? 'bank' : 'DCF'} model`;
     wb.calcProperties.fullCalcOnLoad = true;
+    if (c.ri) sheetBank(wb, c, ctx);
     sheetDCF(wb, c, ctx);
     sheetWACC(wb, c);
     sheetComps(wb, c, peers, ctx);

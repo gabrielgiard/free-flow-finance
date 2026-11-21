@@ -117,7 +117,7 @@ def main():
     if every:
         picks = [c["t"] for c in cos]
     else:
-        picks = ["NVDA", "AAPL", "JPM", "KO", "XOM", "TSLA", "MSTR", "IONQ", "RIVN", "ENB", "CRM", "BRK.B",
+        picks = ["NVDA", "AAPL", "JPM", "KO", "C", "PGR", "SOFI", "XOM", "TSLA", "MSTR", "IONQ", "RIVN", "ENB", "CRM", "BRK.B",
                  "SNDK", "CBRS", "QBTS", "MUFG", "DAL", "GRAB", "005930", "LLY", "MRNA", "TGT", "BE", "JOBY"]
         picks = [t for t in picks if t in by]
     tmp = tempfile.mkdtemp(prefix="ffxl_")
@@ -153,6 +153,22 @@ def main():
         errs_total += len(bad)
         if bad:
             check(f"{tag}: no formula errors", False, bad[:5])
+        # 2b. banks and insurers: the Bank model sheet is the headline model
+        if c.get("ri") and j["rate"] == 1:
+            bm = wb["Bank model"]
+            r = c["ri"]
+            ke, tg = c["wacc"], c["tg"]
+            args = {1: (r["roe1"] - 0.02, ke + 0.005, max(tg - 0.005, 0)), 2: (r["roe1"], ke, tg),
+                    3: (r["roe1"] + 0.02, ke - 0.005, min(tg + 0.0025, ke - 0.01))}[s]
+            want_ri = engine.excess_return(r["bv"], r["roe0"], args[0], args[1], args[2], r["pay"], c["shares"])["per_share"]
+            got_ri = bm["B43"].value
+            check(f"{tag}: bank model value per share = engine", near(got_ri, want_ri), (got_ri, want_ri))
+            if s == 2:
+                check(f"{tag}: bank model = the website's published value", near(got_ri, c["fv"], 0.006), (got_ri, c["fv"]))
+                check(f"{tag}: bank model check cell reads zero", isinstance(bm["C49"].value, (int, float)) and abs(bm["C49"].value) < 0.006, bm["C49"].value)
+                gv = [[bm.cell(row=54 + i, column=3 + k).value for k in range(5)] for i in range(5)]
+                dd = [abs(gv[i][k] - c["erm"]["grid"]["values"][i][k]) for i in range(5) for k in range(5) if isinstance(gv[i][k], (int, float))]
+                check(f"{tag}: bank sensitivity = the page's grid, all 25 cells", len(dd) == 25 and max(dd) <= max(0.011, 0.0005 * abs(c["fv"])), max(dd) if dd else None)
         # 2. the headline value
         ci = {1: "bear", 2: "base", 3: "bull"}[s]
         inp = {
@@ -171,7 +187,8 @@ def main():
         worst = max(worst, abs((got or 0) - want))
         check(f"{tag}: value per share {got:.2f} = engine {want:.2f}" if isinstance(got, (int, float)) else f"{tag}: value per share", near(got, want), (got, want))
         if s == 2 and j["rate"] == 1:
-            check(f"{tag}: matches the website's published value", near(got, c["fv"], 0.006), (got, c["fv"]))
+            site = c["cf"]["fv"] if c.get("cf") else c["fv"]
+            check(f"{tag}: matches the website's published value", near(got, site, 0.006), (got, site))
             check(f"{tag}: the check cell reads zero", isinstance(d["C79"].value, (int, float)) and abs(d["C79"].value) < 0.006, d["C79"].value)
             tvs = d["B78"].value
             if c["dcf"]["ev"] > 0:

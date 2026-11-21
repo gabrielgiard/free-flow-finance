@@ -88,6 +88,16 @@ jobs:
             echo "Not Monday — skipping fundamentals refresh."
           fi
 
+      # About 15 calls to Finnhub's free earnings calendar: when each company
+      # reports next, and the results of the latest report. Daily, because
+      # dates get confirmed and moved.
+      - name: Update the earnings calendar
+        if: steps.fresh.outputs.fresh != 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python fetch_earnings.py
+
       # Pillow draws the preview cards shown when someone shares a company
       # link. If the install ever fails, the build still runs; the cards just
       # keep their last version.
@@ -110,7 +120,7 @@ jobs:
           # docs/sector) and the track record were missing from this list
           # before, so Google's copies of every company page kept the prices
           # from the day they were first uploaded.
-          for f in prices.json fundamentals.json \
+          for f in prices.json fundamentals.json earnings.json \
                    docs/data.js docs/history.js docs/fv-history.js docs/track-record.js \
                    docs/company docs/sector docs/og docs/sitemap.xml docs/robots.txt; do
             if [ -e "$f" ]; then git add -A -- "$f"; fi

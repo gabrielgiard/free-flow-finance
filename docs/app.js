@@ -29,6 +29,7 @@ function renderRoute(opts) {
   else if (route === 'methodology') { html = viewMethodology(); navKey = 'methodology'; }
   else if (route === 'track-record') { html = viewTrackRecord(); navKey = 'track-record'; }
   else if (route === 'privacy' && typeof viewPrivacy === 'function') { html = viewPrivacy(); navKey = 'privacy'; }
+  else if (route === 'earnings' && typeof viewEarnings === 'function') { html = viewEarnings(); navKey = 'earnings'; }
   else { html = view404(); }
 
   APP.innerHTML = html;

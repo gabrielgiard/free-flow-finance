@@ -292,7 +292,9 @@ function mountMap(root) {
       }
 
       const groups = FF_DATA.sectors.map(s => ({ k: s.k, items: inSector(s.k).map(c => ({ t: c.t, v: MAPUI.size === 'equal' && variant === 'page' ? 1 : c.mcap })) }));
-      const H = kind === 'stacked' ? 2300 : Math.round(variant === 'home' ? Math.min(520, Math.max(380, W * 0.46)) : Math.min(Math.max(460, window.innerHeight - 250), W * 0.66));
+      // the full map grows with the library so tiles stay readable (sized for 400)
+      const grow = Math.max(1, Math.min(1.35, FF_DATA.companies.length / 400));
+      const H = kind === 'stacked' ? 2300 : Math.round(variant === 'home' ? Math.min(520, Math.max(380, W * 0.46)) : Math.min(Math.max(460, window.innerHeight - 250), W * 0.66) * grow);
       const L = FF_MAP.layout(groups, W, H, { stacked: kind === 'stacked', floor: MAPUI.size === 'equal' ? 0 : (kind === 'stacked' ? 0 : 0.0003), sectorFloor: kind === 'stacked' && MAPUI.size !== 'equal' ? 0.004 : 0 });
       stage.style.height = Math.round(L.height) + 'px';
 
@@ -319,10 +321,13 @@ function mountMap(root) {
         n.classList.toggle('nm', !col);
         n.classList.toggle('ink', !!(col && col.dark));
         // the ticker as large as the tile allows; the number under it when there is room
-        const fs = Math.max(0, Math.min(30, (w - 8) / (c.t.length * 0.66), (h - 6) / 1.25));
+        // a home-exchange suffix (".PA", ".L") is dropped when the full ticker will not fit
+        const fit = t => Math.max(0, Math.min(30, (w - 8) / (t.length * 0.64), (h - 6) / 1.25));
+        let label = c.t, fs = fit(label);
+        if (fs < 8.5 && /^[A-Z]+\.[A-Z]{1,2}$/.test(c.t) && c.t !== 'BRK.B') { label = c.t.split('.')[0]; fs = fit(label); }
         const showT = fs >= 8.5, showV = showT && h >= fs * 2.15 + 8 && w >= 40;
         const tEl = n.firstChild, vEl = n.lastChild;
-        tEl.textContent = showT ? c.t : ''; tEl.style.fontSize = Math.min(fs, 26).toFixed(1) + 'px';
+        tEl.textContent = showT ? label : ''; tEl.style.fontSize = Math.min(fs, 26).toFixed(1) + 'px';
         vEl.textContent = showV ? (v == null ? 'N/M' : pct(v)) : '';
         vEl.style.fontSize = Math.max(9.5, Math.min(13, fs * 0.6)).toFixed(1) + 'px';
         n.setAttribute('aria-label', `${c.n}: ${v == null ? 'no value' : pct(v) + (m === 'gap' ? ' against fair value' : '')}`);

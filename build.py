@@ -11,6 +11,7 @@ derived here. The website itself does no math; it only displays what this
 script produces.
 """
 
+import datetime
 import json
 import os
 import time
@@ -34,7 +35,7 @@ SECTORS = [
      "note": "Pharmaceutical cash flows are shaped by patent cliffs, so several models below deliberately include a declining year."},
     {"k": "financials", "n": "Financials",
      "d": "Banks, payment networks, insurers and asset managers — the plumbing that moves and prices capital.",
-     "note": "Important: a standard free cash flow DCF does not work for banks, because debt is their raw material rather than their financing. For the banks here we treat net revenue (net interest income plus fees) as the top line, use distributable net income as the margin, and set net debt to zero. It is a simplification — the technically correct tools are a dividend discount or residual income model. Payment networks and asset managers are normal DCF candidates and are modelled conventionally."},
+     "note": "Important: a standard free cash flow DCF does not work for banks, because debt is their raw material rather than their financing. For the banks here we treat net revenue (net interest income plus fees) as the top line, use distributable net income as the margin, and set net debt to zero. Since November 2026 the banks and insurers are valued with the technically correct tool, an excess-return (residual income) model: book value today plus the present value of every future year's return on equity above the cost of equity. The cash-flow DCF stays on each page as a cross-check. Payment networks, exchanges, brokers and asset managers are normal DCF candidates and are modelled conventionally."},
     {"k": "consumer", "n": "Consumer, Retail & Luxury",
      "d": "The companies that sell to households: staples, retailers, restaurants and luxury houses. Slow growing, but with pricing power that compounds quietly.",
      "note": ""},
@@ -138,9 +139,10 @@ def load_companies():
     from companies.expansion4 import EXPANSION4
     from companies.expansion5 import EXPANSION5
     from companies.expansion6 import EXPANSION6
+    from companies.expansion7 import EXPANSION7
     companies = (SEMIS + SOFTWARE + HEALTH + FINANCIALS + CONSUMER
                  + ENERGY + INDUSTRIALS + AUTOS + GLOBAL + FRONTIER + EXPANSION + EXPANSION2 + EXPANSION3
-                 + EXPANSION4 + EXPANSION5 + EXPANSION6)
+                 + EXPANSION4 + EXPANSION5 + EXPANSION6 + EXPANSION7)
     # Recent developments (dated, sourced headlines) for the Thesis tab.
     try:
         from companies.news import NEWS
@@ -148,6 +150,11 @@ def load_companies():
         NEWS = {}
     for c in companies:
         c["news"] = NEWS.get(c["t"], [])
+    # Banks and insurers: inputs for the excess-return model (engine.py).
+    from companies.bank_inputs import BANK
+    for c in companies:
+        if c["t"] in BANK:
+            c["ri"] = dict(BANK[c["t"]])
     return companies
 
 
@@ -428,6 +435,43 @@ def apply_fundamentals(companies):
     print(f"Applied fundamentals from {stamp}: "
           f"{applied['rev']} revenue, {applied['shares']} share counts, "
           f"{applied['netdebt']} net debt figures")
+
+
+def apply_earnings(companies, meta, today=None):
+    """Attach the next and the latest earnings report from earnings.json
+    (fetch_earnings.py). A 'next' date already in the past is dropped (the
+    feed has not caught up yet), and a 'last' report older than three weeks
+    is no longer news. A missing or broken file just means no dates."""
+    path = os.path.join(HERE, "earnings.json")
+    try:
+        with open(path) as f:
+            earn = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        print("No earnings.json — the earnings calendar will be empty until fetch_earnings.py runs")
+        return
+    if not isinstance(earn, dict):
+        return
+    today = today or datetime.date.today()
+    iso = today.isoformat()
+    cutoff = (today - datetime.timedelta(days=21)).isoformat()
+    n = 0
+    for c in companies:
+        e = earn.get(c["t"])
+        if not isinstance(e, dict):
+            continue
+        keep = {}
+        nx, ls = e.get("next"), e.get("last")
+        if isinstance(nx, dict) and isinstance(nx.get("d"), str) and nx["d"] >= iso:
+            keep["next"] = nx
+        if isinstance(ls, dict) and isinstance(ls.get("d"), str) and cutoff <= ls["d"] <= iso:
+            keep["last"] = ls
+        if isinstance(nx, dict) and isinstance(nx.get("d"), str) and cutoff <= nx["d"] < iso and "last" not in keep:
+            keep["last"] = nx          # reported since the last fetch
+        if keep:
+            c["earn"] = keep
+            n += 1
+    meta["earn_at"] = str(earn.get("_fetched_at", ""))[:10]
+    print(f"Earnings calendar: dates for {n} companies (fetched {meta['earn_at'] or 'unknown'})")
 
 
 # The risk-free rate every WACC in this library was originally set against.
@@ -806,7 +850,24 @@ def validate(companies):
             errors.append(f"{t}: revenue segments sum to {total}%, expected ~100%")
         if len(c.get("bull", [])) < 2 or len(c.get("risks", [])) < 2:
             errors.append(f"{t}: needs at least 2 thesis points and 2 risks")
+        r = c.get("ri")
+        if r is not None:
+            if not (isinstance(r, dict) and r.get("kind") in ("bank", "insurer")):
+                errors.append(f"{t}: bank inputs need kind 'bank' or 'insurer'")
+            else:
+                if not (0 < r.get("bv", 0) < 2000):
+                    errors.append(f"{t}: book value {r.get('bv')} ($B) is out of range")
+                for k, lo, hi in (("roe0", -0.30, 0.60), ("roe1", -0.10, 0.45), ("pay", 0.0, 1.0)):
+                    v = r.get(k)
+                    if not isinstance(v, (int, float)) or not (lo <= v <= hi):
+                        errors.append(f"{t}: bank input {k}={v} should be between {lo} and {hi}")
     return errors
+
+
+# Shares that genuinely trade above $900 (no split pending): the warning
+# below would only be noise for these.
+HIGH_PRICED = {"BKNG", "ASML", "MELI", "AZO", "FICO", "RMS", "CSU", "ADYEN", "RHM",
+               "LONN", "MUV2", "GS", "BLK"}
 
 
 def warn_implausible(companies):
@@ -830,7 +891,7 @@ def warn_implausible(companies):
         # Post-split, very few large caps trade above $900. A high price here
         # is the single best signal that a split happened and the stored share
         # count was never updated to match.
-        if c["price"] > 900 and c["t"] not in ("BKNG", "ASML", "MELI", "AZO", "FICO"):
+        if c["price"] > 900 and c["t"] not in HIGH_PRICED:
             warnings.append(f"{c['t']:6s} ${c['price']:>9,.2f}  "
                             f"mcap ${mcap:>7,.0f}B  — high price, verify not pre-split")
     return warnings
@@ -1078,6 +1139,7 @@ def main():
         print(f"{'!' * 64}\n")
 
     meta.update(coverage_stats(out, sectors))
+    apply_earnings(out, meta)
     data = {"sectors": sectors, "companies": out, "meta": meta}
 
     docs = os.path.join(HERE, "docs")

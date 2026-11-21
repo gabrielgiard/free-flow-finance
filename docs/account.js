@@ -990,8 +990,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (function 
     const pct = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
     const wRows = w.map(({ c, e }) => {
       const since = e.p > 0 && c.price > 0 ? c.price / e.p - 1 : null;
+      const er = c.earn && c.earn.next && typeof earnDay === 'function' ? `<small class="mr-earn">reports ${earnDay(c.earn.next.d)}</small>` : '';
       return `<a class="mine-row" href="#/company/${encodeURIComponent(c.t)}">
-        <span class="mr-co"><span class="tk">${escapeHtml(c.t)}</span><span class="nm">${escapeHtml(c.n)}</span></span>
+        <span class="mr-co"><span class="tk">${escapeHtml(c.t)}</span><span class="nm">${escapeHtml(c.n)}</span>${er}</span>
         <span class="mr-px">${FMT.usd(c.price)}</span>
         <span class="mr-since ${since == null ? '' : since >= 0 ? 'up' : 'down'}">${since == null ? '' : `${pct(since)} <small>since you starred</small>`}</span>
         <span class="mr-fv">${fvStr(c.fv)} <small class="${upClass(c.upside)}">${FMT.pct(c.upside)}</small></span>
