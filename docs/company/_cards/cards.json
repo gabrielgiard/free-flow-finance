@@ -10,11 +10,11 @@
 },
 "005380":{
 "design":1,
-"fv":232.41,
+"fv":233.79,
 "n":"Hyundai Motor Company",
 "rating":"Buy",
-"up":0.1541,
-"v":"2026-11-24"
+"up":0.2057,
+"v":"2026-11-25"
 },
 "005930":{
 "design":1,
@@ -50,11 +50,11 @@
 },
 "1810":{
 "design":1,
-"fv":5.24,
+"fv":5.27,
 "n":"Xiaomi Corporation",
 "rating":"Strong Buy",
-"up":0.4604,
-"v":"2026-11-24"
+"up":0.5068,
+"v":"2026-11-25"
 },
 "2222":{
 "design":1,
@@ -66,11 +66,11 @@
 },
 "2317":{
 "design":1,
-"fv":8.72,
+"fv":8.78,
 "n":"Hon Hai Precision Industry Co., Ltd. (Foxconn)",
 "rating":"Strong Buy",
-"up":0.3974,
-"v":"2026-11-24"
+"up":0.3657,
+"v":"2026-11-25"
 },
 "2318":{
 "design":1,
@@ -90,19 +90,19 @@
 },
 "300750":{
 "design":1,
-"fv":54.11,
+"fv":54.44,
 "n":"Contemporary Amperex Technology Co., Limited (CATL)",
 "rating":"Strong Buy",
-"up":0.666,
-"v":"2026-11-24"
+"up":0.7837,
+"v":"2026-11-25"
 },
 "3690":{
 "design":1,
-"fv":13.41,
+"fv":13.52,
 "n":"Meituan",
 "rating":"Strong Buy",
-"up":0.596,
-"v":"2026-11-23"
+"up":0.6272,
+"v":"2026-11-25"
 },
 "4063":{
 "design":1,
@@ -114,11 +114,11 @@
 },
 "4568":{
 "design":1,
-"fv":36.32,
+"fv":36.61,
 "n":"Daiichi Sankyo Company, Limited",
 "rating":"Strong Buy",
-"up":0.9036,
-"v":"2026-11-24"
+"up":0.9249,
+"v":"2026-11-25"
 },
 "600519":{
 "design":1,
@@ -154,19 +154,19 @@
 },
 "6861":{
 "design":1,
-"fv":295.33,
+"fv":297.47,
 "n":"Keyence Corporation",
 "rating":"Strong Buy",
-"up":2.0595,
-"v":"2026-11-24"
+"up":2.1256,
+"v":"2026-11-25"
 },
 "7974":{
 "design":1,
-"fv":56.04,
+"fv":56.47,
 "n":"Nintendo Co., Ltd.",
 "rating":"Hold",
-"up":-0.0387,
-"v":"2026-11-20"
+"up":-0.063,
+"v":"2026-11-25"
 },
 "8035":{
 "design":1,
@@ -178,19 +178,19 @@
 },
 "8058":{
 "design":1,
-"fv":18.61,
+"fv":18.85,
 "n":"Mitsubishi Corporation",
 "rating":"Sell",
-"up":-0.4175,
-"v":"2026-11-20"
+"up":-0.438,
+"v":"2026-11-25"
 },
 "8766":{
 "design":1,
 "fv":44.33,
 "n":"Tokio Marine Holdings, Inc.",
 "rating":"Strong Buy",
-"up":10.1939,
-"v":"2026-11-24"
+"up":10.3081,
+"v":"2026-11-25"
 },
 "9983":{
 "design":1,
@@ -202,19 +202,19 @@
 },
 "9992":{
 "design":1,
-"fv":25.45,
+"fv":25.61,
 "n":"Pop Mart International Group Limited",
 "rating":"Strong Buy",
-"up":0.3944,
-"v":"2026-11-20"
+"up":0.4226,
+"v":"2026-11-25"
 },
 "A":{
 "design":1,
-"fv":103.29,
+"fv":104.23,
 "n":"Agilent Technologies, Inc.",
 "rating":"Sell",
-"up":-0.4372,
-"v":"2026-11-24"
+"up":-0.4159,
+"v":"2026-11-25"
 },
 "AAPL":{
 "design":1,
@@ -226,11 +226,11 @@
 },
 "ABBN":{
 "design":1,
-"fv":53.22,
+"fv":53.7,
 "n":"ABB Ltd",
-"rating":"Sell",
-"up":-0.3223,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.2937,
+"v":"2026-11-25"
 },
 "ABBV":{
 "design":1,
@@ -242,11 +242,11 @@
 },
 "ABNB":{
 "design":1,
-"fv":246.91,
+"fv":249.5,
 "n":"Airbnb, Inc.",
 "rating":"Strong Buy",
-"up":0.4194,
-"v":"2026-11-23"
+"up":0.4493,
+"v":"2026-11-25"
 },
 "ABT":{
 "design":1,
@@ -258,11 +258,11 @@
 },
 "ACN":{
 "design":1,
-"fv":397.03,
+"fv":400.29,
 "n":"Accenture plc",
 "rating":"Strong Buy",
-"up":0.709,
-"v":"2026-11-24"
+"up":0.6645,
+"v":"2026-11-25"
 },
 "ADBE":{
 "design":1,
@@ -274,11 +274,11 @@
 },
 "ADI":{
 "design":1,
-"fv":305.09,
+"fv":307.73,
 "n":"Analog Devices, Inc.",
 "rating":"Hold",
-"up":-0.0251,
-"v":"2026-11-24"
+"up":-0.0762,
+"v":"2026-11-25"
 },
 "ADP":{
 "design":1,
@@ -290,43 +290,43 @@
 },
 "ADS":{
 "design":1,
-"fv":205.95,
+"fv":208.19,
 "n":"adidas AG",
-"rating":"Buy",
-"up":0.1347,
-"v":"2026-11-20"
+"rating":"Hold",
+"up":0.1141,
+"v":"2026-11-25"
 },
 "ADSK":{
 "design":1,
-"fv":380.38,
+"fv":384.8,
 "n":"Autodesk, Inc.",
 "rating":"Strong Buy",
-"up":0.4898,
-"v":"2026-11-23"
+"up":0.5592,
+"v":"2026-11-25"
 },
 "ADYEN":{
 "design":1,
-"fv":2053.35,
+"fv":2066.83,
 "n":"Adyen N.V.",
 "rating":"Strong Buy",
-"up":1.2401,
-"v":"2026-11-24"
+"up":1.2662,
+"v":"2026-11-25"
 },
 "AEM":{
 "design":1,
-"fv":265.58,
+"fv":270.95,
 "n":"Agnico Eagle Mines Limited",
 "rating":"Strong Buy",
-"up":0.663,
-"v":"2026-11-23"
+"up":0.6808,
+"v":"2026-11-25"
 },
 "AEP":{
 "design":1,
-"fv":224.5,
+"fv":229.42,
 "n":"American Electric Power Company, Inc.",
 "rating":"Strong Buy",
-"up":0.7651,
-"v":"2026-11-23"
+"up":0.7981,
+"v":"2026-11-25"
 },
 "AFL":{
 "design":1,
@@ -346,19 +346,19 @@
 },
 "AIG":{
 "design":1,
-"fv":77.28,
+"fv":77.89,
 "n":"American International Group, Inc.",
 "rating":"Hold",
-"up":-0.0301,
-"v":"2026-11-20"
+"up":-0.0528,
+"v":"2026-11-25"
 },
 "AIR":{
 "design":1,
-"fv":203.3,
+"fv":205.48,
 "n":"Airbus SE",
 "rating":"Hold",
-"up":-0.048,
-"v":"2026-11-23"
+"up":-0.0135,
+"v":"2026-11-25"
 },
 "AJG":{
 "design":1,
@@ -410,11 +410,11 @@
 },
 "AMAT":{
 "design":1,
-"fv":217.65,
+"fv":219.17,
 "n":"Applied Materials",
-"rating":"Sell",
-"up":-0.3278,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.2957,
+"v":"2026-11-25"
 },
 "AMD":{
 "design":1,
@@ -458,27 +458,27 @@
 },
 "AMZN":{
 "design":1,
-"fv":274.38,
+"fv":277.99,
 "n":"Amazon.com, Inc.",
-"rating":"Hold",
-"up":0.0743,
-"v":"2026-11-23"
+"rating":"Buy",
+"up":0.1373,
+"v":"2026-11-25"
 },
 "ANET":{
 "design":1,
-"fv":139.47,
+"fv":140.55,
 "n":"Arista Networks, Inc.",
 "rating":"Reduce",
-"up":-0.1726,
-"v":"2026-11-24"
+"up":-0.1429,
+"v":"2026-11-25"
 },
 "AON":{
 "design":1,
-"fv":251.31,
+"fv":256.85,
 "n":"Aon plc",
 "rating":"Reduce",
-"up":-0.2455,
-"v":"2026-11-20"
+"up":-0.2608,
+"v":"2026-11-25"
 },
 "APD":{
 "design":1,
@@ -490,11 +490,11 @@
 },
 "APH":{
 "design":1,
-"fv":137.17,
+"fv":138.25,
 "n":"Amphenol Corporation",
 "rating":"Strong Buy",
-"up":0.867,
-"v":"2026-11-24"
+"up":0.8918,
+"v":"2026-11-25"
 },
 "APO":{
 "design":1,
@@ -522,11 +522,11 @@
 },
 "ARES":{
 "design":1,
-"fv":245.75,
+"fv":250.91,
 "n":"Ares Management Corporation",
 "rating":"Strong Buy",
-"up":0.8585,
-"v":"2026-11-24"
+"up":0.8733,
+"v":"2026-11-25"
 },
 "ARGX":{
 "design":1,
@@ -546,19 +546,19 @@
 },
 "ASML":{
 "design":1,
-"fv":464.1,
+"fv":469.1,
 "n":"ASML Holding N.V.",
 "rating":"Sell",
-"up":-0.6646,
-"v":"2026-11-23"
+"up":-0.64,
+"v":"2026-11-25"
 },
 "ASTS":{
 "design":1,
-"fv":7.38,
+"fv":7.44,
 "n":"AST SpaceMobile, Inc.",
 "rating":"Sell",
-"up":-0.6873,
-"v":"2026-11-24"
+"up":-0.7139,
+"v":"2026-11-25"
 },
 "ASX":{
 "design":1,
@@ -570,11 +570,11 @@
 },
 "ATCO-A":{
 "design":1,
-"fv":14.34,
+"fv":14.5,
 "n":"Atlas Copco AB",
 "rating":"Reduce",
-"up":-0.212,
-"v":"2026-11-20"
+"up":-0.1712,
+"v":"2026-11-25"
 },
 "AVGO":{
 "design":1,
@@ -594,11 +594,11 @@
 },
 "AXP":{
 "design":1,
-"fv":281.72,
+"fv":284.61,
 "n":"American Express Company",
 "rating":"Hold",
-"up":-0.0662,
-"v":"2026-11-20"
+"up":-0.0889,
+"v":"2026-11-25"
 },
 "AZN":{
 "design":1,
@@ -618,11 +618,11 @@
 },
 "B":{
 "design":1,
-"fv":55.52,
+"fv":57.09,
 "n":"Barrick Mining Corporation",
 "rating":"Strong Buy",
-"up":0.6369,
-"v":"2026-11-23"
+"up":0.6537,
+"v":"2026-11-25"
 },
 "BA":{
 "design":1,
@@ -658,19 +658,19 @@
 },
 "BBVA":{
 "design":1,
-"fv":24.97,
+"fv":25.22,
 "n":"Banco Bilbao Vizcaya Argentaria, S.A.",
 "rating":"Hold",
-"up":0.0197,
-"v":"2026-11-23"
+"up":0.0502,
+"v":"2026-11-25"
 },
 "BCE":{
 "design":1,
-"fv":57.21,
+"fv":58.79,
 "n":"BCE Inc.",
 "rating":"Strong Buy",
-"up":1.6172,
-"v":"2026-11-20"
+"up":1.6508,
+"v":"2026-11-25"
 },
 "BCS":{
 "design":1,
@@ -690,11 +690,11 @@
 },
 "BE":{
 "design":1,
-"fv":41.78,
+"fv":42.22,
 "n":"Bloom Energy Corporation",
 "rating":"Sell",
-"up":-0.7516,
-"v":"2026-11-23"
+"up":-0.7239,
+"v":"2026-11-25"
 },
 "BHARTIARTL":{
 "design":1,
@@ -738,11 +738,11 @@
 },
 "BKNG":{
 "design":1,
-"fv":277.56,
+"fv":279.8,
 "n":"Booking Holdings Inc.",
 "rating":"Strong Buy",
-"up":0.8928,
-"v":"2026-11-24"
+"up":0.8715,
+"v":"2026-11-25"
 },
 "BLK":{
 "design":1,
@@ -762,35 +762,35 @@
 },
 "BMW":{
 "design":1,
-"fv":143.72,
+"fv":144.49,
 "n":"Bayerische Motoren Werke AG",
 "rating":"Strong Buy",
-"up":1.4647,
-"v":"2026-11-24"
+"up":1.3858,
+"v":"2026-11-25"
 },
 "BMY":{
 "design":1,
-"fv":100.12,
+"fv":100.9,
 "n":"Bristol-Myers Squibb Company",
 "rating":"Strong Buy",
-"up":0.6142,
-"v":"2026-11-24"
+"up":0.639,
+"v":"2026-11-25"
 },
 "BN":{
 "design":1,
-"fv":34.85,
+"fv":35.23,
 "n":"Brookfield Corporation",
-"rating":"Hold",
-"up":-0.1091,
-"v":"2026-11-23"
+"rating":"Reduce",
+"up":-0.1262,
+"v":"2026-11-25"
 },
 "BNP":{
 "design":1,
-"fv":98.09,
+"fv":98.86,
 "n":"BNP Paribas SA",
 "rating":"Hold",
-"up":-0.0042,
-"v":"2026-11-20"
+"up":0.0221,
+"v":"2026-11-25"
 },
 "BNS":{
 "design":1,
@@ -802,35 +802,35 @@
 },
 "BP":{
 "design":1,
-"fv":147.15,
+"fv":149.48,
 "n":"BP p.l.c.",
 "rating":"Strong Buy",
-"up":2.4421,
-"v":"2026-11-20"
+"up":2.4763,
+"v":"2026-11-25"
 },
 "BRK.B":{
 "design":1,
-"fv":402.13,
+"fv":414.68,
 "n":"Berkshire Hathaway Inc.",
 "rating":"Reduce",
-"up":-0.2945,
-"v":"2026-11-20"
+"up":-0.2842,
+"v":"2026-11-25"
 },
 "BSX":{
 "design":1,
-"fv":38.97,
+"fv":39.41,
 "n":"Boston Scientific Corporation",
-"rating":"Hold",
-"up":-0.1171,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.1265,
+"v":"2026-11-25"
 },
 "BTI":{
 "design":1,
-"fv":48.44,
+"fv":50.72,
 "n":"British American Tobacco p.l.c.",
 "rating":"Reduce",
-"up":-0.1683,
-"v":"2026-11-24"
+"up":-0.1606,
+"v":"2026-11-25"
 },
 "BUD":{
 "design":1,
@@ -850,19 +850,19 @@
 },
 "BYDDY":{
 "design":1,
-"fv":20.97,
+"fv":21.07,
 "n":"BYD Company Limited",
 "rating":"Strong Buy",
-"up":1.7238,
-"v":"2026-11-24"
+"up":1.772,
+"v":"2026-11-25"
 },
 "C":{
 "design":1,
-"fv":99.44,
+"fv":100.29,
 "n":"Citigroup Inc.",
-"rating":"Reduce",
-"up":-0.1304,
-"v":"2026-11-23"
+"rating":"Hold",
+"up":-0.1151,
+"v":"2026-11-25"
 },
 "CAH":{
 "design":1,
@@ -938,27 +938,27 @@
 },
 "CEG":{
 "design":1,
-"fv":507.67,
+"fv":512.56,
 "n":"Constellation Energy Corporation",
 "rating":"Strong Buy",
-"up":1.0735,
-"v":"2026-11-24"
+"up":1.1785,
+"v":"2026-11-25"
 },
 "CFR":{
 "design":1,
-"fv":162.82,
+"fv":164.69,
 "n":"Compagnie Financi\u00e8re Richemont SA",
 "rating":"Reduce",
-"up":-0.2155,
-"v":"2026-11-23"
+"up":-0.185,
+"v":"2026-11-25"
 },
 "CHKP":{
 "design":1,
-"fv":103.3,
+"fv":104.42,
 "n":"Check Point Software Technologies Ltd.",
 "rating":"Sell",
-"up":-0.333,
-"v":"2026-11-20"
+"up":-0.3624,
+"v":"2026-11-25"
 },
 "CHT":{
 "design":1,
@@ -970,11 +970,11 @@
 },
 "CHTR":{
 "design":1,
-"fv":213.25,
+"fv":237.0,
 "n":"Charter Communications, Inc.",
 "rating":"Strong Buy",
-"up":0.5695,
-"v":"2026-11-24"
+"up":0.6093,
+"v":"2026-11-25"
 },
 "CHYM":{
 "design":1,
@@ -986,11 +986,11 @@
 },
 "CI":{
 "design":1,
-"fv":725.75,
+"fv":732.67,
 "n":"The Cigna Group",
 "rating":"Strong Buy",
-"up":1.6391,
-"v":"2026-11-24"
+"up":1.6994,
+"v":"2026-11-25"
 },
 "CIEN":{
 "design":1,
@@ -1066,11 +1066,11 @@
 },
 "CNQ":{
 "design":1,
-"fv":88.98,
+"fv":92.19,
 "n":"Canadian Natural Resources Limited",
 "rating":"Strong Buy",
-"up":1.0049,
-"v":"2026-11-20"
+"up":1.0234,
+"v":"2026-11-25"
 },
 "COF":{
 "design":1,
@@ -1082,11 +1082,11 @@
 },
 "COHR":{
 "design":1,
-"fv":23.1,
+"fv":23.6,
 "n":"Coherent Corp.",
 "rating":"Sell",
-"up":-0.8766,
-"v":"2026-11-20"
+"up":-0.8797,
+"v":"2026-11-25"
 },
 "COIN":{
 "design":1,
@@ -1114,11 +1114,11 @@
 },
 "COST":{
 "design":1,
-"fv":712.22,
+"fv":728.34,
 "n":"Costco Wholesale Corporation",
 "rating":"Sell",
-"up":-0.3538,
-"v":"2026-11-20"
+"up":-0.3298,
+"v":"2026-11-25"
 },
 "CP":{
 "design":1,
@@ -1138,11 +1138,11 @@
 },
 "CPRT":{
 "design":1,
-"fv":12.01,
+"fv":12.1,
 "n":"Copart, Inc.",
 "rating":"Sell",
-"up":-0.6138,
-"v":"2026-11-20"
+"up":-0.6352,
+"v":"2026-11-25"
 },
 "CRCL":{
 "design":1,
@@ -1162,19 +1162,19 @@
 },
 "CRH":{
 "design":1,
-"fv":113.56,
+"fv":115.13,
 "n":"CRH plc",
 "rating":"Buy",
-"up":0.2307,
-"v":"2026-11-23"
+"up":0.1833,
+"v":"2026-11-25"
 },
 "CRM":{
 "design":1,
-"fv":380.98,
+"fv":384.0,
 "n":"Salesforce, Inc.",
 "rating":"Strong Buy",
-"up":0.9713,
-"v":"2026-11-24"
+"up":0.9472,
+"v":"2026-11-25"
 },
 "CRWD":{
 "design":1,
@@ -1186,11 +1186,11 @@
 },
 "CRWV":{
 "design":1,
-"fv":3.0,
+"fv":3.16,
 "n":"CoreWeave, Inc.",
 "rating":"Sell",
-"up":-0.9241,
-"v":"2026-11-20"
+"up":-0.9257,
+"v":"2026-11-25"
 },
 "CS":{
 "design":1,
@@ -1218,11 +1218,11 @@
 },
 "CSU":{
 "design":1,
-"fv":3368.44,
+"fv":3405.68,
 "n":"Constellation Software Inc.",
 "rating":"Strong Buy",
-"up":0.5543,
-"v":"2026-11-20"
+"up":0.5838,
+"v":"2026-11-25"
 },
 "CSX":{
 "design":1,
@@ -1274,19 +1274,19 @@
 },
 "DAL":{
 "design":1,
-"fv":178.32,
+"fv":180.0,
 "n":"Delta Air Lines, Inc.",
 "rating":"Strong Buy",
-"up":1.1143,
-"v":"2026-11-23"
+"up":1.17,
+"v":"2026-11-25"
 },
 "DASH":{
 "design":1,
-"fv":329.42,
+"fv":331.9,
 "n":"DoorDash, Inc.",
 "rating":"Strong Buy",
-"up":1.0572,
-"v":"2026-11-24"
+"up":0.9946,
+"v":"2026-11-25"
 },
 "DB":{
 "design":1,
@@ -1298,19 +1298,19 @@
 },
 "DDOG":{
 "design":1,
-"fv":91.26,
+"fv":92.23,
 "n":"Datadog, Inc.",
 "rating":"Sell",
-"up":-0.4601,
-"v":"2026-11-23"
+"up":-0.4172,
+"v":"2026-11-25"
 },
 "DE":{
 "design":1,
-"fv":543.82,
+"fv":549.6,
 "n":"Deere & Company",
-"rating":"Hold",
-"up":-0.1139,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.1426,
+"v":"2026-11-25"
 },
 "DELL":{
 "design":1,
@@ -1322,11 +1322,11 @@
 },
 "DEO":{
 "design":1,
-"fv":312.58,
+"fv":320.3,
 "n":"Diageo plc",
 "rating":"Strong Buy",
-"up":2.1143,
-"v":"2026-11-24"
+"up":2.1476,
+"v":"2026-11-25"
 },
 "DG":{
 "design":1,
@@ -1362,11 +1362,11 @@
 },
 "DKNG":{
 "design":1,
-"fv":19.42,
+"fv":19.54,
 "n":"DraftKings Inc.",
-"rating":"Buy",
-"up":0.2052,
-"v":"2026-11-24"
+"rating":"Hold",
+"up":0.1072,
+"v":"2026-11-25"
 },
 "DSV":{
 "design":1,
@@ -1378,27 +1378,27 @@
 },
 "DSY":{
 "design":1,
-"fv":32.63,
+"fv":32.97,
 "n":"Dassault Syst\u00e8mes SE",
 "rating":"Strong Buy",
-"up":0.3328,
-"v":"2026-11-20"
+"up":0.3579,
+"v":"2026-11-25"
 },
 "DTE":{
 "design":1,
-"fv":37.25,
+"fv":38.37,
 "n":"Deutsche Telekom AG",
-"rating":"Buy",
-"up":0.2859,
-"v":"2026-11-20"
+"rating":"Strong Buy",
+"up":0.3046,
+"v":"2026-11-25"
 },
 "DUK":{
 "design":1,
-"fv":181.29,
+"fv":185.0,
 "n":"Duke Energy Corporation",
 "rating":"Strong Buy",
-"up":0.3969,
-"v":"2026-11-20"
+"up":0.4025,
+"v":"2026-11-25"
 },
 "DXCM":{
 "design":1,
@@ -1442,19 +1442,19 @@
 },
 "EL.PA":{
 "design":1,
-"fv":196.6,
+"fv":199.2,
 "n":"EssilorLuxottica SA",
 "rating":"Hold",
-"up":0.0236,
-"v":"2026-11-20"
+"up":0.0503,
+"v":"2026-11-25"
 },
 "ELV":{
 "design":1,
-"fv":693.88,
+"fv":700.32,
 "n":"Elevance Health, Inc.",
 "rating":"Strong Buy",
-"up":0.7739,
-"v":"2026-11-24"
+"up":0.7971,
+"v":"2026-11-25"
 },
 "EMR":{
 "design":1,
@@ -1466,27 +1466,27 @@
 },
 "ENB":{
 "design":1,
-"fv":127.69,
+"fv":133.36,
 "n":"Enbridge Inc.",
 "rating":"Strong Buy",
-"up":1.7947,
-"v":"2026-11-20"
+"up":1.8405,
+"v":"2026-11-25"
 },
 "ENEL":{
 "design":1,
-"fv":9.45,
+"fv":9.62,
 "n":"Enel S.p.A.",
 "rating":"Hold",
-"up":-0.088,
-"v":"2026-11-20"
+"up":-0.0672,
+"v":"2026-11-25"
 },
 "ENR":{
 "design":1,
-"fv":139.36,
+"fv":140.35,
 "n":"Siemens Energy AG",
-"rating":"Hold",
-"up":0.0797,
-"v":"2026-11-24"
+"rating":"Buy",
+"up":0.1384,
+"v":"2026-11-25"
 },
 "ENTG":{
 "design":1,
@@ -1498,11 +1498,11 @@
 },
 "EOG":{
 "design":1,
-"fv":439.4,
+"fv":443.62,
 "n":"EOG Resources, Inc.",
 "rating":"Strong Buy",
-"up":2.0233,
-"v":"2026-11-23"
+"up":1.9912,
+"v":"2026-11-25"
 },
 "EPD":{
 "design":1,
@@ -1530,11 +1530,11 @@
 },
 "ERJ":{
 "design":1,
-"fv":27.08,
+"fv":27.47,
 "n":"Embraer S.A.",
 "rating":"Strong Buy",
-"up":0.4979,
-"v":"2026-11-24"
+"up":0.5422,
+"v":"2026-11-25"
 },
 "ET":{
 "design":1,
@@ -1594,19 +1594,19 @@
 },
 "FDX":{
 "design":1,
-"fv":357.06,
+"fv":361.46,
 "n":"FedEx Corporation",
 "rating":"Buy",
-"up":0.1493,
-"v":"2026-11-23"
+"up":0.1703,
+"v":"2026-11-25"
 },
 "FICO":{
 "design":1,
-"fv":1348.55,
+"fv":1362.4,
 "n":"Fair Isaac Corporation",
 "rating":"Strong Buy",
-"up":0.9174,
-"v":"2026-11-24"
+"up":0.9468,
+"v":"2026-11-25"
 },
 "FIG":{
 "design":1,
@@ -1642,11 +1642,11 @@
 },
 "FNV":{
 "design":1,
-"fv":209.02,
+"fv":217.52,
 "n":"Franco-Nevada Corporation",
 "rating":"Hold",
-"up":-0.1199,
-"v":"2026-11-24"
+"up":-0.1113,
+"v":"2026-11-25"
 },
 "FOXA":{
 "design":1,
@@ -1666,19 +1666,19 @@
 },
 "GD":{
 "design":1,
-"fv":448.13,
+"fv":453.91,
 "n":"General Dynamics Corporation",
 "rating":"Buy",
-"up":0.2883,
-"v":"2026-11-23"
+"up":0.2599,
+"v":"2026-11-25"
 },
 "GE":{
 "design":1,
-"fv":255.59,
+"fv":258.74,
 "n":"GE Aerospace",
 "rating":"Reduce",
-"up":-0.2044,
-"v":"2026-11-23"
+"up":-0.1837,
+"v":"2026-11-25"
 },
 "GEHC":{
 "design":1,
@@ -1714,11 +1714,11 @@
 },
 "GLEN":{
 "design":1,
-"fv":3.63,
+"fv":3.66,
 "n":"Glencore plc",
 "rating":"Sell",
-"up":-0.3839,
-"v":"2026-11-20"
+"up":-0.353,
+"v":"2026-11-25"
 },
 "GLW":{
 "design":1,
@@ -1730,27 +1730,27 @@
 },
 "GM":{
 "design":1,
-"fv":28.25,
+"fv":29.3,
 "n":"General Motors Company",
 "rating":"Sell",
-"up":-0.641,
-"v":"2026-11-20"
+"up":-0.6512,
+"v":"2026-11-25"
 },
 "GOOGL":{
 "design":1,
-"fv":304.12,
+"fv":307.89,
 "n":"Alphabet Inc.",
-"rating":"Hold",
-"up":0.078,
-"v":"2026-11-23"
+"rating":"Buy",
+"up":0.1274,
+"v":"2026-11-25"
 },
 "GRAB":{
 "design":1,
-"fv":2.31,
+"fv":2.32,
 "n":"Grab Holdings Limited",
 "rating":"Reduce",
-"up":-0.1612,
-"v":"2026-11-20"
+"up":-0.1818,
+"v":"2026-11-25"
 },
 "GRMN":{
 "design":1,
@@ -1762,19 +1762,19 @@
 },
 "GS":{
 "design":1,
-"fv":604.42,
+"fv":609.92,
 "n":"The Goldman Sachs Group",
 "rating":"Reduce",
-"up":-0.2661,
-"v":"2026-11-23"
+"up":-0.2386,
+"v":"2026-11-25"
 },
 "GSK":{
 "design":1,
-"fv":81.07,
+"fv":82.97,
 "n":"GSK plc",
 "rating":"Strong Buy",
-"up":0.6191,
-"v":"2026-11-24"
+"up":0.6345,
+"v":"2026-11-25"
 },
 "GWW":{
 "design":1,
@@ -1786,11 +1786,11 @@
 },
 "HCA":{
 "design":1,
-"fv":531.51,
+"fv":538.52,
 "n":"HCA Healthcare, Inc.",
 "rating":"Hold",
-"up":0.1176,
-"v":"2026-11-20"
+"up":0.0968,
+"v":"2026-11-25"
 },
 "HD":{
 "design":1,
@@ -1826,11 +1826,11 @@
 },
 "HLN":{
 "design":1,
-"fv":0.63,
+"fv":0.67,
 "n":"Haleon plc",
 "rating":"Sell",
-"up":-0.9318,
-"v":"2026-11-24"
+"up":-0.9291,
+"v":"2026-11-25"
 },
 "HLT":{
 "design":1,
@@ -1858,19 +1858,19 @@
 },
 "HOOD":{
 "design":1,
-"fv":42.09,
+"fv":42.41,
 "n":"Robinhood Markets, Inc.",
 "rating":"Sell",
-"up":-0.3753,
-"v":"2026-11-23"
+"up":-0.3553,
+"v":"2026-11-25"
 },
 "HPE":{
 "design":1,
-"fv":35.54,
+"fv":35.86,
 "n":"Hewlett Packard Enterprise Company",
-"rating":"Hold",
-"up":-0.1157,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.1215,
+"v":"2026-11-25"
 },
 "HSBC":{
 "design":1,
@@ -1882,11 +1882,11 @@
 },
 "HSY":{
 "design":1,
-"fv":134.41,
+"fv":136.32,
 "n":"The Hershey Company",
 "rating":"Reduce",
-"up":-0.2211,
-"v":"2026-11-23"
+"up":-0.2533,
+"v":"2026-11-25"
 },
 "HUM":{
 "design":1,
@@ -1922,11 +1922,11 @@
 },
 "IBM":{
 "design":1,
-"fv":224.42,
+"fv":227.72,
 "n":"International Business Machines Corporation",
 "rating":"Hold",
-"up":-0.0368,
-"v":"2026-11-23"
+"up":-0.0647,
+"v":"2026-11-25"
 },
 "IBN":{
 "design":1,
@@ -1954,27 +1954,27 @@
 },
 "IFX":{
 "design":1,
-"fv":36.1,
+"fv":36.4,
 "n":"Infineon Technologies AG",
 "rating":"Reduce",
-"up":-0.2463,
-"v":"2026-11-24"
+"up":-0.188,
+"v":"2026-11-25"
 },
 "INFY":{
 "design":1,
-"fv":20.54,
+"fv":20.68,
 "n":"Infosys Limited",
 "rating":"Strong Buy",
-"up":0.6445,
-"v":"2026-11-24"
+"up":0.5883,
+"v":"2026-11-25"
 },
 "ING":{
 "design":1,
-"fv":26.68,
+"fv":26.92,
 "n":"ING Groep N.V.",
 "rating":"Hold",
-"up":-0.1193,
-"v":"2026-11-23"
+"up":-0.095,
+"v":"2026-11-25"
 },
 "INSM":{
 "design":1,
@@ -1994,11 +1994,11 @@
 },
 "INTU":{
 "design":1,
-"fv":311.52,
+"fv":314.12,
 "n":"Intuit Inc.",
-"rating":"Hold",
-"up":0.1149,
-"v":"2026-11-24"
+"rating":"Buy",
+"up":0.1561,
+"v":"2026-11-25"
 },
 "IONQ":{
 "design":1,
@@ -2066,11 +2066,11 @@
 },
 "JD":{
 "design":1,
-"fv":89.11,
+"fv":89.44,
 "n":"JD.com, Inc.",
 "rating":"Strong Buy",
-"up":2.4634,
-"v":"2026-11-24"
+"up":2.3906,
+"v":"2026-11-25"
 },
 "JNJ":{
 "design":1,
@@ -2082,11 +2082,11 @@
 },
 "JOBY":{
 "design":1,
-"fv":1.17,
+"fv":1.18,
 "n":"Joby Aviation, Inc.",
 "rating":"Sell",
-"up":-0.6675,
-"v":"2026-11-24"
+"up":-0.6982,
+"v":"2026-11-25"
 },
 "JPM":{
 "design":1,
@@ -2106,11 +2106,11 @@
 },
 "KDP":{
 "design":1,
-"fv":59.85,
+"fv":60.91,
 "n":"Keurig Dr Pepper Inc.",
 "rating":"Strong Buy",
-"up":0.6892,
-"v":"2026-11-23"
+"up":0.7096,
+"v":"2026-11-25"
 },
 "KEYS":{
 "design":1,
@@ -2162,11 +2162,11 @@
 },
 "KR":{
 "design":1,
-"fv":120.15,
+"fv":121.36,
 "n":"The Kroger Co.",
 "rating":"Strong Buy",
-"up":0.7134,
-"v":"2026-11-24"
+"up":0.7379,
+"v":"2026-11-25"
 },
 "LHX":{
 "design":1,
@@ -2178,11 +2178,11 @@
 },
 "LI":{
 "design":1,
-"fv":12.72,
+"fv":12.74,
 "n":"Li Auto Inc.",
-"rating":"Buy",
-"up":0.1892,
-"v":"2026-11-23"
+"rating":"Hold",
+"up":0.0727,
+"v":"2026-11-25"
 },
 "LIN":{
 "design":1,
@@ -2202,11 +2202,11 @@
 },
 "LLY":{
 "design":1,
-"fv":1227.43,
+"fv":1239.61,
 "n":"Eli Lilly and Company",
-"rating":"Reduce",
-"up":-0.128,
-"v":"2026-11-24"
+"rating":"Hold",
+"up":-0.1096,
+"v":"2026-11-25"
 },
 "LMT":{
 "design":1,
@@ -2218,11 +2218,11 @@
 },
 "LNG":{
 "design":1,
-"fv":549.39,
+"fv":556.28,
 "n":"Cheniere Energy, Inc.",
 "rating":"Strong Buy",
-"up":0.8634,
-"v":"2026-11-20"
+"up":0.842,
+"v":"2026-11-25"
 },
 "LONN":{
 "design":1,
@@ -2242,11 +2242,11 @@
 },
 "LRCX":{
 "design":1,
-"fv":151.38,
+"fv":152.37,
 "n":"Lam Research",
 "rating":"Reduce",
-"up":-0.2283,
-"v":"2026-11-24"
+"up":-0.1764,
+"v":"2026-11-25"
 },
 "LSEG":{
 "design":1,
@@ -2258,11 +2258,11 @@
 },
 "LULU":{
 "design":1,
-"fv":159.21,
+"fv":160.52,
 "n":"lululemon athletica inc.",
 "rating":"Strong Buy",
-"up":0.5217,
-"v":"2026-11-23"
+"up":0.4941,
+"v":"2026-11-25"
 },
 "LYG":{
 "design":1,
@@ -2306,19 +2306,19 @@
 },
 "MBLY":{
 "design":1,
-"fv":6.31,
+"fv":6.33,
 "n":"Mobileye Global Inc.",
 "rating":"Strong Buy",
-"up":0.3451,
-"v":"2026-11-24"
+"up":0.4108,
+"v":"2026-11-25"
 },
 "MC":{
 "design":1,
-"fv":649.93,
+"fv":655.23,
 "n":"LVMH Mo\u00ebt Hennessy Louis Vuitton",
 "rating":"Strong Buy",
-"up":0.5039,
-"v":"2026-11-24"
+"up":0.5286,
+"v":"2026-11-25"
 },
 "MCD":{
 "design":1,
@@ -2410,19 +2410,19 @@
 },
 "MFC":{
 "design":1,
-"fv":29.3,
+"fv":29.67,
 "n":"Manulife Financial Corporation",
-"rating":"Sell",
-"up":-0.3034,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.2979,
+"v":"2026-11-25"
 },
 "MFG":{
 "design":1,
-"fv":6.49,
+"fv":6.56,
 "n":"Mizuho Financial Group, Inc.",
-"rating":"Sell",
-"up":-0.3008,
-"v":"2026-11-23"
+"rating":"Reduce",
+"up":-0.2947,
+"v":"2026-11-25"
 },
 "MMC":{
 "design":1,
@@ -2445,8 +2445,8 @@
 "fv":280.2,
 "n":"monday.com Ltd.",
 "rating":"Strong Buy",
-"up":2.731,
-"v":"2026-11-24"
+"up":2.6361,
+"v":"2026-11-25"
 },
 "MNST":{
 "design":1,
@@ -2466,11 +2466,11 @@
 },
 "MPC":{
 "design":1,
-"fv":1288.32,
+"fv":1297.87,
 "n":"Marathon Petroleum Corporation",
 "rating":"Strong Buy",
-"up":2.6274,
-"v":"2026-11-24"
+"up":2.7482,
+"v":"2026-11-25"
 },
 "MPWR":{
 "design":1,
@@ -2506,11 +2506,11 @@
 },
 "MS":{
 "design":1,
-"fv":128.41,
+"fv":129.66,
 "n":"Morgan Stanley",
 "rating":"Reduce",
-"up":-0.256,
-"v":"2026-11-23"
+"up":-0.2262,
+"v":"2026-11-25"
 },
 "MSCI":{
 "design":1,
@@ -2546,11 +2546,11 @@
 },
 "MU":{
 "design":1,
-"fv":509.14,
+"fv":511.8,
 "n":"Micron Technology",
 "rating":"Reduce",
-"up":-0.1916,
-"v":"2026-11-24"
+"up":-0.1488,
+"v":"2026-11-25"
 },
 "MUFG":{
 "design":1,
@@ -2570,11 +2570,11 @@
 },
 "NBIS":{
 "design":1,
-"fv":71.0,
+"fv":71.44,
 "n":"Nebius Group N.V.",
 "rating":"Reduce",
-"up":-0.1868,
-"v":"2026-11-24"
+"up":-0.1594,
+"v":"2026-11-25"
 },
 "NDAQ":{
 "design":1,
@@ -2586,19 +2586,19 @@
 },
 "NEE":{
 "design":1,
-"fv":58.22,
+"fv":59.4,
 "n":"NextEra Energy, Inc.",
 "rating":"Sell",
-"up":-0.3024,
-"v":"2026-11-20"
+"up":-0.3046,
+"v":"2026-11-25"
 },
 "NEM":{
 "design":1,
-"fv":200.91,
+"fv":202.35,
 "n":"Newmont Corporation",
 "rating":"Strong Buy",
-"up":1.0153,
-"v":"2026-11-24"
+"up":0.9948,
+"v":"2026-11-25"
 },
 "NESN":{
 "design":1,
@@ -2634,27 +2634,27 @@
 },
 "NICE":{
 "design":1,
-"fv":237.18,
+"fv":238.74,
 "n":"NICE Ltd.",
 "rating":"Strong Buy",
-"up":1.6426,
-"v":"2026-11-24"
+"up":1.5907,
+"v":"2026-11-25"
 },
 "NIO":{
 "design":1,
-"fv":0.26,
+"fv":0.27,
 "n":"NIO Inc.",
 "rating":"Sell",
-"up":-0.8925,
-"v":"2026-11-20"
+"up":-0.8989,
+"v":"2026-11-25"
 },
 "NKE":{
 "design":1,
-"fv":58.58,
+"fv":59.06,
 "n":"NIKE, Inc.",
 "rating":"Strong Buy",
-"up":0.6387,
-"v":"2026-11-24"
+"up":0.611,
+"v":"2026-11-25"
 },
 "NOC":{
 "design":1,
@@ -2690,11 +2690,11 @@
 },
 "NTES":{
 "design":1,
-"fv":74.45,
+"fv":77.59,
 "n":"NetEase, Inc.",
 "rating":"Reduce",
-"up":-0.2587,
-"v":"2026-11-24"
+"up":-0.2558,
+"v":"2026-11-25"
 },
 "NTR":{
 "design":1,
@@ -2714,11 +2714,11 @@
 },
 "NU":{
 "design":1,
-"fv":11.79,
+"fv":11.93,
 "n":"Nu Holdings Ltd.",
 "rating":"Hold",
-"up":-0.0009,
-"v":"2026-11-23"
+"up":-0.035,
+"v":"2026-11-25"
 },
 "NUE":{
 "design":1,
@@ -2730,11 +2730,11 @@
 },
 "NVDA":{
 "design":1,
-"fv":263.01,
+"fv":265.02,
 "n":"NVIDIA Corporation",
 "rating":"Strong Buy",
-"up":0.6927,
-"v":"2026-11-24"
+"up":0.7751,
+"v":"2026-11-25"
 },
 "NVO":{
 "design":1,
@@ -2802,19 +2802,19 @@
 },
 "ORCL":{
 "design":1,
-"fv":159.59,
+"fv":161.03,
 "n":"Oracle Corporation",
 "rating":"Strong Buy",
-"up":0.4575,
-"v":"2026-11-24"
+"up":0.5502,
+"v":"2026-11-25"
 },
 "ORLY":{
 "design":1,
-"fv":71.65,
+"fv":73.29,
 "n":"O'Reilly Automotive, Inc.",
 "rating":"Reduce",
-"up":-0.2267,
-"v":"2026-11-20"
+"up":-0.242,
+"v":"2026-11-25"
 },
 "OXY":{
 "design":1,
@@ -2834,19 +2834,19 @@
 },
 "PAYX":{
 "design":1,
-"fv":143.96,
+"fv":146.33,
 "n":"Paychex, Inc.",
 "rating":"Buy",
-"up":0.2782,
-"v":"2026-11-20"
+"up":0.2349,
+"v":"2026-11-25"
 },
 "PBR":{
 "design":1,
-"fv":42.87,
+"fv":43.13,
 "n":"Petroleo Brasileiro S.A. - Petrobras",
 "rating":"Strong Buy",
-"up":1.7357,
-"v":"2026-11-24"
+"up":1.6872,
+"v":"2026-11-25"
 },
 "PCAR":{
 "design":1,
@@ -2882,43 +2882,43 @@
 },
 "PG":{
 "design":1,
-"fv":132.57,
+"fv":135.95,
 "n":"The Procter & Gamble Company",
 "rating":"Reduce",
-"up":-0.2173,
-"v":"2026-11-20"
+"up":-0.2152,
+"v":"2026-11-25"
 },
 "PGR":{
 "design":1,
-"fv":268.92,
+"fv":271.94,
 "n":"The Progressive Corporation",
 "rating":"Buy",
-"up":0.1622,
-"v":"2026-11-20"
+"up":0.1392,
+"v":"2026-11-25"
 },
 "PH":{
 "design":1,
-"fv":470.68,
+"fv":478.2,
 "n":"Parker-Hannifin Corporation",
 "rating":"Sell",
-"up":-0.4874,
-"v":"2026-11-23"
+"up":-0.4674,
+"v":"2026-11-25"
 },
 "PHG":{
 "design":1,
-"fv":1.99,
+"fv":2.06,
 "n":"Koninklijke Philips N.V.",
 "rating":"Sell",
-"up":-0.9303,
-"v":"2026-11-20"
+"up":-0.9309,
+"v":"2026-11-25"
 },
 "PINS":{
 "design":1,
-"fv":39.96,
+"fv":40.22,
 "n":"Pinterest, Inc.",
 "rating":"Strong Buy",
-"up":1.1598,
-"v":"2026-11-24"
+"up":1.0406,
+"v":"2026-11-25"
 },
 "PLTR":{
 "design":1,
@@ -2930,11 +2930,11 @@
 },
 "PM":{
 "design":1,
-"fv":113.61,
+"fv":116.81,
 "n":"Philip Morris International",
 "rating":"Sell",
-"up":-0.3829,
-"v":"2026-11-20"
+"up":-0.3663,
+"v":"2026-11-25"
 },
 "PNC":{
 "design":1,
@@ -2946,11 +2946,11 @@
 },
 "PSX":{
 "design":1,
-"fv":747.35,
+"fv":755.05,
 "n":"Phillips 66",
 "rating":"Strong Buy",
-"up":2.1505,
-"v":"2026-11-23"
+"up":2.1983,
+"v":"2026-11-25"
 },
 "PUK":{
 "design":1,
@@ -2962,19 +2962,19 @@
 },
 "PWR":{
 "design":1,
-"fv":410.44,
+"fv":414.45,
 "n":"Quanta Services, Inc.",
-"rating":"Sell",
-"up":-0.3039,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.2671,
+"v":"2026-11-25"
 },
 "PYPL":{
 "design":1,
-"fv":97.43,
+"fv":98.06,
 "n":"PayPal Holdings, Inc.",
 "rating":"Strong Buy",
-"up":0.7346,
-"v":"2026-11-24"
+"up":0.6962,
+"v":"2026-11-25"
 },
 "QBTS":{
 "design":1,
@@ -3010,11 +3010,11 @@
 },
 "RBLX":{
 "design":1,
-"fv":39.56,
+"fv":39.8,
 "n":"Roblox Corporation",
 "rating":"Reduce",
-"up":-0.2604,
-"v":"2026-11-24"
+"up":-0.2845,
+"v":"2026-11-25"
 },
 "RCL":{
 "design":1,
@@ -3050,11 +3050,11 @@
 },
 "RELX":{
 "design":1,
-"fv":25.53,
+"fv":26.22,
 "n":"RELX PLC",
 "rating":"Sell",
-"up":-0.3542,
-"v":"2026-11-24"
+"up":-0.347,
+"v":"2026-11-25"
 },
 "RGTI":{
 "design":1,
@@ -3074,11 +3074,11 @@
 },
 "RIO":{
 "design":1,
-"fv":147.31,
+"fv":148.34,
 "n":"Rio Tinto Group",
 "rating":"Strong Buy",
-"up":1.0127,
-"v":"2026-11-24"
+"up":0.989,
+"v":"2026-11-25"
 },
 "RIVN":{
 "design":1,
@@ -3154,11 +3154,11 @@
 },
 "RR":{
 "design":1,
-"fv":10.08,
+"fv":10.19,
 "n":"Rolls-Royce Holdings plc",
 "rating":"Sell",
-"up":-0.4216,
-"v":"2026-11-23"
+"up":-0.3783,
+"v":"2026-11-25"
 },
 "RSG":{
 "design":1,
@@ -3186,27 +3186,27 @@
 },
 "RYAAY":{
 "design":1,
-"fv":60.82,
+"fv":62.63,
 "n":"Ryanair Holdings plc",
 "rating":"Hold",
-"up":0.0764,
-"v":"2026-11-23"
+"up":0.0872,
+"v":"2026-11-25"
 },
 "SAF":{
 "design":1,
-"fv":322.27,
+"fv":326.17,
 "n":"Safran SA",
 "rating":"Hold",
-"up":-0.0236,
-"v":"2026-11-23"
+"up":0.0228,
+"v":"2026-11-25"
 },
 "SAN":{
 "design":1,
-"fv":10.99,
+"fv":11.1,
 "n":"Banco Santander, S.A.",
 "rating":"Hold",
-"up":-0.0429,
-"v":"2026-11-23"
+"up":-0.0206,
+"v":"2026-11-25"
 },
 "SAP":{
 "design":1,
@@ -3226,11 +3226,11 @@
 },
 "SCCO":{
 "design":1,
-"fv":146.15,
+"fv":147.38,
 "n":"Southern Copper Corporation",
 "rating":"Hold",
-"up":0.0679,
-"v":"2026-11-24"
+"up":0.0453,
+"v":"2026-11-25"
 },
 "SCHW":{
 "design":1,
@@ -3282,19 +3282,19 @@
 },
 "SIE":{
 "design":1,
-"fv":262.38,
+"fv":264.82,
 "n":"Siemens AG",
 "rating":"Hold",
-"up":-0.0589,
-"v":"2026-11-24"
+"up":-0.016,
+"v":"2026-11-25"
 },
 "SLB":{
 "design":1,
-"fv":57.43,
+"fv":57.83,
 "n":"SLB (Schlumberger Limited)",
 "rating":"Buy",
-"up":0.2221,
-"v":"2026-11-24"
+"up":0.1919,
+"v":"2026-11-25"
 },
 "SLF":{
 "design":1,
@@ -3306,11 +3306,11 @@
 },
 "SMCI":{
 "design":1,
-"fv":34.61,
+"fv":34.82,
 "n":"Super Micro Computer, Inc.",
 "rating":"Strong Buy",
-"up":0.5301,
-"v":"2026-11-24"
+"up":0.4939,
+"v":"2026-11-25"
 },
 "SMFG":{
 "design":1,
@@ -3325,8 +3325,8 @@
 "fv":815.12,
 "n":"Sandisk Corporation",
 "rating":"Strong Buy",
-"up":9.457,
-"v":"2026-11-24"
+"up":10.0735,
+"v":"2026-11-25"
 },
 "SNOW":{
 "design":1,
@@ -3338,19 +3338,19 @@
 },
 "SNPS":{
 "design":1,
-"fv":332.36,
+"fv":335.04,
 "n":"Synopsys, Inc.",
 "rating":"Reduce",
-"up":-0.1988,
-"v":"2026-11-24"
+"up":-0.1729,
+"v":"2026-11-25"
 },
 "SNY":{
 "design":1,
-"fv":147.5,
+"fv":156.0,
 "n":"Sanofi S.A.",
 "rating":"Strong Buy",
-"up":1.8419,
-"v":"2026-11-24"
+"up":1.8682,
+"v":"2026-11-25"
 },
 "SO":{
 "design":1,
@@ -3378,11 +3378,11 @@
 },
 "SPCX":{
 "design":1,
-"fv":6.76,
+"fv":6.9,
 "n":"SpaceX (Space Exploration Technologies)",
 "rating":"Sell",
-"up":-0.9532,
-"v":"2026-10-28"
+"up":-0.9459,
+"v":"2026-11-25"
 },
 "SPGI":{
 "design":1,
@@ -3405,8 +3405,8 @@
 "fv":12.21,
 "n":"Stellantis N.V.",
 "rating":"Strong Buy",
-"up":2.5488,
-"v":"2026-11-24"
+"up":2.3355,
+"v":"2026-11-25"
 },
 "STM":{
 "design":1,
@@ -3426,19 +3426,19 @@
 },
 "SU":{
 "design":1,
-"fv":209.84,
+"fv":213.69,
 "n":"Suncor Energy Inc.",
 "rating":"Strong Buy",
-"up":2.288,
-"v":"2026-11-20"
+"up":2.3172,
+"v":"2026-11-25"
 },
 "SU.PA":{
 "design":1,
-"fv":225.48,
+"fv":227.66,
 "n":"Schneider Electric SE",
 "rating":"Hold",
-"up":-0.0892,
-"v":"2026-11-24"
+"up":-0.0415,
+"v":"2026-11-25"
 },
 "SWKS":{
 "design":1,
@@ -3458,19 +3458,19 @@
 },
 "SYM":{
 "design":1,
-"fv":10.59,
+"fv":10.67,
 "n":"Symbotic Inc.",
 "rating":"Sell",
-"up":-0.6973,
-"v":"2026-11-23"
+"up":-0.7194,
+"v":"2026-11-25"
 },
 "T":{
 "design":1,
-"fv":8.27,
+"fv":8.59,
 "n":"AT&T Inc.",
 "rating":"Sell",
-"up":-0.6293,
-"v":"2026-11-20"
+"up":-0.6262,
+"v":"2026-11-25"
 },
 "TAK":{
 "design":1,
@@ -3514,19 +3514,19 @@
 },
 "TDG":{
 "design":1,
-"fv":272.87,
+"fv":278.68,
 "n":"TransDigm Group Incorporated",
 "rating":"Sell",
-"up":-0.7566,
-"v":"2026-11-20"
+"up":-0.7578,
+"v":"2026-11-25"
 },
 "TEAM":{
 "design":1,
-"fv":191.64,
+"fv":193.52,
 "n":"Atlassian Corporation",
 "rating":"Strong Buy",
-"up":0.373,
-"v":"2026-11-23"
+"up":0.3403,
+"v":"2026-11-25"
 },
 "TEL":{
 "design":1,
@@ -3570,11 +3570,11 @@
 },
 "TGT":{
 "design":1,
-"fv":292.2,
+"fv":294.5,
 "n":"Target Corporation",
 "rating":"Strong Buy",
-"up":0.6597,
-"v":"2026-11-24"
+"up":0.71,
+"v":"2026-11-25"
 },
 "TJX":{
 "design":1,
@@ -3610,19 +3610,19 @@
 },
 "TMUS":{
 "design":1,
-"fv":261.43,
+"fv":265.47,
 "n":"T-Mobile US, Inc.",
 "rating":"Strong Buy",
-"up":0.5715,
-"v":"2026-11-23"
+"up":0.5968,
+"v":"2026-11-25"
 },
 "TRI":{
 "design":1,
-"fv":102.16,
+"fv":105.2,
 "n":"Thomson Reuters Corporation",
 "rating":"Hold",
-"up":-0.0473,
-"v":"2026-11-24"
+"up":-0.038,
+"v":"2026-11-25"
 },
 "TRV":{
 "design":1,
@@ -3642,11 +3642,11 @@
 },
 "TSM":{
 "design":1,
-"fv":260.4,
+"fv":262.17,
 "n":"Taiwan Semiconductor Manufacturing",
 "rating":"Reduce",
-"up":-0.2543,
-"v":"2026-11-24"
+"up":-0.2342,
+"v":"2026-11-25"
 },
 "TT":{
 "design":1,
@@ -3682,11 +3682,11 @@
 },
 "TU":{
 "design":1,
-"fv":19.93,
+"fv":20.21,
 "n":"TELUS Corporation",
 "rating":"Strong Buy",
-"up":0.8458,
-"v":"2026-11-24"
+"up":0.8712,
+"v":"2026-11-25"
 },
 "TWLO":{
 "design":1,
@@ -3706,11 +3706,11 @@
 },
 "UAL":{
 "design":1,
-"fv":77.71,
+"fv":78.89,
 "n":"United Airlines Holdings, Inc.",
 "rating":"Reduce",
-"up":-0.2851,
-"v":"2026-11-23"
+"up":-0.2452,
+"v":"2026-11-25"
 },
 "UBER":{
 "design":1,
@@ -3730,27 +3730,27 @@
 },
 "UCG":{
 "design":1,
-"fv":68.49,
+"fv":69.0,
 "n":"UniCredit S.p.A.",
 "rating":"Reduce",
-"up":-0.1827,
-"v":"2026-11-23"
+"up":-0.1402,
+"v":"2026-11-25"
 },
 "UL":{
 "design":1,
-"fv":42.75,
+"fv":44.32,
 "n":"Unilever PLC",
 "rating":"Sell",
-"up":-0.3446,
-"v":"2026-11-24"
+"up":-0.337,
+"v":"2026-11-25"
 },
 "UMC":{
 "design":1,
-"fv":9.28,
+"fv":9.33,
 "n":"United Microelectronics Corporation",
-"rating":"Sell",
-"up":-0.3077,
-"v":"2026-11-24"
+"rating":"Reduce",
+"up":-0.2927,
+"v":"2026-11-25"
 },
 "UNH":{
 "design":1,
@@ -3778,11 +3778,11 @@
 },
 "URI":{
 "design":1,
-"fv":739.73,
+"fv":749.56,
 "n":"United Rentals, Inc.",
 "rating":"Reduce",
-"up":-0.2892,
-"v":"2026-11-23"
+"up":-0.262,
+"v":"2026-11-25"
 },
 "USB":{
 "design":1,
@@ -3794,19 +3794,19 @@
 },
 "V":{
 "design":1,
-"fv":230.98,
+"fv":237.06,
 "n":"Visa Inc.",
 "rating":"Sell",
-"up":-0.4252,
-"v":"2026-11-20"
+"up":-0.4414,
+"v":"2026-11-25"
 },
 "VALE":{
 "design":1,
-"fv":12.77,
+"fv":12.85,
 "n":"Vale S.A.",
 "rating":"Strong Buy",
-"up":0.363,
-"v":"2026-11-24"
+"up":0.3102,
+"v":"2026-11-25"
 },
 "VEEV":{
 "design":1,
@@ -3826,19 +3826,19 @@
 },
 "VOD":{
 "design":1,
-"fv":19.99,
+"fv":20.44,
 "n":"Vodafone Group Plc",
 "rating":"Strong Buy",
-"up":0.4942,
-"v":"2026-11-23"
+"up":0.5198,
+"v":"2026-11-25"
 },
 "VOW3":{
 "design":1,
-"fv":165.62,
+"fv":166.54,
 "n":"Volkswagen AG",
 "rating":"Strong Buy",
-"up":1.4256,
-"v":"2026-11-24"
+"up":1.3286,
+"v":"2026-11-25"
 },
 "VRT":{
 "design":1,
@@ -3906,19 +3906,19 @@
 },
 "WIT":{
 "design":1,
-"fv":3.94,
+"fv":3.98,
 "n":"Wipro Limited",
 "rating":"Strong Buy",
-"up":0.8957,
-"v":"2026-11-23"
+"up":0.8341,
+"v":"2026-11-25"
 },
 "WM":{
 "design":1,
-"fv":192.73,
+"fv":198.09,
 "n":"Waste Management, Inc.",
 "rating":"Reduce",
-"up":-0.1957,
-"v":"2026-11-20"
+"up":-0.199,
+"v":"2026-11-25"
 },
 "WMB":{
 "design":1,
@@ -3930,11 +3930,11 @@
 },
 "WMT":{
 "design":1,
-"fv":87.81,
+"fv":89.59,
 "n":"Walmart Inc.",
 "rating":"Sell",
-"up":-0.3137,
-"v":"2026-11-20"
+"up":-0.3209,
+"v":"2026-11-25"
 },
 "XOM":{
 "design":1,
@@ -3954,19 +3954,19 @@
 },
 "XYZ":{
 "design":1,
-"fv":78.66,
+"fv":79.38,
 "n":"Block, Inc.",
 "rating":"Hold",
-"up":0.074,
-"v":"2026-11-23"
+"up":0.0431,
+"v":"2026-11-25"
 },
 "YUM":{
 "design":1,
-"fv":89.59,
+"fv":92.3,
 "n":"Yum! Brands, Inc.",
 "rating":"Sell",
-"up":-0.4425,
-"v":"2026-11-20"
+"up":-0.4477,
+"v":"2026-11-25"
 },
 "YUMC":{
 "design":1,
